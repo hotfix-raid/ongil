@@ -1,29 +1,29 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { 
-  Search, 
-  MapPin, 
-  Calendar, 
-  Users, 
-  SlidersHorizontal, 
-  Navigation, 
-  Sun, 
-  CloudRain, 
-  Cloud, 
-  Wind, 
-  Info, 
-  Plus, 
-  Minus, 
-  Check, 
-  ChevronDown, 
-  X, 
-  ArrowRight, 
-  Sparkles, 
-  Compass, 
-  AlertTriangle, 
-  Flame, 
-  Trees, 
-  Accessibility, 
+import {
+  Search,
+  MapPin,
+  Calendar,
+  Users,
+  SlidersHorizontal,
+  Navigation,
+  Sun,
+  CloudRain,
+  Cloud,
+  Wind,
+  Info,
+  Plus,
+  Minus,
+  Check,
+  ChevronDown,
+  X,
+  ArrowRight,
+  Sparkles,
+  Compass,
+  AlertTriangle,
+  Flame,
+  Trees,
+  Accessibility,
   Footprints,
   Maximize2,
   Heart,
@@ -58,7 +58,7 @@ export default function SearchTab({
   // Main Search State
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
-  
+
   // Date selection state
   const [isPeriod, setIsPeriod] = useState(true);
   const [selectedStartDate, setSelectedStartDate] = useState<string>("2026-07-06");
@@ -216,10 +216,10 @@ export default function SearchTab({
     if (searchQuery && !searchQuery.includes("(내 주변)")) {
       const q = searchQuery.toLowerCase().trim();
       results = results.filter(
-        d => 
-          d.name.toLowerCase().includes(q) || 
-          d.region.toLowerCase().includes(q) || 
-          d.regionFull.toLowerCase().includes(q) || 
+        d =>
+          d.name.toLowerCase().includes(q) ||
+          d.region.toLowerCase().includes(q) ||
+          d.regionFull.toLowerCase().includes(q) ||
           d.description.toLowerCase().includes(q) ||
           d.category.toLowerCase().includes(q)
       );
@@ -306,8 +306,9 @@ export default function SearchTab({
   };
 
   return (
+    <>
     <div className="space-y-6 animate-fadeIn pb-12">
-      
+
       {/* 1. Sync Alert Banner */}
       <AnimatePresence>
         {showSyncAlert && (
@@ -328,9 +329,9 @@ export default function SearchTab({
 
       {/* 2. Headline */}
       <div className="text-center md:text-left">
-          <span className="text-xs font-semibold text-bento-green block mb-1">
-            맞춤형 혼잡 회피 여정 검색
-          </span>
+        <span className="text-xs font-semibold text-bento-green block mb-1">
+          맞춤형 혼잡 회피 여정 검색
+        </span>
         <h2 className="text-2xl font-display font-black text-bento-dark tracking-tight leading-none mb-1.5 flex items-center gap-2">
           <span>한산 여정 조건별 탐색</span>
           <span className="w-8 h-8 rounded-full bg-bento-green/10 flex items-center justify-center">
@@ -344,20 +345,19 @@ export default function SearchTab({
       </div>
 
       {/* 3. Weather Broadcast Banner */}
-      <div className={`p-4 rounded-xl border text-xs flex items-start gap-3 duration-base ease-out-soft ${
-        weatherInfo.status === "warning" 
+      <div className={`p-4 rounded-xl border text-xs flex items-start gap-3 duration-base ease-out-soft ${weatherInfo.status === "warning"
           ? "bg-amber-50 border-amber-200 text-amber-800"
           : weatherInfo.status === "danger"
-          ? "bg-red-50 border-red-200 text-red-800"
-          : weatherInfo.status === "success"
-          ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-          : "bg-white border-border-default text-bento-dark/80"
-      }`}>
+            ? "bg-red-50 border-red-200 text-red-800"
+            : weatherInfo.status === "success"
+              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+              : "bg-white border-border-default text-bento-dark/80"
+        }`}>
         <div className="mt-0.5 shrink-0">
           {weatherInfo.status === "warning" ? <AlertTriangle size={15} className="text-amber-600" /> :
-           weatherInfo.status === "danger" ? <Flame size={15} className="text-red-600" /> :
-           weatherInfo.status === "success" ? <Check size={15} className="text-emerald-600" /> :
-           <Info size={15} className="text-bento-green" />}
+            weatherInfo.status === "danger" ? <Flame size={15} className="text-red-600" /> :
+              weatherInfo.status === "success" ? <Check size={15} className="text-emerald-600" /> :
+                <Info size={15} className="text-bento-green" />}
         </div>
         <div>
           <span className="font-bold block mb-0.5">실시간 날씨 & 미세먼지 환경 보정</span>
@@ -368,7 +368,7 @@ export default function SearchTab({
       {/* ==================== SEARCH CONTAINER ==================== */}
       <div className="bg-white rounded-xl border border-border-default p-5 shadow-md relative z-30">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-          
+
           {/* Query Block */}
           <div className="col-span-1 md:col-span-5 relative">
             <label className="block text-[11px] font-semibold text-bento-dark/50 mb-1 pl-1">목적지</label>
@@ -387,7 +387,7 @@ export default function SearchTab({
                 className="w-full pl-11 pr-12 py-3 bg-bento-bg/50 border border-border-default rounded-md text-xs font-medium text-bento-dark focus:outline-none focus:border-bento-green focus:bg-white focus:shadow-sm transition-all duration-base ease-out-soft"
               />
               {searchQuery && (
-                <button 
+                <button
                   onClick={() => setSearchQuery("")}
                   className="absolute right-12 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-bento-bg hover:bg-bento-dark/5 flex items-center justify-center text-bento-dark/40 hover:text-bento-dark cursor-pointer transition-colors duration-fast"
                 >
@@ -398,9 +398,8 @@ export default function SearchTab({
                 type="button"
                 onClick={handleLocationDetection}
                 title="내 주변 한산스팟 찾기"
-                className={`absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-md transition-all duration-fast cursor-pointer ${
-                  locationMocked ? "bg-bento-green text-white" : "bg-bento-bg text-bento-green hover:bg-bento-green/10"
-                }`}
+                className={`absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-md transition-all duration-fast cursor-pointer ${locationMocked ? "bg-bento-green text-white" : "bg-bento-bg text-bento-green hover:bg-bento-green/10"
+                  }`}
               >
                 <Navigation size={12} />
               </button>
@@ -516,11 +515,10 @@ export default function SearchTab({
                 setActiveFilterSheet(true);
                 setActiveSheet("filters");
               }}
-              className={`w-full px-4 py-3 border rounded-md text-xs font-medium flex items-center justify-between cursor-pointer transition-colors duration-base ${
-                filterWheelchair || filterStroller || filterPetFriendly || filterSenior || filterParking
+              className={`w-full px-4 py-3 border rounded-md text-xs font-medium flex items-center justify-between cursor-pointer transition-colors duration-base ${filterWheelchair || filterStroller || filterPetFriendly || filterSenior || filterParking
                   ? "bg-bento-green/15 border-bento-green text-bento-green"
                   : "bg-bento-bg/50 hover:bg-bento-bg border-border-default text-bento-dark"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-2 text-left min-w-0">
                 <SlidersHorizontal size={14} className="shrink-0" />
@@ -577,13 +575,11 @@ export default function SearchTab({
             </div>
             <button
               onClick={() => setAvoidCongestion(!avoidCongestion)}
-              className={`w-10 h-5.5 rounded-full transition-all duration-base ease-in-out-soft relative cursor-pointer ${
-                avoidCongestion ? "bg-bento-green" : "bg-bento-stone"
-              }`}
+              className={`w-10 h-5.5 rounded-full transition-all duration-base ease-in-out-soft relative cursor-pointer ${avoidCongestion ? "bg-bento-green" : "bg-bento-stone"
+                }`}
             >
-              <div className={`w-4 h-4 rounded-full bg-white absolute top-[3px] transition-all duration-base ease-in-out-soft ${
-                avoidCongestion ? "left-[22px]" : "left-1"
-              }`} />
+              <div className={`w-4 h-4 rounded-full bg-white absolute top-[3px] transition-all duration-base ease-in-out-soft ${avoidCongestion ? "left-[22px]" : "left-1"
+                }`} />
             </button>
           </div>
         </div>
@@ -601,329 +597,6 @@ export default function SearchTab({
 
       </div>
 
-      {/* ==================== BOTTOM SHEETS (DATE/GUESTS/FILTERS OVERLAYS) ==================== */}
-      <AnimatePresence>
-        {activeSheet !== null && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
-              onClick={() => {
-                setActiveSheet(null);
-                setActiveDateSelector(false);
-                setActiveGuestSelector(false);
-                setActiveFilterSheet(false);
-              }}
-              className="fixed inset-0 bg-bento-dark z-[100]"
-            />
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 260 }}
-              className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white rounded-t-2xl border-t border-border-default shadow-lg z-[101] overflow-hidden max-h-[80vh] flex flex-col"
-            >
-              <div className="px-5 py-3.5 border-b border-border-subtle flex items-center justify-between shrink-0">
-                <h3 className="text-xs font-display font-bold text-bento-dark">
-                  {activeSheet === "date" ? "일자별 혼잡 예측 캘린더" :
-                   activeSheet === "guests" ? "동반 인원 설정" :
-                   "배리어프리 보행 조건"}
-                </h3>
-                <button
-                  onClick={() => {
-                    setActiveSheet(null);
-                    setActiveDateSelector(false);
-                    setActiveGuestSelector(false);
-                    setActiveFilterSheet(false);
-                  }}
-                  className="w-7 h-7 rounded-full bg-bento-bg hover:bg-bento-dark/5 flex items-center justify-center text-bento-dark/60 hover:text-bento-dark cursor-pointer transition-colors duration-fast"
-                >
-                  <X size={12} />
-                </button>
-              </div>
-
-              <div className="p-5 overflow-y-auto flex-1">
-                {/* 1. Date Calendar */}
-                {activeSheet === "date" && (
-                  <div className="space-y-4">
-                    <div className="flex bg-bento-bg rounded-md p-0.5">
-                      <button
-                        onClick={() => {
-                          setIsPeriod(false);
-                          setSelectedEndDate(selectedStartDate);
-                        }}
-                        className={`flex-1 py-1.5 text-[11px] font-medium rounded-sm transition-all duration-fast cursor-pointer ${
-                          !isPeriod ? "bg-white text-bento-green shadow-sm" : "text-bento-dark/60 hover:text-bento-dark"
-                        }`}
-                      >
-                        당일치기
-                      </button>
-                      <button
-                        onClick={() => setIsPeriod(true)}
-                        className={`flex-1 py-1.5 text-[11px] font-medium rounded-sm transition-all duration-fast cursor-pointer ${
-                          isPeriod ? "bg-white text-bento-green shadow-sm" : "text-bento-dark/60 hover:text-bento-dark"
-                        }`}
-                      >
-                        숙박/기간
-                      </button>
-                    </div>
-
-                    <div className="bg-bento-bg/50 p-2.5 rounded-md border border-border-subtle flex items-center justify-center gap-3 text-[10px] font-medium">
-                      <span className="text-bento-dark/50">혼잡도:</span>
-                      <span className="flex items-center gap-1 text-emerald-700"><span className="w-2 h-2 rounded-full bg-emerald-500" /> 한산</span>
-                      <span className="flex items-center gap-1 text-amber-700"><span className="w-2 h-2 rounded-full bg-amber-400" /> 보통</span>
-                      <span className="flex items-center gap-1 text-red-700"><span className="w-2 h-2 rounded-full bg-red-500" /> 혼잡</span>
-                    </div>
-
-                    <div className="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-bento-dark/50 mb-1">
-                      <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
-                    </div>
-
-                    <div className="grid grid-cols-7 gap-1.5">
-                      {/* Blank days spacing */}
-                      <div className="aspect-square" />
-                      <div className="aspect-square" />
-                      <div className="aspect-square" />
-                      <div className="aspect-square" />
-                      <div className="aspect-square" />
-                      
-                      {next30Days.map((d, index) => {
-                        const isSelected = selectedStartDate === d.dateStr || selectedEndDate === d.dateStr;
-                        const inRange = selectedStartDate && selectedEndDate && d.dateStr > selectedStartDate && d.dateStr < selectedEndDate;
-
-                        return (
-                          <button
-                            key={index}
-                            onClick={() => handleDateClick(d.dateStr)}
-                            className={`aspect-square rounded-lg flex flex-col items-center justify-center relative transition-all text-xs font-bold cursor-pointer ${
-                              isSelected 
-                                ? "bg-bento-green text-white" 
-                                : inRange 
-                                ? "bg-bento-green/15 text-bento-green" 
-                                : "bg-bento-bg hover:bg-bento-dark/5 text-bento-dark"
-                            }`}
-                          >
-                            <span>{d.day}</span>
-                            <div className={`w-1.25 h-1.25 rounded-full absolute bottom-1 ${
-                              d.level === "high" ? "bg-red-500" : d.level === "medium" ? "bg-amber-400" : "bg-emerald-400"
-                            }`} />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* 2. Guest Controls */}
-                {activeSheet === "guests" && (
-                  <div className="space-y-4">
-                    {/* Adults */}
-                    <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
-                      <div>
-                        <span className="text-xs font-bold block text-bento-dark">성인 (만 19세 이상)</span>
-                        <span className="text-[10px] text-bento-dark/50 block">보행 약자 및 안내 포함</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <button onClick={() => setAdults(Math.max(1, adults - 1))} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">-</button>
-                        <span className="text-xs font-bold w-4 text-center">{adults}</span>
-                        <button onClick={() => setAdults(adults + 1)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">+</button>
-                      </div>
-                    </div>
-
-                    {/* Children */}
-                    <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
-                      <div>
-                        <span className="text-xs font-bold block text-bento-dark">아동 및 영유아</span>
-                        <span className="text-[10px] text-bento-dark/50 block">휠체어, 유모차 보호자 필요 가능</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <button onClick={() => setChildren(Math.max(0, children - 1))} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">-</button>
-                        <span className="text-xs font-bold w-4 text-center">{children}</span>
-                        <button onClick={() => setChildren(children + 1)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">+</button>
-                      </div>
-                    </div>
-
-                    {/* Pets */}
-                    <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
-                      <div>
-                        <span className="text-xs font-bold block text-bento-dark">반려견 동반</span>
-                        <span className="text-[10px] text-bento-dark/50 block">대형견/소형견 야외 구역 매칭 지원</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <button onClick={() => setPets(Math.max(0, pets - 1))} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">-</button>
-                        <span className="text-xs font-bold w-4 text-center">{pets}</span>
-                        <button onClick={() => setPets(pets + 1)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">+</button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 3. Filters Sheet */}
-                {activeSheet === "filters" && (
-                  <div className="space-y-4">
-                    
-                    {/* Wheelchair */}
-                    <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-bento-green/10 text-bento-green flex items-center justify-center font-bold">
-                          <Accessibility size={14} />
-                        </div>
-                        <div>
-                          <span className="text-xs font-bold block text-bento-dark">휠체어 안심 보행길 전용</span>
-                          <span className="text-[10px] text-bento-dark/50 block">경사도 5% 미만, 턱 없는 완벽 나무데크길</span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setFilterWheelchair(!filterWheelchair)}
-                        className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${
-                          filterWheelchair ? "bg-bento-green" : "bg-bento-dark/20"
-                        }`}
-                      >
-                        <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${
-                          filterWheelchair ? "left-5.25" : "left-0.75"
-                        }`} />
-                      </button>
-                    </div>
-
-                    {/* Stroller */}
-                    <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-bento-green/10 text-bento-green flex items-center justify-center font-bold">
-                          <Baby size={14} />
-                        </div>
-                        <div>
-                          <span className="text-xs font-bold block text-bento-dark">유모차 통행 가능</span>
-                          <span className="text-[10px] text-bento-dark/50 block">비포장 비탈길 제외, 수변/공원 데크길 위주</span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setFilterStroller(!filterStroller)}
-                        className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${
-                          filterStroller ? "bg-bento-green" : "bg-bento-green" // keep synced or toggle
-                        }`}
-                      >
-                        <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${
-                          filterStroller ? "left-5.25" : "left-0.75"
-                        }`} />
-                      </button>
-                    </div>
-
-                    {/* Pet friendly */}
-                    <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-bento-green/10 text-bento-green flex items-center justify-center font-bold">
-                          <PawPrint size={14} />
-                        </div>
-                        <div>
-                          <span className="text-xs font-bold block text-bento-dark">반려동물 출입 공식 허용</span>
-                          <span className="text-[10px] text-bento-dark/50 block">목줄 통행 가능 코스 및 전용 해변(댕수욕장)</span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setFilterPetFriendly(!filterPetFriendly)}
-                        className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${
-                          filterPetFriendly ? "bg-bento-green" : "bg-bento-dark/20"
-                        }`}
-                      >
-                        <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${
-                          filterPetFriendly ? "left-5.25" : "left-0.75"
-                        }`} />
-                      </button>
-                    </div>
-
-                    {/* Large dog / Indoor option (conditional) */}
-                    {filterPetFriendly && (
-                      <div className="p-3 border border-dashed border-border-default rounded-xl bg-bento-bg/30 space-y-2">
-                        <span className="text-[9px] font-bold text-bento-dark/40 uppercase block">반려견 크기 및 실내 조건:</span>
-                        <div className="flex gap-2">
-                          {(["any", "indoor", "large"] as const).map((opt) => (
-                            <button
-                                key={opt}
-                                onClick={() => setFilterPetConditions(opt)}
-                                className={`flex-1 py-1 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${
-                                  filterPetConditions === opt 
-                                    ? "bg-bento-green border-bento-green text-white" 
-                                    : "bg-white border-border-default text-bento-dark/60"
-                                }`}
-                              >
-                                {opt === "any" ? "상관없음" : opt === "indoor" ? "실내 허용 우선" : "대형견 안심"}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                    {/* Senior */}
-                    <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-bento-green/10 text-bento-green flex items-center justify-center font-bold">
-                          <Users size={14} />
-                        </div>
-                        <div>
-                          <span className="text-xs font-bold block text-bento-dark">실버 케어 스마트 쉼터 인접</span>
-                          <span className="text-[10px] text-bento-dark/50 block">중간중간 벤치 및 지붕 대기 쉘터가 구비된 완만지</span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setFilterSenior(!filterSenior)}
-                        className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${
-                          filterSenior ? "bg-bento-green" : "bg-bento-dark/20"
-                        }`}
-                      >
-                        <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${
-                          filterSenior ? "left-5.25" : "left-0.75"
-                        }`} />
-                      </button>
-                    </div>
-
-                    {/* Parking */}
-                    <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-bento-green/10 text-bento-green flex items-center justify-center font-bold">
-                          <Car size={14} />
-                        </div>
-                        <div>
-                          <span className="text-xs font-bold block text-bento-dark">교통 약자 주차 주말 원활</span>
-                          <span className="text-[10px] text-bento-dark/50 block">휠체어 이동 여유 폭이 있는 넓은 무료 공영주차장</span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setFilterParking(!filterParking)}
-                        className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${
-                          filterParking ? "bg-bento-green" : "bg-bento-dark/20"
-                        }`}
-                      >
-                        <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${
-                          filterParking ? "left-5.25" : "left-0.75"
-                        }`} />
-                      </button>
-                    </div>
-
-                  </div>
-                )}
-              </div>
-
-              {/* Sheet Save action */}
-              <div className="p-4 bg-bento-bg border-t border-border-subtle shrink-0">
-                <button
-                  onClick={() => {
-                    setActiveSheet(null);
-                    setActiveDateSelector(false);
-                    setActiveGuestSelector(false);
-                    setActiveFilterSheet(false);
-                    handleSearchExecution();
-                  }}
-                  className="w-full py-3 bg-bento-green hover:bg-bento-green/90 text-white font-display font-bold text-xs rounded-sm shadow-sm transition-all duration-base cursor-pointer"
-                >
-                  조건 변경 완료
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
       {/* ==================== SEARCH RESULTS INTERACTIVE AREA ==================== */}
       <AnimatePresence>
         {searchTriggered && (
@@ -939,7 +612,7 @@ export default function SearchTab({
                 <Leaf size={14} className="text-bento-green" />
                 <span>{searchMessage}</span>
               </span>
-              <button 
+              <button
                 onClick={handleClearSearch}
                 className="text-[10px] font-medium text-red-700 bg-red-100 hover:bg-red-200 px-2.5 py-1 rounded-sm cursor-pointer transition-colors duration-fast"
               >
@@ -962,9 +635,8 @@ export default function SearchTab({
                       }}
                       transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
                       onClick={() => onSelectDestination(dest)}
-                      className={`bg-white rounded-lg border overflow-hidden flex flex-col justify-between cursor-pointer ${
-                        isAlternative ? "border-amber-400 ring-2 ring-amber-400/20" : "border-border-default"
-                      }`}
+                      className={`bg-white rounded-lg border overflow-hidden flex flex-col justify-between cursor-pointer ${isAlternative ? "border-amber-400 ring-2 ring-amber-400/20" : "border-border-default"
+                        }`}
                     >
                       <div className="relative h-44">
                         <img
@@ -977,13 +649,12 @@ export default function SearchTab({
 
                         {/* Top indicators */}
                         <div className="absolute top-3 left-3 flex flex-wrap gap-1">
-                          <span className={`px-2.5 py-0.5 rounded-sm text-[9px] font-bold text-white flex items-center gap-1 ${
-                            dest.congestionStatus === "high" 
-                              ? "bg-red-500" 
-                              : dest.congestionStatus === "medium" 
-                              ? "bg-amber-500" 
-                              : "bg-emerald-500"
-                          }`}>
+                          <span className={`px-2.5 py-0.5 rounded-sm text-[9px] font-bold text-white flex items-center gap-1 ${dest.congestionStatus === "high"
+                              ? "bg-red-500"
+                              : dest.congestionStatus === "medium"
+                                ? "bg-amber-500"
+                                : "bg-emerald-500"
+                            }`}>
                             혼잡도 {dest.congestionLevel}%
                           </span>
                           {dest.isDepopulationArea && (
@@ -1112,5 +783,316 @@ export default function SearchTab({
       )}
 
     </div>
+
+    {/* ==================== BOTTOM SHEETS (DATE/GUESTS/FILTERS OVERLAYS) ==================== */}
+    <AnimatePresence>
+      {activeSheet !== null && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.5 }}
+            exit={{ opacity: 0 }}
+            onClick={() => {
+              setActiveSheet(null);
+              setActiveDateSelector(false);
+              setActiveGuestSelector(false);
+              setActiveFilterSheet(false);
+            }}
+            className="fixed inset-0 bg-bento-dark z-[100]"
+            style={{ marginBottom: 0 }}
+          />
+          <motion.div
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 260 }}
+            className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white rounded-t-2xl border-t border-border-default shadow-lg z-[101] overflow-hidden max-h-[80vh] flex flex-col"
+            style={{ marginBottom: 0 }}
+          >
+            <div className="px-5 py-3.5 border-b border-border-subtle flex items-center justify-between shrink-0">
+              <h3 className="text-xs font-display font-bold text-bento-dark">
+                {activeSheet === "date" ? "일자별 혼잡 예측 캘린더" :
+                  activeSheet === "guests" ? "동반 인원 설정" :
+                    "배리어프리 보행 조건"}
+              </h3>
+              <button
+                onClick={() => {
+                  setActiveSheet(null);
+                  setActiveDateSelector(false);
+                  setActiveGuestSelector(false);
+                  setActiveFilterSheet(false);
+                }}
+                className="w-7 h-7 rounded-full bg-bento-bg hover:bg-bento-dark/5 flex items-center justify-center text-bento-dark/60 hover:text-bento-dark cursor-pointer transition-colors duration-fast"
+              >
+                <X size={12} />
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto flex-1">
+              {/* 1. Date Calendar */}
+              {activeSheet === "date" && (
+                <div className="space-y-4">
+                  <div className="flex bg-bento-bg rounded-md p-0.5">
+                    <button
+                      onClick={() => {
+                        setIsPeriod(false);
+                        setSelectedEndDate(selectedStartDate);
+                      }}
+                      className={`flex-1 py-1.5 text-[11px] font-medium rounded-sm transition-all duration-fast cursor-pointer ${!isPeriod ? "bg-white text-bento-green shadow-sm" : "text-bento-dark/60 hover:text-bento-dark"
+                        }`}
+                    >
+                      당일치기
+                    </button>
+                    <button
+                      onClick={() => setIsPeriod(true)}
+                      className={`flex-1 py-1.5 text-[11px] font-medium rounded-sm transition-all duration-fast cursor-pointer ${isPeriod ? "bg-white text-bento-green shadow-sm" : "text-bento-dark/60 hover:text-bento-dark"
+                        }`}
+                    >
+                      숙박/기간
+                    </button>
+                  </div>
+
+                  <div className="bg-bento-bg/50 p-2.5 rounded-md border border-border-subtle flex items-center justify-center gap-3 text-[10px] font-medium">
+                    <span className="text-bento-dark/50">혼잡도:</span>
+                    <span className="flex items-center gap-1 text-emerald-700"><span className="w-2 h-2 rounded-full bg-emerald-500" /> 한산</span>
+                    <span className="flex items-center gap-1 text-amber-700"><span className="w-2 h-2 rounded-full bg-amber-400" /> 보통</span>
+                    <span className="flex items-center gap-1 text-red-700"><span className="w-2 h-2 rounded-full bg-red-500" /> 혼잡</span>
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-bento-dark/50 mb-1">
+                    <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-1.5">
+                    {/* Blank days spacing */}
+                    <div className="aspect-square" />
+                    <div className="aspect-square" />
+                    <div className="aspect-square" />
+                    <div className="aspect-square" />
+                    <div className="aspect-square" />
+
+                    {next30Days.map((d, index) => {
+                      const isSelected = selectedStartDate === d.dateStr || selectedEndDate === d.dateStr;
+                      const inRange = selectedStartDate && selectedEndDate && d.dateStr > selectedStartDate && d.dateStr < selectedEndDate;
+
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => handleDateClick(d.dateStr)}
+                          className={`aspect-square rounded-lg flex flex-col items-center justify-center relative transition-all text-xs font-bold cursor-pointer ${isSelected
+                              ? "bg-bento-green text-white"
+                              : inRange
+                                ? "bg-bento-green/15 text-bento-green"
+                                : "bg-bento-bg hover:bg-bento-dark/5 text-bento-dark"
+                            }`}
+                        >
+                          <span>{d.day}</span>
+                          <div className={`w-1.25 h-1.25 rounded-full absolute bottom-1 ${d.level === "high" ? "bg-red-500" : d.level === "medium" ? "bg-amber-400" : "bg-emerald-400"
+                            }`} />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* 2. Guest Controls */}
+              {activeSheet === "guests" && (
+                <div className="space-y-4">
+                  {/* Adults */}
+                  <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
+                    <div>
+                      <span className="text-xs font-bold block text-bento-dark">성인 (만 19세 이상)</span>
+                      <span className="text-[10px] text-bento-dark/50 block">보행 약자 및 안내 포함</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setAdults(Math.max(1, adults - 1))} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">-</button>
+                      <span className="text-xs font-bold w-4 text-center">{adults}</span>
+                      <button onClick={() => setAdults(adults + 1)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">+</button>
+                    </div>
+                  </div>
+
+                  {/* Children */}
+                  <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
+                    <div>
+                      <span className="text-xs font-bold block text-bento-dark">아동 및 영유아</span>
+                      <span className="text-[10px] text-bento-dark/50 block">휠체어, 유모차 보호자 필요 가능</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setChildren(Math.max(0, children - 1))} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">-</button>
+                      <span className="text-xs font-bold w-4 text-center">{children}</span>
+                      <button onClick={() => setChildren(children + 1)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">+</button>
+                    </div>
+                  </div>
+
+                  {/* Pets */}
+                  <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
+                    <div>
+                      <span className="text-xs font-bold block text-bento-dark">반려견 동반</span>
+                      <span className="text-[10px] text-bento-dark/50 block">대형견/소형견 야외 구역 매칭 지원</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setPets(Math.max(0, pets - 1))} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">-</button>
+                      <span className="text-xs font-bold w-4 text-center">{pets}</span>
+                      <button onClick={() => setPets(pets + 1)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">+</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 3. Filters Sheet */}
+              {activeSheet === "filters" && (
+                <div className="space-y-4">
+
+                  {/* Wheelchair */}
+                  <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-bento-green/10 text-bento-green flex items-center justify-center font-bold">
+                        <Accessibility size={14} />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold block text-bento-dark">휠체어 안심 보행길 전용</span>
+                        <span className="text-[10px] text-bento-dark/50 block">경사도 5% 미만, 턱 없는 완벽 나무데크길</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setFilterWheelchair(!filterWheelchair)}
+                      className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${filterWheelchair ? "bg-bento-green" : "bg-bento-dark/20"
+                        }`}
+                    >
+                      <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${filterWheelchair ? "left-5.25" : "left-0.75"
+                        }`} />
+                    </button>
+                  </div>
+
+                  {/* Stroller */}
+                  <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-bento-green/10 text-bento-green flex items-center justify-center font-bold">
+                        <Baby size={14} />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold block text-bento-dark">유모차 통행 가능</span>
+                        <span className="text-[10px] text-bento-dark/50 block">비포장 비탈길 제외, 수변/공원 데크길 위주</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setFilterStroller(!filterStroller)}
+                      className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${filterStroller ? "bg-bento-green" : "bg-bento-green" // keep synced or toggle
+                        }`}
+                    >
+                      <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${filterStroller ? "left-5.25" : "left-0.75"
+                        }`} />
+                    </button>
+                  </div>
+
+                  {/* Pet friendly */}
+                  <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-bento-green/10 text-bento-green flex items-center justify-center font-bold">
+                        <PawPrint size={14} />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold block text-bento-dark">반려동물 출입 공식 허용</span>
+                        <span className="text-[10px] text-bento-dark/50 block">목줄 통행 가능 코스 및 전용 해변(댕수욕장)</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setFilterPetFriendly(!filterPetFriendly)}
+                      className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${filterPetFriendly ? "bg-bento-green" : "bg-bento-dark/20"
+                        }`}
+                    >
+                      <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${filterPetFriendly ? "left-5.25" : "left-0.75"
+                        }`} />
+                    </button>
+                  </div>
+
+                  {/* Large dog / Indoor option (conditional) */}
+                  {filterPetFriendly && (
+                    <div className="p-3 border border-dashed border-border-default rounded-xl bg-bento-bg/30 space-y-2">
+                      <span className="text-[9px] font-bold text-bento-dark/40 uppercase block">반려견 크기 및 실내 조건:</span>
+                      <div className="flex gap-2">
+                        {(["any", "indoor", "large"] as const).map((opt) => (
+                          <button
+                            key={opt}
+                            onClick={() => setFilterPetConditions(opt)}
+                            className={`flex-1 py-1 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${filterPetConditions === opt
+                                ? "bg-bento-green border-bento-green text-white"
+                                : "bg-white border-border-default text-bento-dark/60"
+                              }`}
+                          >
+                            {opt === "any" ? "상관없음" : opt === "indoor" ? "실내 허용 우선" : "대형견 안심"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Senior */}
+                  <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-bento-green/10 text-bento-green flex items-center justify-center font-bold">
+                        <Users size={14} />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold block text-bento-dark">실버 케어 스마트 쉼터 인접</span>
+                        <span className="text-[10px] text-bento-dark/50 block">중간중간 벤치 및 지붕 대기 쉘터가 구비된 완만지</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setFilterSenior(!filterSenior)}
+                      className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${filterSenior ? "bg-bento-green" : "bg-bento-dark/20"
+                        }`}
+                    >
+                      <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${filterSenior ? "left-5.25" : "left-0.75"
+                        }`} />
+                    </button>
+                  </div>
+
+                  {/* Parking */}
+                  <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-bento-green/10 text-bento-green flex items-center justify-center font-bold">
+                        <Car size={14} />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold block text-bento-dark">교통 약자 주차 주말 원활</span>
+                        <span className="text-[10px] text-bento-dark/50 block">휠체어 이동 여유 폭이 있는 넓은 무료 공영주차장</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setFilterParking(!filterParking)}
+                      className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${filterParking ? "bg-bento-green" : "bg-bento-dark/20"
+                        }`}
+                    >
+                      <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${filterParking ? "left-5.25" : "left-0.75"
+                        }`} />
+                    </button>
+                  </div>
+
+                </div>
+              )}
+            </div>
+
+            {/* Sheet Save action */}
+            <div className="p-4 bg-bento-bg border-t border-border-subtle shrink-0">
+              <button
+                onClick={() => {
+                  setActiveSheet(null);
+                  setActiveDateSelector(false);
+                  setActiveGuestSelector(false);
+                  setActiveFilterSheet(false);
+                  handleSearchExecution();
+                }}
+                className="w-full py-3 bg-bento-green hover:bg-bento-green/90 text-white font-display font-bold text-xs rounded-sm shadow-sm transition-all duration-base cursor-pointer"
+              >
+                조건 변경 완료
+              </button>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+    </>
   );
 }

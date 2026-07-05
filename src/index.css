@@ -125,10 +125,15 @@
   animation: spin-slow 20s linear infinite;
 }
 
-/* FadeIn — 페이지/섹션 등장용 단발 애니메이션 */
+/* FadeIn — 페이지/섹션 등장용 단발 애니메이션
+   주의: transform은 절대 사용하지 말 것 (opacity만 애니메이션).
+   translateY 등을 넣으면 "to" 키프레임이 transform: none 이어도 브라우저가
+   both/forwards 필 모드 종료 값을 matrix(1,0,0,1,0,0)로 유지해버려(리터럴 none이 아님)
+   자손의 position: fixed containing block이 되어버리는 버그(바텀시트/모달이
+   뷰포트가 아니라 페이지 전체 스크롤 기준 하단에 뜸)가 발생한다. */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .animate-fadeIn {
@@ -164,4 +169,20 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 4rem; /* Accounts for the 16h (4rem) sticky header */
+  height: 100%;
+}
+
+body {
+  height: 100%;
+}
+
+/* #root is the app's scroll container, capped to the real viewport height.
+   Without this, html/body grow to fit all content and any `position: fixed`
+   overlay (bottom sheets, modals, mobile nav) ends up pinned to the bottom
+   of the full page instead of the visible screen — forcing a scroll to reach it. */
+#root {
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }

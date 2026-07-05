@@ -144,7 +144,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-bento-bg font-sans antialiased text-bento-dark selection:bg-bento-green selection:text-white flex flex-col">
+    <div className="min-h-full bg-bento-bg font-sans antialiased text-bento-dark selection:bg-bento-green selection:text-white flex flex-col">
       
       {/* 1. TOP GLOBAL STICKY HEADER */}
       <header className="sticky top-0 z-[100] bg-bento-bg/95 backdrop-blur-md border-b border-border-default shadow-sm">
