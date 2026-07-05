@@ -43,17 +43,16 @@ export default function FeaturesSection() {
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-20">
-          <span className="text-xs font-mono font-bold tracking-widest text-bento-sand uppercase block mb-3">
-            Core Engine & Capabilities
+          <span className="text-xs font-sans font-semibold tracking-wider text-bento-sand/80 block mb-3">
+            Key Features
           </span>
           <h2 className="text-3xl sm:text-5xl font-display font-black text-white tracking-tight leading-snug mb-6">
             관광의 흐름을 재설계하는 <br />
-            <span className="text-bento-olive">온길의 4가지 지능형 기술</span>
+            <span className="text-bento-olive">온길의 4가지 핵심 기능</span>
           </h2>
           <p className="text-bento-olive/80 text-base sm:text-lg leading-relaxed">
-            단순히 여행 경로를 기록하거나 조회하는 데 그치지 않습니다. 
-            온길은 독자적인 데이터 파이프라인을 통과시켜, 환경적·물리적 한계를 넘어선 
-            <strong> '모두를 위한 균형 잡힌 숨쉬는 지도'</strong>를 가시화합니다.
+            여행 경로 기록에 머물지 않고, 환경과 사람을 함께 고려한 
+            <strong> '모두를 위한 균형 잡힌 여행 지도'</strong>를 제공합니다.
           </p>
         </div>
 
@@ -66,15 +65,15 @@ export default function FeaturesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.6, delay: idx * 0.1 }}
-              className="bg-white/5 border border-white/10 hover:border-bento-moss/40 rounded-3xl p-8 hover:bg-white/10 transition-all duration-300 shadow-xs group flex flex-col justify-between"
+              className="bg-white/5 border border-white/10 hover:border-bento-moss/60 rounded-xl p-8 hover:bg-white/[0.12] hover:-translate-y-0.5 transition-all duration-base ease-out-soft shadow-sm group flex flex-col justify-between"
             >
               <div>
                 {/* Icon & Badge */}
                 <div className="flex items-center justify-between mb-6">
-                  <div className="w-10 h-10 rounded-full bg-bento-green border border-white/10 flex items-center justify-center text-white shadow-xs">
+                  <div className="w-10 h-10 rounded-full bg-bento-green border border-white/10 flex items-center justify-center text-white shadow-sm">
                     {feat.icon}
                   </div>
-                  <span className="text-[10px] font-mono font-bold tracking-widest text-bento-sand bg-white/10 border border-white/15 px-3 py-1 rounded-full uppercase">
+                  <span className="text-[11px] font-sans font-semibold text-bento-sand/80 bg-white/10 border border-white/10 px-3 py-1 rounded-full">
                     {feat.badge}
                   </span>
                 </div>

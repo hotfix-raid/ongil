@@ -121,12 +121,12 @@ export default function MapTab({
     <div className="h-[calc(100vh-12rem)] md:h-[calc(100vh-10rem)] flex flex-col gap-4 overflow-hidden animate-fadeIn pb-2 relative">
       
       {/* 1. MOBILE RESPONSIVE SEGMENTED TABS (HIGH ACCESSIBILITY TOUCH TARGETS) */}
-      <div className="lg:hidden flex bg-white border border-bento-dark/10 p-1 rounded-2xl shadow-xs shrink-0 z-10">
+      <div className="lg:hidden flex bg-white border border-border-default p-1 rounded-lg shadow-sm shrink-0 z-10">
         <button
           onClick={() => setMobileView("list")}
-          className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+          className={`flex-1 py-3 rounded-sm text-xs font-semibold transition-all duration-base flex items-center justify-center gap-2 cursor-pointer ${
             mobileView === "list"
-              ? "bg-bento-green text-white shadow-xs"
+              ? "bg-bento-green text-white shadow-sm"
               : "text-bento-dark/60 hover:text-bento-dark hover:bg-bento-bg"
           }`}
         >
@@ -135,9 +135,9 @@ export default function MapTab({
         </button>
         <button
           onClick={() => setMobileView("map")}
-          className={`flex-1 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+          className={`flex-1 py-3 rounded-sm text-xs font-semibold transition-all duration-base flex items-center justify-center gap-2 cursor-pointer ${
             mobileView === "map"
-              ? "bg-bento-green text-white shadow-xs"
+              ? "bg-bento-green text-white shadow-sm"
               : "text-bento-dark/60 hover:text-bento-dark hover:bg-bento-bg"
           }`}
         >
@@ -149,14 +149,14 @@ export default function MapTab({
       <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
         
         {/* LEFT COLUMN: Scrollable Destination list for Map Syncing */}
-        <div className={`w-full lg:w-[35%] xl:w-[30%] shrink-0 flex flex-col bg-white border border-bento-dark/10 rounded-[2rem] overflow-hidden shadow-xs ${
+        <div className={`w-full lg:w-[35%] xl:w-[30%] shrink-0 flex flex-col bg-white border border-border-default rounded-xl overflow-hidden shadow-sm ${
           mobileView === "list" ? "flex h-full" : "hidden lg:flex lg:h-full"
         }`}>
           {/* Title / Mini Filters Header */}
-          <div className="p-4 border-b border-bento-dark/5 space-y-3 shrink-0">
+          <div className="p-4 border-b border-border-subtle space-y-3 shrink-0">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-mono font-bold tracking-widest text-bento-dark/40 uppercase">실시간 보행 흐름망</h3>
-              <span className="text-[10px] bg-bento-green/10 text-bento-green font-bold px-2.5 py-0.5 rounded-full">
+              <h3 className="text-xs font-semibold text-bento-dark/50">실시간 보행 흐름망</h3>
+              <span className="text-[10px] bg-bento-green/10 text-bento-green font-semibold px-2.5 py-0.5 rounded-sm">
                 GPS 연동
               </span>
             </div>
@@ -165,37 +165,37 @@ export default function MapTab({
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setFilterWheelchair(!filterWheelchair)}
-                className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-sm text-xs font-semibold transition-all duration-base cursor-pointer flex items-center gap-1.5 ${
                   filterWheelchair 
-                    ? "bg-bento-green text-white shadow-xs" 
-                    : "bg-bento-bg text-bento-dark/60 border border-bento-dark/5 hover:bg-bento-dark/5"
+                    ? "bg-bento-green text-white shadow-sm" 
+                    : "bg-bento-bg text-bento-dark/60 border border-border-subtle hover:bg-bento-dark/5"
                 }`}
               >
-                <Accessibility size={14} className={filterWheelchair ? "text-white" : "text-bento-green"} />
+                <Accessibility size={14} />
                 <span>휠체어</span>
                 {filterWheelchair && <Check size={12} className="ml-0.5" />}
               </button>
               <button
                 onClick={() => setFilterStroller(!filterStroller)}
-                className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-sm text-xs font-semibold transition-all duration-base cursor-pointer flex items-center gap-1.5 ${
                   filterStroller 
-                    ? "bg-bento-green text-white shadow-xs" 
-                    : "bg-bento-bg text-bento-dark/60 border border-bento-dark/5 hover:bg-bento-dark/5"
+                    ? "bg-bento-green text-white shadow-sm" 
+                    : "bg-bento-bg text-bento-dark/60 border border-border-subtle hover:bg-bento-dark/5"
                 }`}
               >
-                <Baby size={14} className={filterStroller ? "text-white" : "text-amber-500"} />
+                <Baby size={14} />
                 <span>유모차</span>
                 {filterStroller && <Check size={12} className="ml-0.5" />}
               </button>
               <button
                 onClick={() => setFilterPetFriendly(!filterPetFriendly)}
-                className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-sm text-xs font-semibold transition-all duration-base cursor-pointer flex items-center gap-1.5 ${
                   filterPetFriendly 
-                    ? "bg-bento-green text-white shadow-xs" 
-                    : "bg-bento-bg text-bento-dark/60 border border-bento-dark/5 hover:bg-bento-dark/5"
+                    ? "bg-bento-green text-white shadow-sm" 
+                    : "bg-bento-bg text-bento-dark/60 border border-border-subtle hover:bg-bento-dark/5"
                 }`}
               >
-                <PawPrint size={14} className={filterPetFriendly ? "text-white" : "text-orange-500"} />
+                <PawPrint size={14} />
                 <span>반려동물</span>
                 {filterPetFriendly && <Check size={12} className="ml-0.5" />}
               </button>
@@ -203,13 +203,15 @@ export default function MapTab({
           </div>
 
           {/* Scrollable list */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 scrollbar-thin scrollbar-thumb-bento-dark/10">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
             {mockDestinations.filter(meetsFilterConditions).length === 0 ? (
-              <div className="text-center py-12 px-4 space-y-2.5 flex flex-col items-center justify-center h-full">
-                <Search size={32} className="text-bento-dark/30" />
-                <h5 className="text-xs font-bold text-bento-dark">일치하는 안심 코스가 없습니다.</h5>
+              <div className="text-center py-12 px-4 space-y-3 flex flex-col items-center justify-center h-full">
+                <div className="w-12 h-12 rounded-full bg-bento-bg flex items-center justify-center">
+                  <Search size={24} className="text-bento-dark/30" />
+                </div>
+                <h5 className="text-xs font-semibold text-bento-dark">일치하는 안심 코스가 없습니다</h5>
                 <p className="text-[10px] text-bento-dark/50 leading-relaxed text-center">
-                  필터 조건에 부합하는 한산한 보행 지표 코스가 이 지역에 없습니다. 다른 보행 지표 필터를 조절해 보세요.
+                  필터 조건에 맞는 보행 코스가 없습니다. 다른 필터로 조절해 보세요.
                 </p>
               </div>
             ) : (
@@ -230,27 +232,27 @@ export default function MapTab({
                         }
                       }
                     }}
-                    className={`p-3.5 rounded-2xl border transition-all text-left flex gap-4 items-center cursor-pointer ${
+                    className={`p-3.5 rounded-lg border transition-all duration-base text-left flex gap-4 items-center cursor-pointer ${
                       isActive 
-                        ? "border-bento-green bg-bento-green/5 ring-1 ring-bento-green/25" 
-                        : "border-bento-dark/5 bg-white hover:bg-bento-bg"
+                        ? "border-bento-green bg-bento-green/5 ring-1 ring-bento-green/25 shadow-sm" 
+                        : "border-border-default bg-white hover:bg-bento-bg"
                     }`}
                   >
                     <img
                       src={dest.image}
                       alt={dest.name}
                       referrerPolicy="no-referrer"
-                      className="w-16 h-16 rounded-xl object-cover shrink-0 border border-bento-dark/5"
+                      className="w-16 h-16 rounded-md object-cover shrink-0 border border-border-subtle"
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-bold text-bento-green font-mono">{dest.region}</span>
+                        <span className="text-[10px] font-semibold text-bento-green">{dest.region}</span>
                         <span className={`w-1.5 h-1.5 rounded-full ${
                           dest.congestionLevel <= 20 ? "bg-emerald-500" : dest.congestionLevel <= 50 ? "bg-amber-400" : "bg-red-500"
                         }`} />
-                        <span className="text-[9px] font-mono opacity-60">혼잡 {dest.congestionLevel}%</span>
+                        <span className="text-[9px] text-bento-dark/50">혼잡 {dest.congestionLevel}%</span>
                       </div>
-                      <h4 className="font-display font-black text-xs sm:text-sm text-bento-dark tracking-tight truncate leading-tight mt-0.5">
+                      <h4 className="font-display font-bold text-xs sm:text-sm text-bento-dark tracking-tight truncate leading-tight mt-0.5">
                         {dest.name}
                       </h4>
                       <p className="text-[10px] sm:text-xs text-bento-dark/50 truncate leading-relaxed mt-0.5">
@@ -265,48 +267,46 @@ export default function MapTab({
         </div>
 
         {/* RIGHT COLUMN: HIGH-FIDELITY GRAPHIC INTERACTIVE MAP CANVAS */}
-        <div id="visual-map-canvas" className={`flex-1 bg-bento-dark/5 border border-bento-dark/10 rounded-[2.5rem] relative overflow-hidden flex flex-col justify-end shadow-inner ${
+        <div id="visual-map-canvas" className={`flex-1 bg-bento-dark/[0.03] border border-border-default rounded-xl relative overflow-hidden flex flex-col justify-end shadow-inner ${
           mobileView === "map" ? "flex h-full" : "hidden lg:flex lg:h-full"
         }`}>
           
           {/* Map Watermark & Control Overlay */}
           <div className="absolute top-4 left-4 right-4 z-10 flex justify-between items-start pointer-events-none">
-            <div className="bg-white/90 backdrop-blur-md border border-bento-dark/10 p-2.5 rounded-2xl max-w-[200px] pointer-events-auto shadow-sm">
-              <span className="text-[9px] font-mono font-bold text-bento-green block mb-0.5">MAP VIEWPORT</span>
-              <span className="text-[11px] font-bold text-bento-dark block">강원 안심 보행 관측도</span>
+            <div className="bg-white/90 backdrop-blur-md border border-border-default p-2.5 rounded-lg max-w-[200px] pointer-events-auto shadow-sm">
+              <span className="text-[9px] font-semibold text-bento-green block mb-0.5">안심 관측도</span>
+              <span className="text-[11px] font-bold text-bento-dark block">강원 보행 관측도</span>
               <span className="text-[9px] text-bento-dark/50 block leading-tight mt-0.5">정선·태백·삼척·고성 시범 노선 및 인근 우회도</span>
             </div>
 
             <div className="flex flex-col gap-2 pointer-events-auto">
               {/* Map layers toggler */}
-              <button
-                onClick={() => setMapType(mapType === "standard" ? "topographical" : "standard")}
-                className="p-2.5 bg-white/90 backdrop-blur-md border border-bento-dark/10 rounded-xl text-bento-dark hover:bg-white shadow-xs cursor-pointer flex items-center justify-center"
-                title="지도 보기 전환"
-              >
-                <Layers size={14} />
-              </button>
-              {nearMeActive && (
-                <button
-                  onClick={() => {
-                    setNearMeActive(false);
-                    setActivePin(null);
-                  }}
-                  className="px-2.5 py-1.5 bg-red-100 text-red-800 text-[9px] font-bold rounded-lg border border-red-200 cursor-pointer shadow-xs"
-                >
-                  주변필터 끄기 X
-                </button>
-              )}
+          <button
+            onClick={() => setMapType(mapType === "standard" ? "topographical" : "standard")}
+            className="p-2.5 bg-white/90 backdrop-blur-md border border-border-default rounded-md text-bento-dark hover:bg-white shadow-sm cursor-pointer flex items-center justify-center transition-colors duration-fast"
+            title="지도 보기 전환"
+          >
+            <Layers size={14} />
+          </button>
+          {nearMeActive && (
+            <button
+              onClick={() => {
+                setNearMeActive(false);
+                setActivePin(null);
+              }}
+              className="px-2.5 py-1.5 bg-red-100 text-red-800 text-[9px] font-semibold rounded-sm border border-red-200 cursor-pointer shadow-sm transition-colors duration-fast"
+            >
+              X 주변필터 끄기
+            </button>
+          )}
             </div>
           </div>
 
           {/* Floating radar effect */}
           {radarRipple && (
-            <div className="absolute inset-0 bg-bento-green/5 z-20 flex items-center justify-center pointer-events-none">
-              <div className="w-48 h-48 rounded-full border border-bento-green/30 animate-ping absolute" />
-              <div className="w-24 h-24 rounded-full border-2 border-bento-green/20 animate-pulse absolute" />
-              <span className="text-xs text-bento-green font-bold tracking-widest uppercase font-mono bg-white/95 px-4 py-2 rounded-full border border-bento-green/20 shadow-sm flex items-center gap-2">
-                <Radio size={14} className="animate-spin-slow text-bento-green" />
+            <div className="absolute inset-0 bg-bento-green/[0.02] z-20 flex items-center justify-center pointer-events-none">
+              <span className="text-xs text-bento-green font-semibold bg-white/95 px-4 py-2 rounded-sm border border-bento-green/20 shadow-sm flex items-center gap-2">
+                <Radio size={14} className="text-bento-green" />
                 <span>내 주변 한산 스팟 검색 중...</span>
               </span>
             </div>
@@ -379,14 +379,14 @@ export default function MapTab({
                 >
                   {/* Active marker glow ring */}
                   {isActive && (
-                    <div className="absolute inset-0 w-8 h-8 -left-1.5 -top-1.5 bg-bento-green/20 border border-bento-green/40 rounded-full animate-ping" />
+                    <div className="absolute inset-0 w-8 h-8 -left-1.5 -top-1.5 bg-bento-green/10 rounded-full scale-150" />
                   )}
 
                   {/* Marker body pin */}
-                  <div className={`px-2.5 py-1.5 rounded-full border font-bold text-[10px] flex items-center gap-1 shadow-sm transition-all duration-300 ${colorClass} ${
-                    isActive ? "scale-115 ring-2 ring-white" : "hover:scale-105"
+                  <div className={`px-2.5 py-1.5 rounded-sm border font-semibold text-[10px] flex items-center gap-1 shadow-sm transition-all duration-base ${colorClass} ${
+                    isActive ? "ring-2 ring-white scale-110" : "hover:scale-105"
                   }`}>
-                    <MapPin size={10} className={isActive ? "animate-bounce" : ""} />
+                    <MapPin size={10} />
                     <span className="truncate max-w-[80px] font-display font-black tracking-tight">{dest.name.split(" ")[1] || dest.name}</span>
                   </div>
 
@@ -403,13 +403,13 @@ export default function MapTab({
 
           {/* BOTTOM FLOATING ACTOR: "내 주변 한산한 곳" RECALCULATOR PRESSET */}
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30">
-            <button
-              onClick={handleNearMeQuery}
-              className="px-4.5 py-3.5 bg-bento-dark hover:bg-bento-dark/95 active:scale-95 text-white text-xs font-bold rounded-full shadow-lg transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap"
-            >
-              <Navigation size={13} className="animate-pulse text-bento-olive" />
-              <span>내 주변 한산한 안심길 재검색</span>
-            </button>
+          <button
+            onClick={handleNearMeQuery}
+            className="px-5 py-3.5 bg-bento-dark hover:bg-bento-dark/95 active:scale-[0.97] text-white text-xs font-semibold rounded-lg shadow-md transition-all duration-base flex items-center gap-2 cursor-pointer whitespace-nowrap"
+          >
+            <Navigation size={13} className="text-bento-olive" />
+            <span>내 주변 한산한 안심길 재검색</span>
+          </button>
           </div>
 
           {/* SLIDING MAP MINI DRAWER: Clicking on a pin slides up details */}
@@ -419,12 +419,12 @@ export default function MapTab({
                 initial={{ y: "110%", opacity: 0.5 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: "110%", opacity: 0.5 }}
-                transition={{ type: "spring", damping: 25, stiffness: 220 }}
-                className="relative w-[calc(100%-2rem)] max-w-md mx-auto mb-4 bg-white border border-bento-dark/10 rounded-3xl p-4.5 shadow-xl z-40 flex gap-4 items-center"
+                transition={{ type: "spring", damping: 30, stiffness: 260 }}
+                className="relative w-[calc(100%-2rem)] max-w-md mx-auto mb-4 bg-white border border-border-default rounded-xl p-4 shadow-lg z-40 flex gap-4 items-center"
               >
                 <button
                   onClick={() => setActivePin(null)}
-                  className="absolute top-3.5 right-3.5 w-6 h-6 rounded-full bg-bento-bg flex items-center justify-center text-bento-dark/50 hover:text-bento-dark cursor-pointer"
+                  className="absolute top-3.5 right-3.5 w-6 h-6 rounded-full bg-bento-bg hover:bg-bento-dark/5 flex items-center justify-center text-bento-dark/50 hover:text-bento-dark cursor-pointer transition-colors duration-fast"
                 >
                   <X size={12} />
                 </button>
@@ -433,26 +433,26 @@ export default function MapTab({
                   src={activePin.image}
                   alt={activePin.name}
                   referrerPolicy="no-referrer"
-                  className="w-20 h-20 rounded-2xl object-cover shrink-0 border border-bento-dark/5"
+                  className="w-20 h-20 rounded-lg object-cover shrink-0 border border-border-subtle"
                 />
 
                 <div className="min-w-0 flex-1 space-y-1.5 text-left">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[9px] font-mono font-bold text-bento-green uppercase bg-bento-green/10 px-2 py-0.5 rounded-md">
+                    <span className="text-[9px] font-semibold text-bento-green bg-bento-green/10 px-2 py-0.5 rounded-sm">
                       {activePin.region}
                     </span>
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                    <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-sm ${
                       activePin.congestionLevel <= 20 
-                        ? "bg-emerald-150 text-emerald-800" 
+                        ? "bg-emerald-50 text-emerald-800" 
                         : activePin.congestionLevel <= 50 
-                        ? "bg-amber-150 text-amber-800" 
-                        : "bg-red-150 text-red-800"
+                        ? "bg-amber-50 text-amber-800" 
+                        : "bg-red-50 text-red-800"
                     }`}>
-                      ● 혼잡도 {activePin.congestionLevel}%
+                      혼잡도 {activePin.congestionLevel}%
                     </span>
                   </div>
 
-                  <h4 className="font-display font-black text-sm text-bento-dark tracking-tight leading-none">
+                  <h4 className="font-display font-bold text-sm text-bento-dark tracking-tight leading-none">
                     {activePin.name}
                   </h4>
 
@@ -463,7 +463,7 @@ export default function MapTab({
                   <div className="pt-1.5 flex gap-2 shrink-0">
                     <button
                       onClick={() => onSelectDestination(activePin)}
-                      className="px-3.5 py-2 bg-bento-green hover:bg-bento-green/90 text-white text-[10px] font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1"
+                      className="px-3.5 py-2 bg-bento-green hover:bg-bento-green/90 text-white text-[10px] font-semibold rounded-sm transition-all duration-base cursor-pointer flex items-center gap-1"
                     >
                       <span>상세정보</span>
                       <ArrowRight size={10} />
@@ -472,7 +472,7 @@ export default function MapTab({
                       onClick={() => {
                         setToastMessage(`${activePin.name} 안심 대안 경로가 GPS 및 지도 오버레이에 정상 매칭되었습니다. (출발: 삼척시 근덕면 공영주차장)`);
                       }}
-                      className="px-3 py-2 bg-bento-dark hover:bg-bento-dark/95 text-white text-[10px] font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1"
+                      className="px-3 py-2 bg-bento-dark hover:bg-bento-dark/95 text-white text-[10px] font-semibold rounded-sm transition-all duration-base cursor-pointer flex items-center gap-1"
                     >
                       <span>경로 안내</span>
                     </button>
@@ -493,18 +493,19 @@ export default function MapTab({
             initial={{ opacity: 0, y: 50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-24 left-4 right-4 md:left-auto md:right-6 md:max-w-md bg-bento-dark text-white p-4.5 rounded-2xl shadow-xl z-[200] border border-white/10 flex items-start gap-3.5"
+            transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="fixed bottom-24 left-4 right-4 md:left-auto md:right-6 md:max-w-md bg-bento-dark text-white p-4 rounded-lg shadow-lg z-[200] border border-white/10 flex items-start gap-3.5"
           >
             <div className="w-5 h-5 rounded-full bg-bento-green flex items-center justify-center text-white shrink-0 mt-0.5">
               <Check size={12} />
             </div>
             <div className="flex-1 text-left">
-              <h5 className="text-xs font-black text-bento-green tracking-wide">실시간 경로 매칭 성공</h5>
-              <p className="text-[11px] text-white/80 leading-relaxed mt-1 font-medium">{toastMessage}</p>
+              <h5 className="text-xs font-bold text-bento-green">실시간 경로 매칭 성공</h5>
+              <p className="text-[11px] text-white/80 leading-relaxed mt-1">{toastMessage}</p>
             </div>
             <button 
               onClick={() => setToastMessage(null)}
-              className="text-white/40 hover:text-white transition-colors cursor-pointer"
+              className="text-white/40 hover:text-white transition-colors duration-fast cursor-pointer"
             >
               <X size={14} />
             </button>

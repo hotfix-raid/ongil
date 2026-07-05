@@ -35,15 +35,15 @@ export default function ImpactSection() {
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-xs font-mono font-bold tracking-widest text-bento-green uppercase block mb-3">
-            Expected Socio-Economic Impact
+          <span className="text-xs font-sans font-semibold tracking-wider text-bento-green block mb-3">
+            Expected Impact
           </span>
           <h2 className="text-3xl sm:text-4xl font-display font-black text-bento-dark tracking-tight leading-snug mb-6">
-            데이터가 그리는 <span className="text-bento-green">기대 효과</span>
+            <span className="text-bento-green">기대 효과</span>
           </h2>
           <p className="text-bento-dark/80 text-sm sm:text-base leading-relaxed">
-            온길은 관광객들의 단순 분산을 유도하는 것을 넘어, 
-            로컬 상권에는 활력을, 교통 약자들에게는 완전한 보행권을 제공하는 지속 가능한 생태계를 구현합니다.
+            온길은 단순 분산을 넘어, 로컬 상권에는 활력을, 
+            교통 약자에게는 완전한 보행권을 제공합니다.
           </p>
         </div>
 
@@ -56,14 +56,14 @@ export default function ImpactSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: idx * 0.15 }}
-              className="bg-white rounded-3xl border border-bento-dark/10 p-8 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+              className="bg-white rounded-xl border border-border-default p-8 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-base ease-out-soft flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-center justify-between mb-6">
-                  <div className="w-12 h-12 rounded-2xl bg-bento-bg flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-md bg-bento-bg flex items-center justify-center">
                     {stat.icon}
                   </div>
-                  <span className="text-[10px] text-bento-dark/40 font-mono font-bold uppercase">
+                  <span className="text-[10px] text-bento-dark/40 font-sans font-semibold">
                     {stat.label}
                   </span>
                 </div>
@@ -77,7 +77,7 @@ export default function ImpactSection() {
                 </h3>
               </div>
 
-              <p className="text-bento-dark/60 text-xs sm:text-sm leading-relaxed border-t border-bento-dark/5 pt-4 mt-4">
+              <p className="text-bento-dark/60 text-xs sm:text-sm leading-relaxed border-t border-border-subtle pt-4 mt-4">
                 {stat.description}
               </p>
             </motion.div>

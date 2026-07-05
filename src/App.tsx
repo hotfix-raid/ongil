@@ -147,7 +147,7 @@ export default function App() {
     <div className="min-h-screen bg-bento-bg font-sans antialiased text-bento-dark selection:bg-bento-green selection:text-white flex flex-col">
       
       {/* 1. TOP GLOBAL STICKY HEADER */}
-      <header className="sticky top-0 z-[100] bg-bento-bg/95 backdrop-blur-md border-b border-bento-dark/10 shadow-xs">
+      <header className="sticky top-0 z-[100] bg-bento-bg/95 backdrop-blur-md border-b border-border-default shadow-sm">
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
           
           {/* Brand Logo */}
@@ -156,9 +156,9 @@ export default function App() {
               setViewMode("intro");
               window.scrollTo({ top: 0, behavior: "smooth" });
             }} 
-            className="flex items-center gap-2 text-bento-dark hover:opacity-90 transition-opacity cursor-pointer"
+            className="flex items-center gap-2 text-bento-dark hover:opacity-90 transition-opacity duration-fast cursor-pointer"
           >
-            <div className="w-8 h-8 rounded-full bg-bento-green flex items-center justify-center text-white shadow-xs">
+            <div className="w-8 h-8 rounded-full bg-bento-green flex items-center justify-center text-white">
               <Compass size={18} className="animate-spin-slow" />
             </div>
             <span className="font-display font-black tracking-tight text-sm sm:text-base">
@@ -167,23 +167,23 @@ export default function App() {
           </button>
 
           {/* Quick status badge / Action */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
 
             {user ? (
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5 bg-white border border-bento-dark/10 px-2.5 py-1.5 rounded-xl">
+                <div className="flex items-center gap-1.5 bg-white border border-border-default px-2.5 py-1.5 rounded-md">
                   <img
                     src={user.avatarUrl}
                     alt={user.name}
-                    className="w-5.5 h-5.5 rounded-full object-cover border border-bento-green/10"
+                    className="w-5 h-5 rounded-full object-cover border border-border-subtle"
                   />
-                  <span className="text-[11px] font-bold text-bento-dark hidden sm:inline">
+                  <span className="text-xs font-semibold text-bento-dark hidden sm:inline">
                     {user.name}님
                   </span>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 text-[11px] font-bold rounded-xl border border-red-100 transition-colors cursor-pointer"
+                  className="px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 text-xs font-medium rounded-sm border border-red-200/60 transition-colors duration-fast cursor-pointer"
                 >
                   로그아웃
                 </button>
@@ -195,7 +195,7 @@ export default function App() {
                     setModalMode("login");
                     setShowLoginModal(true);
                   }}
-                  className="px-3 py-1.5 bg-white hover:bg-bento-bg text-bento-dark border border-bento-dark/15 text-[11px] font-bold rounded-xl transition-all cursor-pointer"
+                  className="px-3 py-1.5 bg-bento-cream hover:bg-bento-dark/5 text-bento-dark border border-border-default text-xs font-medium rounded-sm transition-colors duration-fast cursor-pointer"
                 >
                   로그인
                 </button>
@@ -204,7 +204,7 @@ export default function App() {
                     setModalMode("signup");
                     setShowLoginModal(true);
                   }}
-                  className="px-3 py-1.5 bg-bento-green hover:bg-bento-green/90 text-white text-[11px] font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+                  className="px-3 py-1.5 bg-bento-green hover:bg-bento-ink text-white text-xs font-semibold rounded-sm shadow-sm hover:shadow-md transition-all duration-base cursor-pointer"
                 >
                   회원가입
                 </button>
@@ -223,88 +223,85 @@ export default function App() {
           
           {/* A. DESKTOP SIDEBAR NAVIGATION (Hidden on Mobile) */}
           <aside className="hidden md:flex md:w-56 shrink-0 flex-col gap-2">
-            <div className="bg-white p-4.5 rounded-[2rem] border border-bento-dark/10 shadow-xs space-y-1.5 sticky top-22">
-              <span className="text-[9px] font-mono font-bold text-bento-dark/40 uppercase tracking-widest block pl-2.5 mb-2">
-                MAIN NAVIGATION
-              </span>
+            <div className="bg-white p-4 rounded-lg border border-border-subtle shadow-sm space-y-1 sticky top-22">
 
               {/* Home */}
               <button
                 onClick={() => handleNavigateToTab("home")}
-                className={`w-full px-4 py-3 rounded-2xl text-xs font-bold text-left flex items-center gap-3 transition-all cursor-pointer ${
+                className={`w-full px-4 py-2.5 rounded-md text-sm font-medium text-left flex items-center gap-3 transition-colors duration-fast cursor-pointer relative ${
                   activeTab === "home"
-                    ? "bg-bento-green text-white shadow-xs"
-                    : "text-bento-dark/70 hover:bg-bento-bg"
+                    ? "bg-bento-green/10 text-bento-green before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-[3px] before:h-5 before:rounded-full before:bg-bento-green"
+                    : "text-bento-dark/70 hover:bg-bento-cream/60 hover:text-bento-dark"
                 }`}
               >
-                <Compass size={16} />
+                <Compass size={16} strokeWidth={activeTab === "home" ? 2.5 : 2} />
                 <span>추천 홈</span>
               </button>
 
               {/* Search */}
               <button
                 onClick={() => handleNavigateToTab("search")}
-                className={`w-full px-4 py-3 rounded-2xl text-xs font-bold text-left flex items-center gap-3 transition-all cursor-pointer ${
+                className={`w-full px-4 py-2.5 rounded-md text-sm font-medium text-left flex items-center gap-3 transition-colors duration-fast cursor-pointer relative ${
                   activeTab === "search"
-                    ? "bg-bento-green text-white shadow-xs"
-                    : "text-bento-dark/70 hover:bg-bento-bg"
+                    ? "bg-bento-green/10 text-bento-green before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-[3px] before:h-5 before:rounded-full before:bg-bento-green"
+                    : "text-bento-dark/70 hover:bg-bento-cream/60 hover:text-bento-dark"
                 }`}
               >
-                <Search size={16} />
+                <Search size={16} strokeWidth={activeTab === "search" ? 2.5 : 2} />
                 <span>여정 탐색</span>
               </button>
 
               {/* Map */}
               <button
                 onClick={() => handleNavigateToTab("map")}
-                className={`w-full px-4 py-3 rounded-2xl text-xs font-bold text-left flex items-center gap-3 transition-all cursor-pointer ${
+                className={`w-full px-4 py-2.5 rounded-md text-sm font-medium text-left flex items-center gap-3 transition-colors duration-fast cursor-pointer relative ${
                   activeTab === "map"
-                    ? "bg-bento-green text-white shadow-xs"
-                    : "text-bento-dark/70 hover:bg-bento-bg"
+                    ? "bg-bento-green/10 text-bento-green before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-[3px] before:h-5 before:rounded-full before:bg-bento-green"
+                    : "text-bento-dark/70 hover:bg-bento-cream/60 hover:text-bento-dark"
                 }`}
               >
-                <MapIcon size={16} />
+                <MapIcon size={16} strokeWidth={activeTab === "map" ? 2.5 : 2} />
                 <span>안심 관측도</span>
               </button>
 
               {/* Course */}
               <button
                 onClick={() => handleNavigateToTab("course")}
-                className={`w-full px-4 py-3 rounded-2xl text-xs font-bold text-left flex items-center gap-3 transition-all cursor-pointer ${
+                className={`w-full px-4 py-2.5 rounded-md text-sm font-medium text-left flex items-center gap-3 transition-colors duration-fast cursor-pointer relative ${
                   activeTab === "course"
-                    ? "bg-bento-green text-white shadow-xs"
-                    : "text-bento-dark/70 hover:bg-bento-bg"
+                    ? "bg-bento-green/10 text-bento-green before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-[3px] before:h-5 before:rounded-full before:bg-bento-green"
+                    : "text-bento-dark/70 hover:bg-bento-cream/60 hover:text-bento-dark"
                 }`}
               >
-                <Footprints size={16} />
+                <Footprints size={16} strokeWidth={activeTab === "course" ? 2.5 : 2} />
                 <span>걷기 코스</span>
               </button>
 
               {/* MY Profile */}
               <button
                 onClick={() => handleNavigateToTab("my")}
-                className={`w-full px-4 py-3 rounded-2xl text-xs font-bold text-left flex items-center gap-3 transition-all cursor-pointer relative ${
+                className={`w-full px-4 py-2.5 rounded-md text-sm font-medium text-left flex items-center gap-3 transition-colors duration-fast cursor-pointer relative ${
                   activeTab === "my"
-                    ? "bg-bento-green text-white shadow-xs"
-                    : "text-bento-dark/70 hover:bg-bento-bg"
+                    ? "bg-bento-green/10 text-bento-green before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-[3px] before:h-5 before:rounded-full before:bg-bento-green"
+                    : "text-bento-dark/70 hover:bg-bento-cream/60 hover:text-bento-dark"
                 }`}
               >
-                <User size={16} />
+                <User size={16} strokeWidth={activeTab === "my" ? 2.5 : 2} />
                 <span>마이 페이지</span>
                 
                 {/* Visual indicator when defaults are saved */}
                 {Object.values(accessibilityDefaults).some(Boolean) && (
-                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-amber-400" />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-bento-green animate-pulse" />
                 )}
               </button>
 
               {/* Direct callout to documentation */}
-              <div className="pt-4 mt-4 border-t border-bento-dark/5 text-center">
+              <div className="pt-3 mt-3 border-t border-border-subtle">
                 <button
                   onClick={() => setViewMode("intro")}
-                  className="text-[10px] font-bold text-bento-green hover:underline flex items-center justify-center gap-1.5 w-full cursor-pointer"
+                  className="text-xs font-medium text-bento-stone hover:text-bento-ink flex items-center justify-center gap-1.5 w-full py-2 rounded-md hover:bg-bento-cream/50 transition-colors duration-fast cursor-pointer"
                 >
-                  <BookOpen size={11} />
+                  <BookOpen size={14} />
                   <span>온길 철학 기획관람가기</span>
                 </button>
               </div>
@@ -366,65 +363,65 @@ export default function App() {
           </main>
 
           {/* C. MOBILE BOTTOM NAVIGATION BAR (Hidden on Desktop) */}
-          <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-bento-dark/10 px-2 py-2 flex justify-around items-center z-[90] shadow-lg">
+          <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-border-default px-2 py-2 flex justify-around items-center z-[90] shadow-md">
             
             {/* Home */}
             <button
               onClick={() => handleNavigateToTab("home")}
-              className={`flex flex-col items-center justify-center w-14 py-1.5 rounded-2xl transition-all cursor-pointer ${
-                activeTab === "home" ? "text-bento-green bg-bento-green/10 font-bold" : "text-bento-dark/50"
+              className={`flex flex-col items-center justify-center w-14 py-2 rounded-lg transition-colors duration-fast cursor-pointer ${
+                activeTab === "home" ? "text-bento-green bg-bento-green/[0.06] font-semibold" : "text-bento-dark/50 hover:text-bento-dark/70"
               }`}
             >
-              <Compass size={18} className={activeTab === "home" ? "scale-110" : ""} />
-              <span className="text-[9px] mt-1 font-sans">추천홈</span>
+              <Compass size={20} strokeWidth={activeTab === "home" ? 2.5 : 2} />
+              <span className="text-[10px] mt-1 font-medium leading-none">추천홈</span>
             </button>
 
             {/* Search */}
             <button
               onClick={() => handleNavigateToTab("search")}
-              className={`flex flex-col items-center justify-center w-14 py-1.5 rounded-2xl transition-all cursor-pointer ${
-                activeTab === "search" ? "text-bento-green bg-bento-green/10 font-bold" : "text-bento-dark/50"
+              className={`flex flex-col items-center justify-center w-14 py-2 rounded-lg transition-colors duration-fast cursor-pointer ${
+                activeTab === "search" ? "text-bento-green bg-bento-green/[0.06] font-semibold" : "text-bento-dark/50 hover:text-bento-dark/70"
               }`}
             >
-              <Search size={18} className={activeTab === "search" ? "scale-110" : ""} />
-              <span className="text-[9px] mt-1 font-sans">탐색</span>
+              <Search size={20} strokeWidth={activeTab === "search" ? 2.5 : 2} />
+              <span className="text-[10px] mt-1 font-medium leading-none">탐색</span>
             </button>
 
             {/* Map */}
             <button
               onClick={() => handleNavigateToTab("map")}
-              className={`flex flex-col items-center justify-center w-14 py-1.5 rounded-2xl transition-all cursor-pointer ${
-                activeTab === "map" ? "text-bento-green bg-bento-green/10 font-bold" : "text-bento-dark/50"
+              className={`flex flex-col items-center justify-center w-14 py-2 rounded-lg transition-colors duration-fast cursor-pointer ${
+                activeTab === "map" ? "text-bento-green bg-bento-green/[0.06] font-semibold" : "text-bento-dark/50 hover:text-bento-dark/70"
               }`}
             >
-              <MapIcon size={18} className={activeTab === "map" ? "scale-110" : ""} />
-              <span className="text-[9px] mt-1 font-sans">관측도</span>
+              <MapIcon size={20} strokeWidth={activeTab === "map" ? 2.5 : 2} />
+              <span className="text-[10px] mt-1 font-medium leading-none">관측도</span>
             </button>
 
             {/* Course */}
             <button
               onClick={() => handleNavigateToTab("course")}
-              className={`flex flex-col items-center justify-center w-14 py-1.5 rounded-2xl transition-all cursor-pointer ${
-                activeTab === "course" ? "text-bento-green bg-bento-green/10 font-bold" : "text-bento-dark/50"
+              className={`flex flex-col items-center justify-center w-14 py-2 rounded-lg transition-colors duration-fast cursor-pointer ${
+                activeTab === "course" ? "text-bento-green bg-bento-green/[0.06] font-semibold" : "text-bento-dark/50 hover:text-bento-dark/70"
               }`}
             >
-              <Footprints size={18} className={activeTab === "course" ? "scale-110" : ""} />
-              <span className="text-[9px] mt-1 font-sans">걷기길</span>
+              <Footprints size={20} strokeWidth={activeTab === "course" ? 2.5 : 2} />
+              <span className="text-[10px] mt-1 font-medium leading-none">걷기길</span>
             </button>
 
             {/* MY */}
             <button
               onClick={() => handleNavigateToTab("my")}
-              className={`flex flex-col items-center justify-center w-14 py-1.5 rounded-2xl transition-all cursor-pointer relative ${
-                activeTab === "my" ? "text-bento-green bg-bento-green/10 font-bold" : "text-bento-dark/50"
+              className={`flex flex-col items-center justify-center w-14 py-2 rounded-lg transition-colors duration-fast cursor-pointer relative ${
+                activeTab === "my" ? "text-bento-green bg-bento-green/[0.06] font-semibold" : "text-bento-dark/50 hover:text-bento-dark/70"
               }`}
             >
-              <User size={18} className={activeTab === "my" ? "scale-110" : ""} />
-              <span className="text-[9px] mt-1 font-sans">MY</span>
+              <User size={20} strokeWidth={activeTab === "my" ? 2.5 : 2} />
+              <span className="text-[10px] mt-1 font-medium leading-none">MY</span>
               
               {/* Micro dot on Mobile bottom bar if filters are saved */}
               {Object.values(accessibilityDefaults).some(Boolean) && (
-                <span className="absolute top-1.5 right-4 w-1.5 h-1.5 rounded-full bg-amber-400" />
+                <span className="absolute top-2 right-3 w-1.5 h-1.5 rounded-full bg-bento-green animate-pulse" />
               )}
             </button>
 

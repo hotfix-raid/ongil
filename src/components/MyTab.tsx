@@ -88,7 +88,7 @@ export default function MyTab({
     <div className="space-y-6 animate-fadeIn pb-12">
       
       {/* 1. Header & Profile Banner */}
-      <div className="bg-white rounded-[2.5rem] border border-bento-dark/10 p-6 flex flex-col sm:flex-row items-center gap-5 shadow-xs relative overflow-hidden">
+      <div className="bg-white rounded-xl border border-border-default p-6 flex flex-col sm:flex-row items-center gap-5 shadow-sm relative overflow-hidden">
         
         {user ? (
           <>
@@ -110,7 +110,7 @@ export default function MyTab({
                 <h3 className="font-display font-black text-lg text-bento-dark tracking-tight leading-none">
                   {user.name} 님 (관광 약자 수호 길벗)
                 </h3>
-                <span className="bg-bento-olive text-bento-dark text-[9px] font-bold px-2 py-0.5 rounded-full w-max mx-auto sm:mx-0">
+                <span className="bg-bento-olive text-bento-dark text-[9px] font-semibold px-2 py-0.5 rounded-sm w-max mx-auto sm:mx-0">
                   안심 보행 보조단
                 </span>
               </div>
@@ -135,7 +135,7 @@ export default function MyTab({
           <>
             {/* Anonymous Profile */}
             <div className="relative">
-              <div className="w-20 h-20 rounded-full bg-bento-dark/5 border-2 border-dashed border-bento-dark/20 flex items-center justify-center text-bento-dark/40 shrink-0">
+              <div className="w-20 h-20 rounded-full bg-bento-dark/5 border-2 border-dashed border-border-strong flex items-center justify-center text-bento-dark/40 shrink-0">
                 <User size={36} className="text-bento-dark/30" />
               </div>
             </div>
@@ -152,9 +152,9 @@ export default function MyTab({
               </p>
               <button
                 onClick={onLoginClick}
-                className="px-4 py-2 bg-bento-green hover:bg-bento-green/90 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-xs active:scale-98"
+                className="px-4 py-2 bg-bento-green hover:bg-bento-green/90 text-white text-xs font-semibold rounded-sm transition-all duration-base cursor-pointer shadow-sm active:scale-[0.98]"
               >
-                카카오 로그인으로 3초 만에 시작하기
+                카카오 로그인으로 시작하기
               </button>
             </div>
           </>
@@ -171,21 +171,21 @@ export default function MyTab({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="p-3.5 bg-bento-green text-white text-xs font-bold rounded-2xl flex items-center gap-2.5 shadow-sm"
+            className="p-3.5 bg-bento-green text-white text-xs font-semibold rounded-lg flex items-center gap-2.5 shadow-sm"
           >
-            <Sparkles size={14} className="animate-pulse" />
+            <Sparkles size={14} />
             <span>{toastMessage}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* 3. Sub Navigation inside Profile tab */}
-      <div className="flex bg-white rounded-2xl p-1 border border-bento-dark/10 max-w-sm mx-auto sm:mx-0">
+      <div className="flex bg-white rounded-lg p-1 border border-border-default max-w-sm mx-auto sm:mx-0">
         <button
           onClick={() => setActiveSubTab("profile")}
-          className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+          className={`flex-1 py-2 text-xs font-semibold rounded-sm transition-all duration-base cursor-pointer flex items-center justify-center gap-1.5 ${
             activeSubTab === "profile" 
-              ? "bg-bento-green text-white shadow-xs" 
+              ? "bg-bento-green text-white shadow-sm" 
               : "text-bento-dark/60 hover:bg-bento-dark/5"
           }`}
         >
@@ -194,9 +194,9 @@ export default function MyTab({
         </button>
         <button
           onClick={() => setActiveSubTab("stamp")}
-          className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+          className={`flex-1 py-2 text-xs font-semibold rounded-sm transition-all duration-base cursor-pointer flex items-center justify-center gap-1.5 ${
             activeSubTab === "stamp" 
-              ? "bg-bento-green text-white shadow-xs" 
+              ? "bg-bento-green text-white shadow-sm" 
               : "text-bento-dark/60 hover:bg-bento-dark/5"
           }`}
         >
@@ -208,17 +208,17 @@ export default function MyTab({
       {/* 4. DETAIL RENDERING */}
       <div className="relative">
         {!user && (
-          <div className="absolute inset-0 bg-white/70 backdrop-blur-xs rounded-[2.5rem] z-50 flex flex-col items-center justify-center space-y-3 p-6 text-center">
+          <div className="absolute inset-0 bg-white/70 backdrop-blur-xs rounded-xl z-50 flex flex-col items-center justify-center space-y-3 p-6 text-center">
             <div className="w-12 h-12 rounded-full bg-bento-dark/5 flex items-center justify-center text-bento-dark/60">
               <Lock size={20} />
             </div>
-            <span className="text-xs font-bold text-bento-dark">안심 기준 및 스탬프북 잠김</span>
+            <span className="text-xs font-semibold text-bento-dark">안심 기준 및 스탬프북 잠김</span>
             <p className="text-[11px] text-bento-dark/50 max-w-xs leading-relaxed">
               카카오 계정 연동 후에 상세 스탬프 미션 현황 조회와 안심 필터 저장 기능을 이용하실 수 있습니다.
             </p>
             <button
               onClick={onLoginClick}
-              className="px-4 py-2 bg-bento-dark text-white text-xs font-bold rounded-xl hover:bg-bento-dark/95 transition-all cursor-pointer shadow-xs active:scale-98"
+              className="px-4 py-2 bg-bento-dark text-white text-xs font-semibold rounded-sm hover:bg-bento-dark/95 transition-all duration-base cursor-pointer shadow-sm active:scale-[0.98]"
             >
               로그인 잠금해제
             </button>
@@ -230,132 +230,132 @@ export default function MyTab({
             <div className="space-y-6">
               
               {/* A. 나만의 안심 보행 디폴트 필터값 설정 (Accessibility defaults editor) */}
-              <div className="bg-white rounded-[2.5rem] border border-bento-dark/10 p-5 space-y-4 shadow-xs">
+              <div className="bg-white rounded-xl border border-border-default p-5 space-y-4 shadow-sm">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <Sliders size={16} className="text-bento-green" />
-                    <h4 className="font-display font-black text-sm text-bento-dark">
-                      나의 안심보행 보조 기본값 설정 (Accessibility Defaults)
+                    <h4 className="font-display font-bold text-sm text-bento-dark">
+                      나의 안심보행 기본값 설정
                     </h4>
                   </div>
                   <p className="text-[11px] text-bento-dark/50">
-                    여기서 설정하신 교통 기준은 앱이 켜질 때마다 홈 화면의 날씨 큐레이션 및 검색 필터에 완전히 자동 동기화되어, 매번 수동 선택하는 수고를 덜어드립니다.
+                    여기서 설정한 기준은 앱 실행 시 검색 필터에 자동 동기화되어 매번 수동 선택할 필요가 없습니다.
                   </p>
                 </div>
 
                 <div className="space-y-2.5">
                   
                   {/* Wheelchair */}
-                  <div className="flex items-center justify-between p-3.5 bg-bento-bg rounded-2xl">
+                  <div className="flex items-center justify-between p-3.5 bg-bento-bg rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-bento-green/10 text-bento-green flex items-center justify-center shrink-0">
                         <Accessibility size={16} />
                       </div>
                       <div className="text-left">
-                        <span className="text-xs font-bold block text-bento-dark">휠체어 안전보행로 전용</span>
-                        <span className="text-[10px] text-bento-dark/50 block">계단 완전 제거, 경사도 5% 미만 및 보행 안전난간 필수 기준</span>
+                        <span className="text-xs font-semibold block text-bento-dark">휠체어 안전보행로</span>
+                        <span className="text-[10px] text-bento-dark/50 block">계단 제거, 경사도 5% 미만, 안전난간 기준</span>
                       </div>
                     </div>
                     <button
                       onClick={() => handleToggle("wheelchair", !accessibilityDefaults.wheelchair)}
-                      className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${
-                        accessibilityDefaults.wheelchair ? "bg-bento-green" : "bg-bento-dark/20"
+                      className={`w-10 h-5.5 rounded-full transition-all duration-base ease-in-out-soft relative cursor-pointer ${
+                        accessibilityDefaults.wheelchair ? "bg-bento-green" : "bg-bento-stone"
                       }`}
                     >
-                      <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${
-                        accessibilityDefaults.wheelchair ? "left-5.25" : "left-0.75"
+                      <div className={`w-4 h-4 rounded-full bg-white absolute top-[3px] transition-all duration-base ease-in-out-soft ${
+                        accessibilityDefaults.wheelchair ? "left-[22px]" : "left-1"
                       }`} />
                     </button>
                   </div>
 
                   {/* Stroller */}
-                  <div className="flex items-center justify-between p-3.5 bg-bento-bg rounded-2xl">
+                  <div className="flex items-center justify-between p-3.5 bg-bento-bg rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
                         <Baby size={16} />
                       </div>
                       <div className="text-left">
-                        <span className="text-xs font-bold block text-bento-dark">유모차 동반 수동설계 통로</span>
-                        <span className="text-[10px] text-bento-dark/50 block">비포장 비탈길 전면 우회, 중간중간 기저귀 갈이대 구비처 타겟</span>
+                        <span className="text-xs font-semibold block text-bento-dark">유모차 동반 통로</span>
+                        <span className="text-[10px] text-bento-dark/50 block">비포장 비탈길 우회, 기저귀 갈이대 구비처</span>
                       </div>
                     </div>
                     <button
                       onClick={() => handleToggle("stroller", !accessibilityDefaults.stroller)}
-                      className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${
-                        accessibilityDefaults.stroller ? "bg-bento-green" : "bg-bento-dark/20"
+                      className={`w-10 h-5.5 rounded-full transition-all duration-base ease-in-out-soft relative cursor-pointer ${
+                        accessibilityDefaults.stroller ? "bg-bento-green" : "bg-bento-stone"
                       }`}
                     >
-                      <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${
-                        accessibilityDefaults.stroller ? "left-5.25" : "left-0.75"
+                      <div className={`w-4 h-4 rounded-full bg-white absolute top-[3px] transition-all duration-base ease-in-out-soft ${
+                        accessibilityDefaults.stroller ? "left-[22px]" : "left-1"
                       }`} />
                     </button>
                   </div>
 
                   {/* Pet Friendly */}
-                  <div className="flex items-center justify-between p-3.5 bg-bento-bg rounded-2xl">
+                  <div className="flex items-center justify-between p-3.5 bg-bento-bg rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-orange-500/10 text-orange-600 flex items-center justify-center shrink-0">
                         <PawPrint size={16} />
                       </div>
                       <div className="text-left">
-                        <span className="text-xs font-bold block text-bento-dark">반려동물 동반 산책 (댕수욕장 동기화)</span>
-                        <span className="text-[10px] text-bento-dark/50 block">목줄 착용 오프라인 산책 공식 허용 관광지 우선 추천</span>
+                        <span className="text-xs font-semibold block text-bento-dark">반려동물 동반 산책</span>
+                        <span className="text-[10px] text-bento-dark/50 block">목줄 착용, 공식 허용 관광지 우선 추천</span>
                       </div>
                     </div>
                     <button
                       onClick={() => handleToggle("petFriendly", !accessibilityDefaults.petFriendly)}
-                      className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${
-                        accessibilityDefaults.petFriendly ? "bg-bento-green" : "bg-bento-dark/20"
+                      className={`w-10 h-5.5 rounded-full transition-all duration-base ease-in-out-soft relative cursor-pointer ${
+                        accessibilityDefaults.petFriendly ? "bg-bento-green" : "bg-bento-stone"
                       }`}
                     >
-                      <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${
-                        accessibilityDefaults.petFriendly ? "left-5.25" : "left-0.75"
+                      <div className={`w-4 h-4 rounded-full bg-white absolute top-[3px] transition-all duration-base ease-in-out-soft ${
+                        accessibilityDefaults.petFriendly ? "left-[22px]" : "left-1"
                       }`} />
                     </button>
                   </div>
 
                   {/* Senior */}
-                  <div className="flex items-center justify-between p-3.5 bg-bento-bg rounded-2xl">
+                  <div className="flex items-center justify-between p-3.5 bg-bento-bg rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0">
                         <User size={16} />
                       </div>
                       <div className="text-left">
-                        <span className="text-xs font-bold block text-bento-dark">실버 케어 스마트 쉼터 지향</span>
-                        <span className="text-[10px] text-bento-dark/50 block">도보 200m 이내 앉아서 쉴 수 있는 등받이 벤치 및 차양막 완비</span>
+                        <span className="text-xs font-semibold block text-bento-dark">실버 케어 쉼터</span>
+                        <span className="text-[10px] text-bento-dark/50 block">도보 200m 이내 등받이 벤치 및 차양막 완비</span>
                       </div>
                     </div>
                     <button
                       onClick={() => handleToggle("senior", !accessibilityDefaults.senior)}
-                      className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${
-                        accessibilityDefaults.senior ? "bg-bento-green" : "bg-bento-dark/20"
+                      className={`w-10 h-5.5 rounded-full transition-all duration-base ease-in-out-soft relative cursor-pointer ${
+                        accessibilityDefaults.senior ? "bg-bento-green" : "bg-bento-stone"
                       }`}
                     >
-                      <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${
-                        accessibilityDefaults.senior ? "left-5.25" : "left-0.75"
+                      <div className={`w-4 h-4 rounded-full bg-white absolute top-[3px] transition-all duration-base ease-in-out-soft ${
+                        accessibilityDefaults.senior ? "left-[22px]" : "left-1"
                       }`} />
                     </button>
                   </div>
 
                   {/* Parking */}
-                  <div className="flex items-center justify-between p-3.5 bg-bento-bg rounded-2xl">
+                  <div className="flex items-center justify-between p-3.5 bg-bento-bg rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-teal-500/10 text-teal-600 flex items-center justify-center shrink-0">
                         <Car size={16} />
                       </div>
                       <div className="text-left">
-                        <span className="text-xs font-bold block text-bento-dark">장애인/약자 전용주차 완벽인접</span>
-                        <span className="text-[10px] text-bento-dark/50 block">휠체어 하차를 지원하는 평지 무료 공영주차장 완비</span>
+                        <span className="text-xs font-semibold block text-bento-dark">장애인 전용 주차</span>
+                        <span className="text-[10px] text-bento-dark/50 block">평지 무료 공영주차장, 휠체어 하차 지원</span>
                       </div>
                     </div>
                     <button
                       onClick={() => handleToggle("parking", !accessibilityDefaults.parking)}
-                      className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${
-                        accessibilityDefaults.parking ? "bg-bento-green" : "bg-bento-dark/20"
+                      className={`w-10 h-5.5 rounded-full transition-all duration-base ease-in-out-soft relative cursor-pointer ${
+                        accessibilityDefaults.parking ? "bg-bento-green" : "bg-bento-stone"
                       }`}
                     >
-                      <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${
-                        accessibilityDefaults.parking ? "left-5.25" : "left-0.75"
+                      <div className={`w-4 h-4 rounded-full bg-white absolute top-[3px] transition-all duration-base ease-in-out-soft ${
+                        accessibilityDefaults.parking ? "left-[22px]" : "left-1"
                       }`} />
                     </button>
                   </div>
@@ -366,15 +366,15 @@ export default function MyTab({
               {/* B. 내가 찜한 안심 코스 리스트 (Liked List) */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-mono font-bold tracking-widest text-bento-dark/40 uppercase pl-1">
-                    내가 저장한 안심 힐링 명소 ({savedDestinations.length}개)
+                  <h4 className="text-xs font-semibold text-bento-dark/50 pl-1">
+                    저장한 안심 명소 ({savedDestinations.length}개)
                   </h4>
                   {savedDestinations.length > 0 && (
                     <button
                       onClick={onClearLikes}
-                      className="text-[10px] font-mono text-red-700 bg-red-100 hover:bg-red-200 px-2.5 py-1 rounded-full cursor-pointer transition-colors"
+                      className="text-[10px] font-medium text-red-700 bg-red-100 hover:bg-red-200 px-2.5 py-1 rounded-sm cursor-pointer transition-colors duration-fast"
                     >
-                      전체 지우기 X
+                      전체 지우기
                     </button>
                   )}
                 </div>
@@ -385,24 +385,24 @@ export default function MyTab({
                       <div
                         key={dest.id}
                         onClick={() => onSelectDestination(dest)}
-                        className="bg-white p-4 rounded-3xl border border-bento-dark/5 flex gap-4 hover:shadow-md transition-all cursor-pointer items-center text-left"
+                        className="bg-white p-4 rounded-lg border border-border-default flex gap-4 hover:shadow-md transition-all duration-base cursor-pointer items-center text-left"
                       >
                         <img
                           src={dest.image}
                           alt={dest.name}
                           referrerPolicy="no-referrer"
-                          className="w-16 h-16 rounded-2xl object-cover shrink-0 border border-bento-dark/5"
+                          className="w-16 h-16 rounded-md object-cover shrink-0 border border-border-subtle"
                         />
                         <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex items-center justify-between">
-                            <span className="text-[9px] font-mono font-bold text-bento-green uppercase">
+                            <span className="text-[9px] font-semibold text-bento-green">
                               {dest.region} · {dest.category}
                             </span>
                             <span className="text-[9px] text-bento-dark/50">
                               혼잡 {dest.congestionLevel}%
                             </span>
                           </div>
-                          <h5 className="font-display font-black text-sm text-bento-dark tracking-tight truncate leading-none">
+                          <h5 className="font-display font-bold text-sm text-bento-dark tracking-tight truncate leading-none">
                             {dest.name}
                           </h5>
                           <p className="text-[10px] text-bento-dark/40 truncate leading-relaxed">
@@ -414,11 +414,13 @@ export default function MyTab({
                   </div>
                 ) : (
                   /* Empty Saved State */
-                  <div className="p-8 text-center bg-white rounded-[2rem] border border-bento-dark/10 shadow-xs max-w-sm mx-auto space-y-2.5 flex flex-col items-center justify-center">
-                    <Heart className="text-red-500 fill-red-500 animate-pulse" size={32} />
-                    <h5 className="text-xs font-bold text-bento-dark mt-2">저장된 코스가 아직 없습니다.</h5>
+                  <div className="p-8 text-center bg-white rounded-xl border border-border-default shadow-sm max-w-sm mx-auto space-y-3 flex flex-col items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+                      <Heart className="text-red-400" size={24} />
+                    </div>
+                    <h5 className="text-xs font-semibold text-bento-dark">저장된 코스가 없어요</h5>
                     <p className="text-[11px] text-bento-dark/50 px-4 leading-relaxed">
-                      홈 화면이나 상세 검색 피드에서 하트 버튼을 눌러, 나만의 무장애 한산 안심길 목록을 커스텀 빌드해 보세요!
+                      홈 화면이나 검색 결과에서 하트 버튼을 눌러 나만의 안심 코스 목록을 만들어 보세요!
                     </p>
                   </div>
                 )}
@@ -428,16 +430,16 @@ export default function MyTab({
           ) : (
             
             /* 🏆 두루누비 스탬프북 (Durunubi Walk Goals & Stampbook Gamification) */
-            <div className="bg-white rounded-[2.5rem] border border-bento-dark/10 p-6 space-y-6 shadow-xs text-center md:text-left">
+            <div className="bg-white rounded-xl border border-border-default p-6 space-y-6 shadow-sm text-center md:text-left">
               <div className="space-y-1">
-                <div className="flex items-center justify-center md:justify-start gap-2 text-bento-green">
-                  <Award size={18} />
-                  <h4 className="font-display font-black text-sm text-bento-dark">
-                    강원 소멸지역 완보 안심 스탬프북 (Active Stampbook)
+                <div className="flex items-center justify-center md:justify-start gap-2">
+                  <Award size={18} className="text-bento-green" />
+                  <h4 className="font-display font-bold text-sm text-bento-dark">
+                    강원 소멸지역 안심 스탬프북
                   </h4>
                 </div>
                 <p className="text-[11px] text-bento-dark/50">
-                  인근 89개 인구소멸 기여 대상구역의 한산 노선을 완보하고, 로컬 마일리지 및 지자체 전용 할인혜택을 정복하세요!
+                  인근 인구소멸 대상구역의 한산 노선을 완보하고 로컬 마일리지 및 할인혜택을 받으세요!
                 </p>
               </div>
 
@@ -447,29 +449,33 @@ export default function MyTab({
                   <div
                     key={stamp.id}
                     onClick={() => {
-                      alert(`스탬프 정보 [${stamp.county}]: ${stamp.name}\n${stamp.unlocked ? `완보 해제 완료 (${stamp.date}) | 혜택: ${stamp.prize}` : "아직 미답사 구역입니다. 한산 걷기 코스에 참가해 스탬프를 받으세요!"}`);
+                      const info = stamp.unlocked
+                        ? `${stamp.county} ${stamp.name} · 완보 해제 (${stamp.date}) · ${stamp.prize}`
+                        : `${stamp.county} ${stamp.name} · 미답사 구역`;
+                      setToastMessage(info);
+                      setTimeout(() => setToastMessage(""), 4000);
                     }}
-                    className={`p-4 rounded-[2rem] border relative overflow-hidden flex flex-col items-center justify-between transition-all cursor-pointer text-center aspect-square ${
+                    className={`p-4 rounded-xl border relative overflow-hidden flex flex-col items-center justify-between transition-all duration-base cursor-pointer text-center aspect-square ${
                       stamp.unlocked 
                         ? "bg-bento-green/5 border-bento-green/30" 
-                        : "bg-bento-dark/[0.02] border-bento-dark/5 opacity-60"
+                        : "bg-bento-dark/[0.02] border-border-default opacity-60"
                     }`}
                   >
                     {/* Stamp Icon */}
-                    <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white text-xs font-black shadow-md bg-gradient-to-tr ${
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md bg-gradient-to-tr ${
                       stamp.unlocked ? stamp.color : "from-gray-400 to-slate-500 saturate-0"
                     }`}>
                       {stamp.unlocked ? (
-                        <span className="flex items-center gap-0.5">✓ 완보</span>
+                        <span>✓</span>
                       ) : (
                         <Lock size={14} className="text-white" />
                       )}
                     </div>
 
                     <div className="space-y-0.5 z-10">
-                      <span className="text-[9px] font-mono font-bold text-bento-dark/40 uppercase block">{stamp.county}</span>
-                      <h5 className="text-[11px] font-black text-bento-dark leading-tight line-clamp-1">{stamp.name.split(" ")[0]}</h5>
-                      <span className="text-[8px] bg-bento-green/10 text-bento-green px-1.5 py-0.5 rounded-full inline-block font-mono">
+                      <span className="text-[9px] font-semibold text-bento-dark/50 block">{stamp.county}</span>
+                      <h5 className="text-[11px] font-bold text-bento-dark leading-tight line-clamp-1">{stamp.name.split(" ")[0]}</h5>
+                      <span className="text-[8px] bg-bento-green/10 text-bento-green px-1.5 py-0.5 rounded-sm inline-block text-[9px]">
                         {stamp.unlocked ? stamp.date : "미해제"}
                       </span>
                     </div>
@@ -481,16 +487,19 @@ export default function MyTab({
               </div>
 
               {/* Stamp benefits banner */}
-              <div className="p-4 bg-bento-bg border border-bento-dark/5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="p-4 bg-bento-bg border border-border-subtle rounded-lg flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="space-y-1 text-center md:text-left">
-                  <span className="text-xs font-bold text-bento-dark block">🎁 해제된 완보 리워드: <strong>2개</strong></span>
+                  <span className="text-xs font-semibold text-bento-dark block">해제된 완보 리워드: <strong>2개</strong></span>
                   <p className="text-[10px] text-bento-dark/50 leading-relaxed">
-                    고성 안심길 정복(고성 특산 미역 할인쿠폰), 삼척 옥빛바다 열린길 통과(삼척 곤드레 한정식 식사권)가 메신저로 전송되었습니다.
+                    고성 안심길 정복(고성 특산 미역 할인쿠폰), 삼척 옥빛바다 열린길 통과(삼척 곤드레 한정식 식사권)가 전송되었습니다.
                   </p>
                 </div>
                 <button
-                  onClick={() => alert("스탬프 쿠폰함 바코드가 생성되었습니다. 강원도 지정 가맹점 스마트폰 화면에 시연해 주세요.")}
-                  className="px-4.5 py-2.5 bg-bento-dark text-white text-[11px] font-bold rounded-xl hover:bg-bento-dark/90 transition-all cursor-pointer shrink-0"
+                  onClick={() => {
+                    setToastMessage("스탬프 쿠폰함 바코드가 생성되었습니다. 강원도 지정 가맹점 스마트폰 화면에 시연해 주세요.");
+                    setTimeout(() => setToastMessage(""), 4000);
+                  }}
+                  className="px-4 py-2.5 bg-bento-dark hover:bg-bento-dark/90 text-white text-[11px] font-semibold rounded-sm transition-all duration-base cursor-pointer shrink-0"
                 >
                   내 쿠폰함 열기
                 </button>
@@ -501,12 +510,12 @@ export default function MyTab({
       </div>
 
       {/* 5. General Utility settings cards (Safe encryption indicator) */}
-      <div className="p-4 bg-bento-dark/[0.03] border border-bento-dark/5 rounded-2xl text-[10px] text-bento-dark/50 leading-relaxed flex gap-2.5 items-start">
+      <div className="p-4 bg-bento-dark/[0.03] border border-border-subtle rounded-lg text-[10px] text-bento-dark/50 leading-relaxed flex gap-2.5 items-start">
         <Info size={12} className="text-bento-green shrink-0 mt-0.5" />
         <div>
-          <span className="font-bold text-bento-dark block mb-0.5">안심 로컬 암호화 및 오프라인 상태 관리</span>
+          <span className="font-semibold text-bento-dark block mb-0.5">안심 로컬 암호화 및 오프라인 상태 관리</span>
           <p>
-            온길은 개인의 거동 상태, 반려동물 품종, 장애 여부 등의 사생활 민감 지표를 외부에 저장하지 않고, 기기 내 안전영역(Secure LocalStorage)에 암호화하여 로컬 캐싱합니다. 안심하고 힐링을 조율하세요.
+            온길은 개인의 거동 상태, 반려동물 품종, 장애 여부 등의 사생활 민감 지표를 외부에 저장하지 않고, 기기 내 안전영역에 암호화하여 로컬 캐싱합니다.
           </p>
         </div>
       </div>

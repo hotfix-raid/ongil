@@ -35,7 +35,7 @@ export default function ProblemSection() {
         
         {/* Section Header */}
         <div className="max-w-3xl mb-16">
-          <span className="text-xs font-mono font-bold tracking-widest text-bento-green uppercase block mb-3">
+          <span className="text-xs font-sans font-semibold tracking-wider text-bento-green block mb-3">
             Why We Need Ongil
           </span>
           <h2 className="text-3xl sm:text-4xl font-display font-black text-bento-dark tracking-tight leading-snug mb-6">
@@ -43,9 +43,9 @@ export default function ProblemSection() {
             <span className="text-bento-green">3가지 구조적 불균형</span>
           </h2>
           <p className="text-bento-dark/80 text-base sm:text-lg leading-relaxed">
-            기존 추천 알고리즘은 오직 '개인 만족도의 단순 극대화'에만 몰두합니다. 그 결과, 
-            인기 있는 곳을 더욱 인기 있게 만들어 체증을 고착화시키고 소외된 지역을 영원히 숨겨둡니다. 
-            온길은 관광지의 가치뿐만 아니라 <strong>지속가능성과 포용성</strong>을 한눈에 설계합니다.
+            기존 추천 방식은 오직 '개인 만족도'만 좇습니다. 
+            그 결과, 인기 지역은 더 붐비고 소외된 곳은 영원히 숨겨집니다. 
+            온길은 관광지의 가치와 <strong>지속가능성·포용성</strong>을 함께 설계합니다.
           </p>
         </div>
 
@@ -58,16 +58,16 @@ export default function ProblemSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
               transition={{ duration: 0.6, delay: idx * 0.15 }}
-              className={`${prob.bgClass} p-8 rounded-3xl border border-bento-dark/10 shadow-xs hover:shadow-sm hover:border-bento-green/30 transition-all duration-300 relative flex flex-col justify-between`}
+              className={`${prob.bgClass} p-8 rounded-xl border border-border-subtle shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-bento-green/30 transition-all duration-base ease-out-soft relative flex flex-col justify-between`}
             >
               <div>
-                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center mb-6 shadow-xs border border-bento-dark/5">
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center mb-6 shadow-sm border border-border-subtle">
                   {prob.icon}
                 </div>
                 <h3 className="text-lg sm:text-xl font-display font-extrabold text-bento-dark mb-1">
                   {prob.title}
                 </h3>
-                <span className="text-xs font-mono text-bento-dark/50 block mb-2 uppercase">
+                <span className="text-xs font-sans text-bento-dark/50 block mb-2">
                   {prob.subtitle}
                 </span>
                 <span className="text-xs font-bold text-bento-green block mb-4">
@@ -87,10 +87,10 @@ export default function ProblemSection() {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mt-12 bg-bento-moss/20 border border-bento-green/15 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
+          className="mt-12 bg-bento-moss/20 border border-bento-green/15 rounded-xl p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
         >
           <div className="flex gap-4 items-start">
-            <div className="p-3 bg-white rounded-full text-bento-green shadow-xs border border-bento-dark/5 mt-1">
+            <div className="p-3 bg-white rounded-full text-bento-green shadow-sm border border-border-subtle mt-1">
               <AlertTriangle size={24} />
             </div>
             <div>
@@ -104,7 +104,7 @@ export default function ProblemSection() {
               </p>
             </div>
           </div>
-          <div className="text-bento-dark/60 text-xs font-mono self-end md:self-auto shrink-0 bg-white/85 px-3 py-1.5 rounded-full border border-bento-green/15 uppercase tracking-wider">
+          <div className="text-bento-dark/60 text-xs font-sans self-end md:self-auto shrink-0 bg-white/85 px-3 py-1.5 rounded-full border border-bento-green/15">
             KTO 빅데이터 팩트
           </div>
         </motion.div>

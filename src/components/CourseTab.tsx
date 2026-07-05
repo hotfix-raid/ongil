@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Footprints, 
@@ -207,6 +207,14 @@ export default function CourseTab({
   const [filterPetFriendly, setFilterPetFriendly] = useState(false);
 
   const [selectedCourse, setSelectedCourse] = useState<WalkingCourse | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
 
   // Filter application
   const filteredCourses = mockCourses.filter(course => {
@@ -223,11 +231,14 @@ export default function CourseTab({
       
       {/* 1. Header */}
       <div className="text-center md:text-left">
-        <span className="text-xs font-mono font-bold tracking-widest text-bento-green uppercase block mb-1">
-          Durunubi Barrier-Free Walking Trails
+        <span className="text-sm font-semibold text-bento-green block mb-1">
+          두루누비 무장애 걷기 코스
         </span>
-        <h2 className="text-2xl font-display font-black text-bento-dark tracking-tight leading-none mb-1.5 flex items-center gap-1.5 justify-center md:justify-start">
-          <span>두루누비 걷기 코스 전용 탐색</span> <Footprints size={22} className="text-bento-green animate-pulse" />
+        <h2 className="text-2xl font-display font-black text-bento-dark tracking-tight leading-none mb-1.5 flex items-center gap-2 justify-center md:justify-start">
+          <span>걷기 코스 전용 탐색</span>
+          <span className="w-8 h-8 rounded-full bg-bento-green/10 flex items-center justify-center">
+            <Footprints size={18} className="text-bento-green" />
+          </span>
         </h2>
         <p className="text-bento-dark/60 text-xs leading-relaxed max-w-2xl">
           지자체 및 문화체육관광부 두루누비 GPS 자료를 기반으로, 
@@ -236,18 +247,18 @@ export default function CourseTab({
       </div>
 
       {/* 2. Interactive Filter Chips Control Panel */}
-      <div className="bg-white p-4.5 rounded-[2rem] border border-bento-dark/10 shadow-xs space-y-3">
+      <div className="bg-white p-4 rounded-xl border border-border-default shadow-sm space-y-3">
         
         {/* Row 1: Regions */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[10px] font-mono font-bold text-bento-dark/40 uppercase w-14 shrink-0">시군 선택:</span>
+          <span className="text-[10px] font-semibold text-bento-dark/50 w-14 shrink-0">시군</span>
           {(["all", "고성", "정선", "태백", "삼척"] as const).map((reg) => (
             <button
               key={reg}
               onClick={() => setSelectedRegion(reg)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-sm text-xs font-medium transition-all duration-base cursor-pointer ${
                 selectedRegion === reg 
-                  ? "bg-bento-green text-white shadow-xs" 
+                  ? "bg-bento-green text-white shadow-sm" 
                   : "bg-bento-bg text-bento-dark/60 hover:bg-bento-dark/5"
               }`}
             >
@@ -258,14 +269,14 @@ export default function CourseTab({
 
         {/* Row 2: Difficulty */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[10px] font-mono font-bold text-bento-dark/40 uppercase w-14 shrink-0">난이도:</span>
+          <span className="text-[10px] font-semibold text-bento-dark/50 w-14 shrink-0">난이도</span>
           {(["all", "쉬움", "보통"] as const).map((diff) => (
             <button
               key={diff}
               onClick={() => setSelectedDifficulty(diff)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-sm text-xs font-medium transition-all duration-base cursor-pointer ${
                 selectedDifficulty === diff 
-                  ? "bg-bento-green text-white shadow-xs" 
+                  ? "bg-bento-green text-white shadow-sm" 
                   : "bg-bento-bg text-bento-dark/60 hover:bg-bento-dark/5"
               }`}
             >
@@ -275,12 +286,12 @@ export default function CourseTab({
         </div>
 
         {/* Row 3: Accessibility */}
-        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-bento-dark/5">
-          <span className="text-[10px] font-mono font-bold text-bento-dark/40 uppercase w-14 shrink-0">보조 조치:</span>
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border-subtle">
+          <span className="text-[10px] font-semibold text-bento-dark/50 w-14 shrink-0">보조</span>
           <button
             onClick={() => setFilterWheelchair(!filterWheelchair)}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-              filterWheelchair ? "bg-bento-green text-white" : "bg-bento-bg text-bento-dark/60 border border-bento-dark/5"
+            className={`px-3 py-1.5 rounded-sm text-xs font-medium transition-all duration-base flex items-center gap-1.5 cursor-pointer ${
+              filterWheelchair ? "bg-bento-green text-white shadow-sm" : "bg-bento-bg text-bento-dark/60 border border-border-subtle"
             }`}
           >
             <Accessibility size={12} />
@@ -289,8 +300,8 @@ export default function CourseTab({
           </button>
           <button
             onClick={() => setFilterStroller(!filterStroller)}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-              filterStroller ? "bg-bento-green text-white" : "bg-bento-bg text-bento-dark/60 border border-bento-dark/5"
+            className={`px-3 py-1.5 rounded-sm text-xs font-medium transition-all duration-base flex items-center gap-1.5 cursor-pointer ${
+              filterStroller ? "bg-bento-green text-white shadow-sm" : "bg-bento-bg text-bento-dark/60 border border-border-subtle"
             }`}
           >
             <Baby size={12} />
@@ -299,8 +310,8 @@ export default function CourseTab({
           </button>
           <button
             onClick={() => setFilterPetFriendly(!filterPetFriendly)}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-              filterPetFriendly ? "bg-bento-green text-white" : "bg-bento-bg text-bento-dark/60 border border-bento-dark/5"
+            className={`px-3 py-1.5 rounded-sm text-xs font-medium transition-all duration-base flex items-center gap-1.5 cursor-pointer ${
+              filterPetFriendly ? "bg-bento-green text-white shadow-sm" : "bg-bento-bg text-bento-dark/60 border border-border-subtle"
             }`}
           >
             <PawPrint size={12} />
@@ -311,11 +322,11 @@ export default function CourseTab({
       </div>
 
       {/* 3. Curation Summary Banner */}
-      <div className="p-3.5 bg-bento-olive/15 border border-bento-green/10 rounded-2xl text-xs text-bento-dark font-bold flex items-center gap-2.5">
-        <Sparkles size={14} className="text-bento-green shrink-0 animate-pulse" />
+      <div className="p-3.5 bg-bento-olive/15 border border-bento-green/10 rounded-lg text-xs text-bento-dark font-medium flex items-center gap-2.5">
+        <Sparkles size={14} className="text-bento-green shrink-0" />
         <span>
-          오늘의 탐색 조건: <strong>{selectedRegion === "all" ? "강원 4군" : selectedRegion}</strong> + {filterWheelchair ? "휠체어 " : ""}{filterStroller ? "유모차 " : ""}{filterPetFriendly ? "반려가족 " : ""} 
-          → <strong>총 {filteredCourses.length}개의 안심 걷기길 매칭완료!</strong>
+          탐색 조건: <strong>{selectedRegion === "all" ? "강원 4군" : selectedRegion}</strong> · {filterWheelchair ? "휠체어 " : ""}{filterStroller ? "유모차 " : ""}{filterPetFriendly ? "반려가족 " : ""} 
+          → <strong>{filteredCourses.length}개 코스 매칭</strong>
         </span>
       </div>
 
@@ -324,9 +335,13 @@ export default function CourseTab({
         {filteredCourses.map((course) => (
           <motion.div
             key={course.id}
-            whileHover={{ y: -3 }}
+            whileHover={{
+              y: -3,
+              boxShadow: "0 4px 6px -1px color-mix(in srgb, #1A2F23 6%, transparent)"
+            }}
+            transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
             onClick={() => setSelectedCourse(course)}
-            className="bg-white rounded-3xl border border-bento-dark/5 overflow-hidden flex flex-col justify-between hover:shadow-md transition-all cursor-pointer shadow-xs"
+            className="bg-white rounded-lg border border-border-default overflow-hidden flex flex-col justify-between cursor-pointer shadow-sm"
           >
             <div className="relative h-44 shrink-0">
               <img
@@ -339,19 +354,19 @@ export default function CourseTab({
               
               {/* Region and Distance overlay */}
               <div className="absolute top-3 left-3 flex gap-1.5 items-center">
-                <span className="text-[10px] font-bold bg-bento-green text-white px-2.5 py-0.5 rounded-md">
-                  {course.region} 코스
+                <span className="text-[10px] font-semibold bg-bento-green text-white px-2.5 py-0.5 rounded-sm">
+                  {course.region}
                 </span>
-                <span className="text-[10px] font-bold bg-white text-bento-dark px-2.5 py-0.5 rounded-md">
-                  총 {course.distanceKm}km ({course.timeMins}분)
+                <span className="text-[10px] font-semibold bg-white/90 text-bento-dark px-2.5 py-0.5 rounded-sm backdrop-blur-xs">
+                  {course.distanceKm}km · {course.timeMins}분
                 </span>
               </div>
 
               <div className="absolute bottom-3.5 left-4 text-white">
-                <span className="text-[9px] font-bold text-bento-olive uppercase tracking-wider block">
-                  두루누비 걷기노선 연계망
+                <span className="text-[9px] font-semibold text-bento-olive/90 block">
+                  두루누비 걷기노선
                 </span>
-                <h3 className="font-display font-black text-sm md:text-base tracking-tight leading-none mt-1">
+                <h3 className="font-display font-bold text-sm md:text-base tracking-tight leading-none mt-1">
                   {course.name}
                 </h3>
               </div>
@@ -362,23 +377,23 @@ export default function CourseTab({
                 {course.summary}
               </p>
 
-              <div className="space-y-1.5 pt-2 border-t border-bento-dark/5">
-                <span className="text-[9px] font-mono font-bold text-bento-dark/40 block">안심 보행 지표</span>
+              <div className="space-y-1.5 pt-2 border-t border-border-subtle">
+                <span className="text-[9px] font-semibold text-bento-dark/50 block">보행 지표</span>
                 <div className="flex flex-wrap gap-1">
                   {course.accessibility.wheelchair && (
-                    <span className="bg-bento-bg text-bento-dark text-[9px] font-black px-2.5 py-1 rounded-full border border-bento-dark/5 flex items-center gap-1">
+                    <span className="bg-bento-bg text-bento-dark text-[9px] font-medium px-2.5 py-1 rounded-sm border border-border-subtle flex items-center gap-1">
                       <Accessibility size={10} className="text-bento-green" />
                       <span>휠체어 안심</span>
                     </span>
                   )}
                   {course.accessibility.stroller && (
-                    <span className="bg-bento-bg text-bento-dark text-[9px] font-black px-2.5 py-1 rounded-full border border-bento-dark/5 flex items-center gap-1">
+                    <span className="bg-bento-bg text-bento-dark text-[9px] font-medium px-2.5 py-1 rounded-sm border border-border-subtle flex items-center gap-1">
                       <Baby size={10} className="text-amber-500" />
                       <span>유모차 가능</span>
                     </span>
                   )}
                   {course.accessibility.petFriendly && (
-                    <span className="bg-bento-bg text-bento-dark text-[9px] font-black px-2.5 py-1 rounded-full border border-bento-dark/5 flex items-center gap-1">
+                    <span className="bg-bento-bg text-bento-dark text-[9px] font-medium px-2.5 py-1 rounded-sm border border-border-subtle flex items-center gap-1">
                       <PawPrint size={10} className="text-orange-500" />
                       <span>반려동물 환영</span>
                     </span>
@@ -409,7 +424,7 @@ export default function CourseTab({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: "100%", opacity: 0.5 }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="relative bg-bento-bg w-full h-full md:h-[90vh] md:max-w-2xl md:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden z-10 text-left"
+              className="relative bg-bento-bg w-full h-full md:h-[90vh] md:max-w-2xl md:rounded-2xl shadow-lg flex flex-col overflow-hidden z-10 text-left"
             >
               {/* Header Cover inside Modal */}
               <div className="relative h-48 shrink-0">
@@ -422,13 +437,13 @@ export default function CourseTab({
                 <div className="absolute inset-0 bg-bento-dark/70" />
                 <button
                   onClick={() => setSelectedCourse(null)}
-                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center text-bento-dark/60 hover:text-bento-dark cursor-pointer"
+                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center text-bento-dark/60 hover:text-bento-dark cursor-pointer transition-colors duration-fast"
                 >
                   <X size={14} />
                 </button>
 
                 <div className="absolute bottom-5 left-5 right-5 text-white">
-                  <span className="text-[9px] font-bold text-bento-olive uppercase block mb-1">
+                  <span className="text-[9px] font-bold text-bento-olive block mb-1">
                     두루누비 걷기노선 정밀관측지도
                   </span>
                   <h3 className="font-display font-black text-base md:text-lg tracking-tight leading-none">
@@ -453,19 +468,19 @@ export default function CourseTab({
                 
                 {/* 5-1. Summary Paragraph */}
                 <div className="space-y-1">
-                  <span className="text-[9px] font-bold text-bento-dark/40 uppercase block">개요</span>
+                  <span className="text-[9px] font-bold text-bento-dark/40 block">개요</span>
                   <p className="text-xs text-bento-dark/80 leading-relaxed font-sans">{selectedCourse.summary}</p>
                 </div>
 
                 {/* 5-2. Segmented Safety Map Diagram (구간별 보행안전도 및 우회로 안내) */}
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-bold text-bento-dark/40 uppercase">구간별 보행 한산안전도 관측선</span>
+                    <span className="text-[9px] font-bold text-bento-dark/40">구간별 보행 한산안전도 관측선</span>
                     <span className="text-[8px] bg-bento-green/10 text-bento-green px-2 py-0.5 rounded-md font-mono">100% Barrier-Free Target</span>
                   </div>
 
                   {/* SVG Route Diagram */}
-                  <div className="p-4 bg-white rounded-2xl border border-bento-dark/10 shadow-xs relative">
+                  <div className="p-4 bg-white rounded-xl border border-border-default shadow-sm relative">
                     <div className="flex items-center justify-between relative z-10">
                       
                       {/* Node Start */}
@@ -509,24 +524,24 @@ export default function CourseTab({
 
                 {/* 5-3. Detail Segments Lists */}
                 <div className="space-y-3">
-                  <span className="text-[9px] font-bold text-bento-dark/40 uppercase block">구간 인프라 정밀 실측 세부</span>
+                  <span className="text-[9px] font-bold text-bento-dark/40 block">구간 인프라 정밀 실측 세부</span>
                   
                   <div className="space-y-2.5">
                     {selectedCourse.segments.map((seg, idx) => (
-                      <div key={idx} className="p-3 bg-white border border-bento-dark/5 rounded-xl space-y-1.5">
+                      <div key={idx} className="p-3 bg-white border border-border-subtle rounded-md space-y-1.5">
                         <div className="flex items-center justify-between">
                           <h4 className="text-xs font-bold text-bento-dark flex items-center gap-1.5">
                             <CornerDownRight size={12} className="text-bento-green" />
                             <span>{seg.name}</span>
                           </h4>
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                          <span className={`px-2 py-0.5 rounded-sm text-[9px] font-semibold ${
                             seg.safety === "안전" 
                               ? "bg-emerald-50 text-emerald-800" 
                               : seg.safety === "주의" 
                               ? "bg-amber-50 text-amber-800" 
                               : "bg-red-50 text-red-800"
                           }`}>
-                            ● {seg.safety} ({seg.distance})
+                            {seg.safety} ({seg.distance})
                           </span>
                         </div>
                         <p className="text-[10px] text-bento-dark/60 leading-relaxed font-sans">{seg.description}</p>
@@ -540,7 +555,7 @@ export default function CourseTab({
 
                 {/* 5-4. Associated Tourist Spots (연계 관광지) */}
                 <div className="space-y-3">
-                  <span className="text-[9px] font-bold text-bento-dark/40 uppercase block">코스 인근 연계 안심지</span>
+                  <span className="text-[9px] font-bold text-bento-dark/40 block">코스 인근 연계 안심지</span>
                   
                   <div className="grid grid-cols-2 gap-3">
                     {mockDestinations
@@ -552,17 +567,17 @@ export default function CourseTab({
                             setSelectedCourse(null);
                             onSelectDestination(dest);
                           }}
-                          className="bg-white p-2.5 rounded-2xl border border-bento-dark/5 flex gap-2.5 items-center cursor-pointer hover:border-bento-green/40 transition-all"
+                          className="bg-white p-2.5 rounded-md border border-border-subtle flex gap-2.5 items-center cursor-pointer hover:border-bento-green/40 transition-all duration-base"
                         >
                           <img
                             src={dest.image}
                             alt={dest.name}
                             referrerPolicy="no-referrer"
-                            className="w-10 h-10 rounded-lg object-cover shrink-0"
+                            className="w-10 h-10 rounded-sm object-cover shrink-0"
                           />
                           <div className="min-w-0 flex-1 text-left">
-                            <h5 className="text-[11px] font-bold text-bento-dark truncate leading-none mb-1">{dest.name}</h5>
-                            <span className="text-[9px] font-mono text-bento-green">혼잡도 {dest.congestionLevel}%</span>
+                            <h5 className="text-[11px] font-semibold text-bento-dark truncate leading-none mb-1">{dest.name}</h5>
+                            <span className="text-[9px] text-bento-green">혼잡도 {dest.congestionLevel}%</span>
                           </div>
                         </div>
                       ))}
@@ -572,19 +587,19 @@ export default function CourseTab({
               </div>
 
               {/* Action buttons inside overlay */}
-              <div className="p-4 bg-white border-t border-bento-dark/5 shrink-0 flex gap-2">
+              <div className="p-4 bg-white border-t border-border-subtle shrink-0 flex gap-2">
                 <button
                   onClick={() => {
-                    alert(`${selectedCourse.name}의 오프라인 휠체어 안전지도와 GPS 오프라인 트래킹맵이 두루누비 앱 및 스마트폰 카카오맵 동기화 모의 전송되었습니다!`);
+                    setToastMessage(`${selectedCourse.name}의 오프라인 휠체어 안전지도와 GPS 오프라인 트래킹맵이 두루누비 앱 및 스마트폰 카카오맵 동기화 모의 전송되었습니다!`);
                   }}
-                  className="flex-1 py-3 bg-bento-green hover:bg-bento-green/90 text-white text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                  className="flex-1 py-3 bg-bento-green hover:bg-bento-green/90 text-white text-xs font-semibold rounded-sm transition-all duration-base cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <Navigation size={12} />
                   <span>GPS 및 안심 음성 안내 받기</span>
                 </button>
                 <button
                   onClick={() => setSelectedCourse(null)}
-                  className="px-4 py-3 bg-bento-dark hover:bg-bento-dark/90 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
+                  className="px-4 py-3 bg-bento-dark hover:bg-bento-dark/90 text-white text-xs font-semibold rounded-sm transition-all duration-base cursor-pointer"
                 >
                   닫기
                 </button>
@@ -594,6 +609,22 @@ export default function CourseTab({
         )}
       </AnimatePresence>
 
+      {/* Toast notification */}
+      {toastMessage && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] bg-bento-ink text-white rounded-lg shadow-lg px-5 py-3 flex items-center gap-3"
+        >
+          <p className="text-xs font-semibold">{toastMessage}</p>
+          <button
+            onClick={() => setToastMessage(null)}
+            className="text-white/60 hover:text-white transition-colors duration-fast cursor-pointer shrink-0"
+          >
+            <X size={14} />
+          </button>
+        </motion.div>
+      )}
     </div>
   );
 }

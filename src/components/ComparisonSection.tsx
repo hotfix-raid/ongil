@@ -37,29 +37,31 @@ export default function ComparisonSection() {
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-xs font-mono font-bold tracking-widest text-bento-sand uppercase block mb-3">
+          <span className="text-xs font-sans font-semibold tracking-wider text-bento-sand/80 block mb-3">
             Why Ongil is Different
           </span>
           <h2 className="text-3xl sm:text-4xl font-display font-black text-white tracking-tight leading-snug mb-6">
-            기존 서비스와 온길의 확실한 차이
+            기존 서비스와 온길의 차이
           </h2>
           <p className="text-bento-olive/80 text-sm sm:text-base leading-relaxed">
-            단순한 '맛집 찾기'나 '대표 명소 순위'는 관광지의 과밀을 악화시키고 여행 만족도를 떨어뜨립니다. 
-            온길은 <strong>관광 빅데이터 기반의 상생 흐름 제어</strong>를 통해 완전히 다른 만족을 제공합니다.
+            단순 '맛집 찾기'나 '명소 순위'는 과밀을 악화시키고 만족도를 떨어뜨립니다. 
+            온길은 <strong>관광 데이터 기반의 균형 있는 추천</strong>으로 다른 만족을 제공합니다.
           </p>
         </div>
 
         {/* Comparison Table Desktop */}
-        <div className="hidden md:block overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md shadow-sm">
+        <div className="hidden md:block overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-md shadow-md">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-white/10 bg-white/5">
-                <th className="p-6 text-xs font-mono font-bold uppercase tracking-wider text-bento-olive w-1/4">구분</th>
-                <th className="p-6 text-xs font-mono font-bold uppercase tracking-wider text-white/50 w-3/8 flex items-center gap-2">
-                  <X size={14} className="text-white/30" />
-                  기존 추천 서비스
+                <th className="p-6 text-xs font-sans font-semibold tracking-wider text-bento-olive w-1/4">구분</th>
+                <th className="p-6 text-xs font-sans font-semibold tracking-wider text-white/50 w-3/8">
+                  <span className="flex items-center gap-2">
+                    <X size={14} className="text-white/30" />
+                    기존 추천 서비스
+                  </span>
                 </th>
-                <th className="p-6 text-xs font-mono font-bold uppercase tracking-wider text-bento-sand w-3/8">
+                <th className="p-6 text-xs font-sans font-semibold tracking-wider text-bento-sand w-3/8">
                   <span className="flex items-center gap-2 text-bento-sand">
                     <ShieldCheck size={16} className="text-bento-sand" />
                     온길(Ongil) 플랫폼
@@ -102,11 +104,11 @@ export default function ComparisonSection() {
         </div>
 
         {/* Comparison Cards for Mobile */}
-        <div className="md:hidden space-y-6">
+        <div className="md:hidden space-y-4">
           {comparisonData.map((row, idx) => (
             <div 
               key={idx} 
-              className={`rounded-3xl border p-6 space-y-4 ${
+              className={`rounded-lg border p-5 space-y-4 ${
                 row.isHighlighted ? "bg-white/5 border-white/10" : "bg-white/2 border-white/5"
               }`}
             >
@@ -117,7 +119,7 @@ export default function ComparisonSection() {
               <div className="space-y-3">
                 {/* Traditional */}
                 <div className="space-y-1">
-                  <span className="text-[10px] font-mono font-bold tracking-wider text-white/40 uppercase flex items-center gap-1">
+                  <span className="text-[10px] font-sans font-semibold tracking-wider text-white/40 flex items-center gap-1">
                     <X size={10} /> 기존 서비스
                   </span>
                   <p className="text-xs text-white/60 leading-relaxed pl-3.5 border-l border-white/10">
@@ -127,7 +129,7 @@ export default function ComparisonSection() {
                 
                 {/* Ongil */}
                 <div className="space-y-1">
-                  <span className="text-[10px] font-mono font-bold tracking-wider text-bento-sand uppercase flex items-center gap-1">
+                  <span className="text-[10px] font-sans font-semibold tracking-wider text-bento-sand flex items-center gap-1">
                     <Check size={10} /> 온길(Ongil)
                   </span>
                   <p className="text-xs text-bento-olive leading-relaxed pl-3.5 border-l border-bento-green">

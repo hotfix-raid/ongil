@@ -315,10 +315,10 @@ export default function SearchTab({
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="p-3 bg-bento-green text-white text-xs font-bold rounded-2xl flex items-center justify-between shadow-md"
+            className="p-3 bg-bento-green text-white text-xs font-bold rounded-lg flex items-center justify-between shadow-md"
           >
             <div className="flex items-center gap-2">
-              <Sparkles size={14} className="text-white shrink-0 animate-pulse" />
+              <Sparkles size={14} className="text-white shrink-0" />
               <span>MY 설정의 보행 약자 기본값이 검색 조건에 안전하게 로드되었습니다!</span>
             </div>
             <button onClick={() => setShowSyncAlert(false)} className="text-white/60 hover:text-white font-mono shrink-0 font-bold px-2">X</button>
@@ -328,11 +328,14 @@ export default function SearchTab({
 
       {/* 2. Headline */}
       <div className="text-center md:text-left">
-        <span className="text-xs font-mono font-bold tracking-widest text-bento-green uppercase block mb-1">
-          Smart Congestion-Avoidance Query
-        </span>
-        <h2 className="text-2xl font-display font-black text-bento-dark tracking-tight leading-none mb-1.5 flex items-center gap-1.5">
-          <span>한산 여정 조건별 탐색</span> <Search size={20} className="text-bento-green" />
+          <span className="text-xs font-semibold text-bento-green block mb-1">
+            맞춤형 혼잡 회피 여정 검색
+          </span>
+        <h2 className="text-2xl font-display font-black text-bento-dark tracking-tight leading-none mb-1.5 flex items-center gap-2">
+          <span>한산 여정 조건별 탐색</span>
+          <span className="w-8 h-8 rounded-full bg-bento-green/10 flex items-center justify-center">
+            <Search size={18} className="text-bento-green" />
+          </span>
         </h2>
         <p className="text-bento-dark/60 text-xs leading-relaxed max-w-2xl">
           나이, 보행 약자 동반, 반려견 크기까지. 원하는 필터를 켜면 실시간 붐빔 예측 데이터를 매칭해
@@ -341,65 +344,65 @@ export default function SearchTab({
       </div>
 
       {/* 3. Weather Broadcast Banner */}
-      <div className={`p-4 rounded-3xl border text-xs flex items-start gap-3 transition-all duration-300 ${
+      <div className={`p-4 rounded-xl border text-xs flex items-start gap-3 duration-base ease-out-soft ${
         weatherInfo.status === "warning" 
           ? "bg-amber-50 border-amber-200 text-amber-800"
           : weatherInfo.status === "danger"
           ? "bg-red-50 border-red-200 text-red-800"
           : weatherInfo.status === "success"
           ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-          : "bg-white border-bento-dark/10 text-bento-dark/80"
+          : "bg-white border-border-default text-bento-dark/80"
       }`}>
         <div className="mt-0.5 shrink-0">
-          {weatherInfo.status === "warning" ? <AlertTriangle size={15} className="text-amber-600 animate-bounce" /> :
+          {weatherInfo.status === "warning" ? <AlertTriangle size={15} className="text-amber-600" /> :
            weatherInfo.status === "danger" ? <Flame size={15} className="text-red-600" /> :
            weatherInfo.status === "success" ? <Check size={15} className="text-emerald-600" /> :
            <Info size={15} className="text-bento-green" />}
         </div>
         <div>
           <span className="font-bold block mb-0.5">실시간 날씨 & 미세먼지 환경 보정</span>
-          <p className="leading-relaxed text-[11px] font-sans">{weatherInfo.text}</p>
+          <p className="leading-relaxed text-[11px]">{weatherInfo.text}</p>
         </div>
       </div>
 
       {/* ==================== SEARCH CONTAINER ==================== */}
-      <div className="bg-white rounded-[2rem] border border-bento-dark/10 p-5 shadow-sm relative z-30">
+      <div className="bg-white rounded-xl border border-border-default p-5 shadow-md relative z-30">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
           
           {/* Query Block */}
           <div className="col-span-1 md:col-span-5 relative">
-            <label className="block text-[10px] font-mono font-bold uppercase text-bento-dark/40 mb-1 pl-1">목적지 (군 또는 관광지)</label>
+            <label className="block text-[11px] font-semibold text-bento-dark/50 mb-1 pl-1">목적지</label>
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-bento-dark/40" size={16} />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-bento-dark/30" size={16} />
               <input
                 ref={searchInputRef}
                 type="text"
-                placeholder="어디로 가시나요? (정선, 고성, 삼척...)"
+                placeholder="정선, 고성, 삼척... 어디로 가시나요?"
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
                   setShowSuggestions(true);
                 }}
                 onFocus={() => setShowSuggestions(true)}
-                className="w-full pl-11 pr-12 py-3 bg-bento-bg/50 border border-bento-dark/5 rounded-2xl text-xs font-bold text-bento-dark focus:outline-none focus:border-bento-green focus:bg-white transition-all"
+                className="w-full pl-11 pr-12 py-3 bg-bento-bg/50 border border-border-default rounded-md text-xs font-medium text-bento-dark focus:outline-none focus:border-bento-green focus:bg-white focus:shadow-sm transition-all duration-base ease-out-soft"
               />
               {searchQuery && (
                 <button 
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-12 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-bento-bg flex items-center justify-center text-bento-dark/40 hover:text-bento-dark cursor-pointer"
+                  className="absolute right-12 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-bento-bg hover:bg-bento-dark/5 flex items-center justify-center text-bento-dark/40 hover:text-bento-dark cursor-pointer transition-colors duration-fast"
                 >
-                  <X size={10} />
+                  <X size={11} />
                 </button>
               )}
               <button
                 type="button"
                 onClick={handleLocationDetection}
                 title="내 주변 한산스팟 찾기"
-                className={`absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-xl transition-all cursor-pointer ${
+                className={`absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-md transition-all duration-fast cursor-pointer ${
                   locationMocked ? "bg-bento-green text-white" : "bg-bento-bg text-bento-green hover:bg-bento-green/10"
                 }`}
               >
-                <Navigation size={12} className={locationMocked ? "animate-pulse" : ""} />
+                <Navigation size={12} />
               </button>
             </div>
 
@@ -409,13 +412,14 @@ export default function SearchTab({
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowSuggestions(false)} />
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-bento-dark/10 shadow-lg z-50 p-4 max-h-[300px] overflow-y-auto"
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg border border-border-default shadow-lg z-50 p-4 max-h-[300px] overflow-y-auto"
                   >
                     <div className="mb-3">
-                      <h4 className="text-[10px] font-bold text-bento-dark/40 uppercase mb-2">최근 검색</h4>
+                      <h4 className="text-[10px] font-bold text-bento-dark/50 mb-2">최근 검색</h4>
                       <div className="flex flex-wrap gap-1.5">
                         {recentSearches.map((term, i) => (
                           <button
@@ -433,7 +437,7 @@ export default function SearchTab({
                     </div>
 
                     <div>
-                      <h4 className="text-[10px] font-bold text-bento-dark/40 uppercase mb-2">시범 안심지 추천</h4>
+                      <h4 className="text-[10px] font-bold text-bento-dark/50 mb-2">시범 안심지 추천</h4>
                       <div className="space-y-1">
                         {popularKeywords.map((item, i) => (
                           <button
@@ -442,7 +446,7 @@ export default function SearchTab({
                               setSearchQuery(item.text);
                               setShowSuggestions(false);
                             }}
-                            className="w-full text-left px-2 py-1.5 hover:bg-bento-bg rounded-lg flex items-center justify-between text-xs text-bento-dark transition-colors cursor-pointer"
+                            className="w-full text-left px-3 py-2 hover:bg-bento-bg rounded-md flex items-center justify-between text-xs text-bento-dark transition-colors duration-fast cursor-pointer"
                           >
                             <div className="flex items-center gap-2">
                               <MapPin size={10} className="text-bento-green" />
@@ -463,59 +467,59 @@ export default function SearchTab({
 
           {/* Date Selector */}
           <div className="col-span-1 md:col-span-3">
-            <label className="block text-[10px] font-mono font-bold uppercase text-bento-dark/40 mb-1 pl-1">일정 (일자별 혼잡 예보)</label>
+            <label className="block text-[11px] font-semibold text-bento-dark/50 mb-1 pl-1">일정</label>
             <button
               onClick={() => {
                 setActiveDateSelector(true);
                 setActiveSheet("date");
               }}
-              className="w-full px-4 py-3 bg-bento-bg/50 hover:bg-bento-bg border border-bento-dark/5 rounded-2xl text-xs font-bold text-bento-dark flex items-center justify-between cursor-pointer"
+              className="w-full px-4 py-3 bg-bento-bg/50 hover:bg-bento-bg border border-border-default rounded-md text-xs font-medium text-bento-dark flex items-center justify-between cursor-pointer transition-colors duration-base"
             >
               <div className="flex items-center gap-2 text-left min-w-0">
                 <Calendar size={14} className="text-bento-green shrink-0" />
-                <span className="truncate">
+                <span className="truncate font-medium">
                   {selectedStartDate ? `${selectedStartDate.slice(5)}` : "날짜 선택"}
                   {selectedEndDate && selectedEndDate !== selectedStartDate ? ` ~ ${selectedEndDate.slice(5)}` : ""}
                 </span>
               </div>
-              <ChevronDown size={12} className="text-bento-dark/40 shrink-0" />
+              <ChevronDown size={12} className="text-bento-dark/30 shrink-0" />
             </button>
           </div>
 
           {/* Guest Selector */}
           <div className="col-span-1 md:col-span-2">
-            <label className="block text-[10px] font-mono font-bold uppercase text-bento-dark/40 mb-1 pl-1">동반 유형</label>
+            <label className="block text-[11px] font-semibold text-bento-dark/50 mb-1 pl-1">동반 인원</label>
             <button
               onClick={() => {
                 setActiveGuestSelector(true);
                 setActiveSheet("guests");
               }}
-              className="w-full px-4 py-3 bg-bento-bg/50 hover:bg-bento-bg border border-bento-dark/5 rounded-2xl text-xs font-bold text-bento-dark flex items-center justify-between cursor-pointer"
+              className="w-full px-4 py-3 bg-bento-bg/50 hover:bg-bento-bg border border-border-default rounded-md text-xs font-medium text-bento-dark flex items-center justify-between cursor-pointer transition-colors duration-base"
             >
               <div className="flex items-center gap-2 text-left min-w-0">
                 <Users size={14} className="text-bento-green shrink-0" />
-                <span className="truncate">
+                <span className="truncate font-medium">
                   성인 {adults}
                   {children > 0 ? `, 아동 ${children}` : ""}
-                  {pets > 0 ? `, 🐾 ${pets}` : ""}
+                  {pets > 0 ? <><PawPrint size={11} className="inline text-orange-500" /> {pets}</> : ""}
                 </span>
               </div>
-              <ChevronDown size={12} className="text-bento-dark/40 shrink-0" />
+              <ChevronDown size={12} className="text-bento-dark/30 shrink-0" />
             </button>
           </div>
 
           {/* Accessibility Filter */}
           <div className="col-span-1 md:col-span-2">
-            <label className="block text-[10px] font-mono font-bold uppercase text-bento-dark/40 mb-1 pl-1">배리어프리 필터</label>
+            <label className="block text-[11px] font-semibold text-bento-dark/50 mb-1 pl-1">보행 필터</label>
             <button
               onClick={() => {
                 setActiveFilterSheet(true);
                 setActiveSheet("filters");
               }}
-              className={`w-full px-4 py-3 border rounded-2xl text-xs font-bold flex items-center justify-between cursor-pointer ${
+              className={`w-full px-4 py-3 border rounded-md text-xs font-medium flex items-center justify-between cursor-pointer transition-colors duration-base ${
                 filterWheelchair || filterStroller || filterPetFriendly || filterSenior || filterParking
                   ? "bg-bento-green/15 border-bento-green text-bento-green"
-                  : "bg-bento-bg/50 hover:bg-bento-bg border-bento-dark/5 text-bento-dark"
+                  : "bg-bento-bg/50 hover:bg-bento-bg border-border-default text-bento-dark"
               }`}
             >
               <div className="flex items-center gap-2 text-left min-w-0">
@@ -526,45 +530,45 @@ export default function SearchTab({
                     : "세부 필터"}
                 </span>
               </div>
-              <ChevronDown size={12} className="shrink-0 opacity-60" />
+              <ChevronDown size={12} className="shrink-0 text-bento-dark/30" />
             </button>
           </div>
 
         </div>
 
         {/* Filters Quick Line & Switch */}
-        <div className="mt-4 pt-4 border-t border-bento-dark/5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="mt-4 pt-4 border-t border-border-subtle flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[9px] font-bold text-bento-dark/40 uppercase tracking-wider mr-1">
+            <span className="text-[10px] font-semibold text-bento-dark/50 mr-1">
               빠른 필터:
             </span>
             <button
               onClick={() => applyPreset("pet")}
-              className="px-2.5 py-1 bg-bento-bg hover:bg-bento-green/10 border border-bento-dark/5 rounded-full text-[11px] font-bold text-bento-dark/80 flex items-center gap-1 transition-all cursor-pointer"
+              className="px-3 py-1.5 bg-bento-bg hover:bg-bento-green/10 border border-border-subtle hover:border-bento-green/30 rounded-md text-[11px] font-medium text-bento-dark/80 flex items-center gap-1.5 transition-all duration-base cursor-pointer"
             >
-              <PawPrint size={11} className="text-orange-500" />
+              <PawPrint size={12} className="text-orange-500" />
               <span>반려견</span>
             </button>
             <button
               onClick={() => applyPreset("wheelchair")}
-              className="px-2.5 py-1 bg-bento-bg hover:bg-bento-green/10 border border-bento-dark/5 rounded-full text-[11px] font-bold text-bento-dark/80 flex items-center gap-1 transition-all cursor-pointer"
+              className="px-3 py-1.5 bg-bento-bg hover:bg-bento-green/10 border border-border-subtle hover:border-bento-green/30 rounded-md text-[11px] font-medium text-bento-dark/80 flex items-center gap-1.5 transition-all duration-base cursor-pointer"
             >
-              <Accessibility size={11} className="text-bento-green" />
-              <span>휠체어데크</span>
+              <Accessibility size={12} className="text-bento-green" />
+              <span>휠체어 데크</span>
             </button>
             <button
               onClick={() => applyPreset("stroller")}
-              className="px-2.5 py-1 bg-bento-bg hover:bg-bento-green/10 border border-bento-dark/5 rounded-full text-[11px] font-bold text-bento-dark/80 flex items-center gap-1 transition-all cursor-pointer"
+              className="px-3 py-1.5 bg-bento-bg hover:bg-bento-green/10 border border-border-subtle hover:border-bento-green/30 rounded-md text-[11px] font-medium text-bento-dark/80 flex items-center gap-1.5 transition-all duration-base cursor-pointer"
             >
-              <Baby size={11} className="text-amber-500" />
-              <span>유모차통행</span>
+              <Baby size={12} className="text-amber-500" />
+              <span>유모차 통행</span>
             </button>
           </div>
 
           {/* Smart Avoidance Switch */}
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <span className="text-xs font-bold text-bento-dark block leading-none mb-0.5">
+              <span className="text-xs font-semibold text-bento-dark block leading-none mb-0.5">
                 과밀 관광지 자동 우회
               </span>
               <span className="text-[10px] text-bento-dark/50 block leading-none">
@@ -573,12 +577,12 @@ export default function SearchTab({
             </div>
             <button
               onClick={() => setAvoidCongestion(!avoidCongestion)}
-              className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${
-                avoidCongestion ? "bg-bento-green" : "bg-bento-dark/20"
+              className={`w-10 h-5.5 rounded-full transition-all duration-base ease-in-out-soft relative cursor-pointer ${
+                avoidCongestion ? "bg-bento-green" : "bg-bento-stone"
               }`}
             >
-              <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${
-                avoidCongestion ? "left-5.25" : "left-0.75"
+              <div className={`w-4 h-4 rounded-full bg-white absolute top-[3px] transition-all duration-base ease-in-out-soft ${
+                avoidCongestion ? "left-[22px]" : "left-1"
               }`} />
             </button>
           </div>
@@ -588,7 +592,7 @@ export default function SearchTab({
         <div className="mt-5">
           <button
             onClick={handleSearchExecution}
-            className="w-full py-3.5 bg-bento-green hover:bg-bento-green/95 active:scale-[0.99] text-white font-display font-black text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-3.5 bg-bento-green hover:bg-bento-green/90 active:scale-[0.98] text-white font-display font-bold text-sm rounded-lg shadow-md transition-all duration-base ease-out-soft flex items-center justify-center gap-2 cursor-pointer"
           >
             <Search size={16} />
             <span>한산한 보행 안심지 조건 탐색</span>
@@ -617,14 +621,14 @@ export default function SearchTab({
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 220 }}
-              className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white rounded-t-[2rem] border-t border-bento-dark/10 shadow-2xl z-[101] overflow-hidden max-h-[80vh] flex flex-col"
+              transition={{ type: "spring", damping: 30, stiffness: 260 }}
+              className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white rounded-t-2xl border-t border-border-default shadow-lg z-[101] overflow-hidden max-h-[80vh] flex flex-col"
             >
-              <div className="px-5 py-3.5 border-b border-bento-dark/5 flex items-center justify-between shrink-0">
-                <h3 className="text-xs font-display font-black text-bento-dark uppercase">
-                  {activeSheet === "date" ? "📅 일자별 관광 혼잡지표 예측캘린더" :
-                   activeSheet === "guests" ? "👥 동반 여행 인원수" :
-                   "♿ 배리어프리 보행 장애 인프라 지표"}
+              <div className="px-5 py-3.5 border-b border-border-subtle flex items-center justify-between shrink-0">
+                <h3 className="text-xs font-display font-bold text-bento-dark">
+                  {activeSheet === "date" ? "일자별 혼잡 예측 캘린더" :
+                   activeSheet === "guests" ? "동반 인원 설정" :
+                   "배리어프리 보행 조건"}
                 </h3>
                 <button
                   onClick={() => {
@@ -633,7 +637,7 @@ export default function SearchTab({
                     setActiveGuestSelector(false);
                     setActiveFilterSheet(false);
                   }}
-                  className="w-7 h-7 rounded-full bg-bento-bg flex items-center justify-center text-bento-dark/60 hover:text-bento-dark cursor-pointer"
+                  className="w-7 h-7 rounded-full bg-bento-bg hover:bg-bento-dark/5 flex items-center justify-center text-bento-dark/60 hover:text-bento-dark cursor-pointer transition-colors duration-fast"
                 >
                   <X size={12} />
                 </button>
@@ -643,33 +647,33 @@ export default function SearchTab({
                 {/* 1. Date Calendar */}
                 {activeSheet === "date" && (
                   <div className="space-y-4">
-                    <div className="flex bg-bento-bg rounded-xl p-0.5">
+                    <div className="flex bg-bento-bg rounded-md p-0.5">
                       <button
                         onClick={() => {
                           setIsPeriod(false);
                           setSelectedEndDate(selectedStartDate);
                         }}
-                        className={`flex-1 py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
-                          !isPeriod ? "bg-white text-bento-green shadow-xs" : "text-bento-dark/60"
+                        className={`flex-1 py-1.5 text-[11px] font-medium rounded-sm transition-all duration-fast cursor-pointer ${
+                          !isPeriod ? "bg-white text-bento-green shadow-sm" : "text-bento-dark/60 hover:text-bento-dark"
                         }`}
                       >
                         당일치기
                       </button>
                       <button
                         onClick={() => setIsPeriod(true)}
-                        className={`flex-1 py-1.5 text-[11px] font-bold rounded-lg transition-all cursor-pointer ${
-                          isPeriod ? "bg-white text-bento-green shadow-xs" : "text-bento-dark/60"
+                        className={`flex-1 py-1.5 text-[11px] font-medium rounded-sm transition-all duration-fast cursor-pointer ${
+                          isPeriod ? "bg-white text-bento-green shadow-sm" : "text-bento-dark/60 hover:text-bento-dark"
                         }`}
                       >
                         숙박/기간
                       </button>
                     </div>
 
-                    <div className="bg-bento-bg/50 p-2.5 rounded-xl border border-bento-dark/5 flex items-center justify-around text-[9px] font-bold">
-                      <span className="text-bento-dark/50">예측 혼잡도 범례:</span>
-                      <span className="flex items-center gap-1 text-emerald-700">● 쾌적(월~목)</span>
-                      <span className="flex items-center gap-1 text-amber-700">● 보통(금요일)</span>
-                      <span className="flex items-center gap-1 text-red-700">● 혼잡(주말)</span>
+                    <div className="bg-bento-bg/50 p-2.5 rounded-md border border-border-subtle flex items-center justify-center gap-3 text-[10px] font-medium">
+                      <span className="text-bento-dark/50">혼잡도:</span>
+                      <span className="flex items-center gap-1 text-emerald-700"><span className="w-2 h-2 rounded-full bg-emerald-500" /> 한산</span>
+                      <span className="flex items-center gap-1 text-amber-700"><span className="w-2 h-2 rounded-full bg-amber-400" /> 보통</span>
+                      <span className="flex items-center gap-1 text-red-700"><span className="w-2 h-2 rounded-full bg-red-500" /> 혼잡</span>
                     </div>
 
                     <div className="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-bento-dark/50 mb-1">
@@ -721,9 +725,9 @@ export default function SearchTab({
                         <span className="text-[10px] text-bento-dark/50 block">보행 약자 및 안내 포함</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <button onClick={() => setAdults(Math.max(1, adults - 1))} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-bento-dark/10 font-bold text-sm cursor-pointer shadow-xs">-</button>
+                        <button onClick={() => setAdults(Math.max(1, adults - 1))} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">-</button>
                         <span className="text-xs font-bold w-4 text-center">{adults}</span>
-                        <button onClick={() => setAdults(adults + 1)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-bento-dark/10 font-bold text-sm cursor-pointer shadow-xs">+</button>
+                        <button onClick={() => setAdults(adults + 1)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">+</button>
                       </div>
                     </div>
 
@@ -734,9 +738,9 @@ export default function SearchTab({
                         <span className="text-[10px] text-bento-dark/50 block">휠체어, 유모차 보호자 필요 가능</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <button onClick={() => setChildren(Math.max(0, children - 1))} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-bento-dark/10 font-bold text-sm cursor-pointer shadow-xs">-</button>
+                        <button onClick={() => setChildren(Math.max(0, children - 1))} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">-</button>
                         <span className="text-xs font-bold w-4 text-center">{children}</span>
-                        <button onClick={() => setChildren(children + 1)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-bento-dark/10 font-bold text-sm cursor-pointer shadow-xs">+</button>
+                        <button onClick={() => setChildren(children + 1)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">+</button>
                       </div>
                     </div>
 
@@ -747,9 +751,9 @@ export default function SearchTab({
                         <span className="text-[10px] text-bento-dark/50 block">대형견/소형견 야외 구역 매칭 지원</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <button onClick={() => setPets(Math.max(0, pets - 1))} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-bento-dark/10 font-bold text-sm cursor-pointer shadow-xs">-</button>
+                        <button onClick={() => setPets(Math.max(0, pets - 1))} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">-</button>
                         <span className="text-xs font-bold w-4 text-center">{pets}</span>
-                        <button onClick={() => setPets(pets + 1)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-bento-dark/10 font-bold text-sm cursor-pointer shadow-xs">+</button>
+                        <button onClick={() => setPets(pets + 1)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">+</button>
                       </div>
                     </div>
                   </div>
@@ -830,7 +834,7 @@ export default function SearchTab({
 
                     {/* Large dog / Indoor option (conditional) */}
                     {filterPetFriendly && (
-                      <div className="p-3 border border-dashed border-bento-dark/10 rounded-xl bg-bento-bg/30 space-y-2">
+                      <div className="p-3 border border-dashed border-border-default rounded-xl bg-bento-bg/30 space-y-2">
                         <span className="text-[9px] font-bold text-bento-dark/40 uppercase block">반려견 크기 및 실내 조건:</span>
                         <div className="flex gap-2">
                           {(["any", "indoor", "large"] as const).map((opt) => (
@@ -840,7 +844,7 @@ export default function SearchTab({
                                 className={`flex-1 py-1 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${
                                   filterPetConditions === opt 
                                     ? "bg-bento-green border-bento-green text-white" 
-                                    : "bg-white border-bento-dark/10 text-bento-dark/60"
+                                    : "bg-white border-border-default text-bento-dark/60"
                                 }`}
                               >
                                 {opt === "any" ? "상관없음" : opt === "indoor" ? "실내 허용 우선" : "대형견 안심"}
@@ -901,7 +905,7 @@ export default function SearchTab({
               </div>
 
               {/* Sheet Save action */}
-              <div className="p-4 bg-bento-bg border-t border-bento-dark/5 shrink-0">
+              <div className="p-4 bg-bento-bg border-t border-border-subtle shrink-0">
                 <button
                   onClick={() => {
                     setActiveSheet(null);
@@ -910,7 +914,7 @@ export default function SearchTab({
                     setActiveFilterSheet(false);
                     handleSearchExecution();
                   }}
-                  className="w-full py-3 bg-bento-green hover:bg-bento-green/90 text-white font-display font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+                  className="w-full py-3 bg-bento-green hover:bg-bento-green/90 text-white font-display font-bold text-xs rounded-sm shadow-sm transition-all duration-base cursor-pointer"
                 >
                   조건 변경 완료
                 </button>
@@ -930,14 +934,14 @@ export default function SearchTab({
             className="space-y-4"
           >
             {/* Results Title Alert Badge */}
-            <div className="p-3 bg-bento-olive/15 border border-bento-green/10 rounded-2xl flex items-center justify-between text-xs font-semibold text-bento-dark shadow-xs">
+            <div className="p-3 bg-bento-olive/15 border border-bento-green/10 rounded-lg flex items-center justify-between text-xs font-medium text-bento-dark shadow-sm">
               <span className="flex items-center gap-2">
-                <Leaf size={14} className="text-bento-green animate-pulse" />
+                <Leaf size={14} className="text-bento-green" />
                 <span>{searchMessage}</span>
               </span>
               <button 
                 onClick={handleClearSearch}
-                className="text-[10px] font-mono text-red-700 bg-red-100 hover:bg-red-200 px-2.5 py-1 rounded-full cursor-pointer transition-colors"
+                className="text-[10px] font-medium text-red-700 bg-red-100 hover:bg-red-200 px-2.5 py-1 rounded-sm cursor-pointer transition-colors duration-fast"
               >
                 검색 초기화
               </button>
@@ -952,10 +956,14 @@ export default function SearchTab({
                   return (
                     <motion.div
                       key={dest.id}
-                      whileHover={{ y: -3 }}
+                      whileHover={{
+                        y: -4,
+                        boxShadow: "0 4px 6px -1px color-mix(in srgb, #1A2F23 6%, transparent)"
+                      }}
+                      transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
                       onClick={() => onSelectDestination(dest)}
-                      className={`bg-white rounded-3xl border overflow-hidden flex flex-col justify-between hover:shadow-md transition-all cursor-pointer ${
-                        isAlternative ? "border-amber-400 ring-2 ring-amber-400/20" : "border-bento-dark/5"
+                      className={`bg-white rounded-lg border overflow-hidden flex flex-col justify-between cursor-pointer ${
+                        isAlternative ? "border-amber-400 ring-2 ring-amber-400/20" : "border-border-default"
                       }`}
                     >
                       <div className="relative h-44">
@@ -969,14 +977,14 @@ export default function SearchTab({
 
                         {/* Top indicators */}
                         <div className="absolute top-3 left-3 flex flex-wrap gap-1">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold text-white flex items-center gap-1 ${
+                          <span className={`px-2.5 py-0.5 rounded-sm text-[9px] font-bold text-white flex items-center gap-1 ${
                             dest.congestionStatus === "high" 
-                              ? "bg-red-500 animate-pulse" 
+                              ? "bg-red-500" 
                               : dest.congestionStatus === "medium" 
                               ? "bg-amber-500" 
                               : "bg-emerald-500"
                           }`}>
-                            ● 혼잡도 {dest.congestionLevel}%
+                            혼잡도 {dest.congestionLevel}%
                           </span>
                           {dest.isDepopulationArea && (
                             <span className="bg-bento-green/95 text-white text-[8px] font-bold px-2 py-0.5 rounded-full">
@@ -998,7 +1006,7 @@ export default function SearchTab({
                         </button>
 
                         <div className="absolute bottom-3 left-3 text-white">
-                          <span className="text-[8px] font-bold tracking-widest text-bento-olive uppercase block">
+                          <span className="text-[9px] font-semibold text-bento-olive/90 block">
                             {dest.region} · {dest.category}
                           </span>
                           <h4 className="font-display font-black text-sm tracking-tight leading-none mt-1">
@@ -1013,24 +1021,24 @@ export default function SearchTab({
                         </p>
 
                         <div className="space-y-1">
-                          <span className="text-[9px] font-bold text-bento-dark/40 uppercase block">보행 약자 시설</span>
+                          <span className="text-[9px] font-semibold text-bento-dark/50 block">보행 편의</span>
                           <div className="flex flex-wrap gap-1">
                             {dest.accessibility.wheelchair && (
-                              <span className="bg-bento-bg text-bento-dark/80 text-[9px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
+                              <span className="bg-bento-bg text-bento-dark/80 text-[9px] font-medium px-2 py-0.5 rounded-sm flex items-center gap-1 border border-border-subtle">
                                 <Accessibility size={10} className="text-bento-green" />
-                                <span>경사로완비</span>
+                                <span>경사로 완비</span>
                               </span>
                             )}
                             {dest.accessibility.stroller && (
-                              <span className="bg-bento-bg text-bento-dark/80 text-[9px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
+                              <span className="bg-bento-bg text-bento-dark/80 text-[9px] font-medium px-2 py-0.5 rounded-sm flex items-center gap-1 border border-border-subtle">
                                 <Baby size={10} className="text-amber-500" />
-                                <span>유모차안심</span>
+                                <span>유모차 안심</span>
                               </span>
                             )}
                             {dest.petFriendly.allowed && (
-                              <span className="bg-bento-bg text-bento-dark/80 text-[9px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
+                              <span className="bg-bento-bg text-bento-dark/80 text-[9px] font-medium px-2 py-0.5 rounded-sm flex items-center gap-1 border border-border-subtle">
                                 <PawPrint size={10} className="text-orange-500" />
-                                <span>반려견동반</span>
+                                <span>반려견 동반</span>
                               </span>
                             )}
                           </div>
@@ -1038,7 +1046,7 @@ export default function SearchTab({
 
                         {/* Alternative link notification */}
                         {isAlternative && dest.alternativeId && (
-                          <div className="p-2 bg-amber-50 rounded-xl border border-amber-200 text-[10px] text-amber-800 leading-normal flex items-start gap-1">
+                          <div className="p-2 bg-amber-50 rounded-md border border-amber-200 text-[10px] text-amber-800 leading-normal flex items-start gap-1.5">
                             <AlertTriangle size={12} className="text-amber-600 shrink-0 mt-0.5" />
                             <span><strong>주말 집중지 경고:</strong> 대안 여행지인 <strong>고성 능파대</strong>로 쾌적한 우회 코스가 준비되어 있습니다. 클릭하여 대안을 조망하세요.</span>
                           </div>
@@ -1050,16 +1058,18 @@ export default function SearchTab({
               </div>
             ) : (
               /* No Results state */
-              <div className="text-center py-12 bg-white rounded-3xl border border-bento-dark/10 shadow-xs max-w-md mx-auto space-y-3 flex flex-col items-center justify-center">
-                <Search size={32} className="text-bento-dark/40" />
-                <h4 className="font-display font-black text-bento-dark text-sm mt-2">일치하는 안심 코스가 없습니다.</h4>
+              <div className="text-center py-12 bg-white rounded-lg border border-border-default shadow-sm max-w-md mx-auto space-y-3 flex flex-col items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-bento-bg flex items-center justify-center">
+                  <Search size={24} className="text-bento-dark/30" />
+                </div>
+                <h4 className="font-display font-bold text-bento-dark text-sm mt-2">조건에 맞는 코스가 없어요</h4>
                 <p className="text-xs text-bento-dark/50 px-6 leading-relaxed">
-                  필터 조건이 너무 많거나, 해당 지자체에 실시간 대기 안전기준을 충족하는 코스가 아직 등록되지 않았습니다. 
-                  보행 필터를 한 단계 완화하거나 '내 주변'preset을 다시 선택해 보세요!
+                  필터 조건을 너무 많이 적용하셨거나, 해당 지역에 아직 등록된 안심 코스가 없습니다.
+                  보행 필터를 줄이거나 '내 주변' 기능으로 다시 찾아보세요!
                 </p>
                 <button
                   onClick={handleClearSearch}
-                  className="px-4 py-2 bg-bento-green text-white text-xs font-bold rounded-lg cursor-pointer"
+                  className="px-4 py-2 bg-bento-green hover:bg-bento-green/90 text-white text-xs font-medium rounded-sm transition-colors duration-base cursor-pointer"
                 >
                   필터 전체 초기화
                 </button>
@@ -1071,16 +1081,16 @@ export default function SearchTab({
 
       {/* 4. Display default suggestions before any search query executed */}
       {!searchTriggered && (
-        <div className="space-y-4 pt-4 border-t border-bento-dark/5">
-          <h3 className="text-xs font-mono font-bold tracking-widest text-bento-dark/40 uppercase pl-1 flex items-center gap-1.5">
-            <span>강원 소멸 대응 시범지구 실시간 혼잡 예측</span> <Sparkles size={12} className="text-bento-green animate-pulse" />
+        <div className="space-y-4 pt-4 border-t border-border-subtle">
+          <h3 className="text-xs font-semibold text-bento-dark/50 pl-1 flex items-center gap-1.5">
+            <span>강원 소멸 대응 시범지구 실시간 혼잡 예측</span>
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {mockDestinations.slice(0, 4).map((dest) => (
               <div
                 key={dest.id}
                 onClick={() => onSelectDestination(dest)}
-                className="bg-white rounded-2xl border border-bento-dark/5 p-3 flex items-center gap-3 hover:shadow-md transition-all cursor-pointer"
+                className="bg-white rounded-xl border border-border-subtle p-3 flex items-center gap-3 hover:shadow-md transition-all cursor-pointer"
               >
                 <img
                   src={dest.image}

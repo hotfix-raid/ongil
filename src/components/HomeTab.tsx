@@ -96,16 +96,16 @@ export default function HomeTab({
       dust: "8㎍/㎡ (좋음)",
       rain: "10%",
       wind: "북서풍 1.5m/s",
-      icon: <Sun className="text-amber-500 animate-spin-slow" size={20} />,
-      desc: "맑고 파란 하늘이 열렸습니다. 자외선이 조금 강하니 모자와 썬크림을 준비하세요. 보행 데크길과 해변 산책에 최상의 대기 질입니다."
+      icon: <Sun className="text-amber-500" size={20} />,
+      desc: "맑고 파란 하늘입니다. 자외선이 강하니 모자와 썬크림을 챙기세요. 보행 데크길과 해변 산책에 최적입니다."
     },
     rainy: {
       temp: "21°C",
       dust: "12㎍/㎡ (좋음)",
       rain: "85%",
       wind: "동풍 4.2m/s",
-      icon: <CloudRain className="text-blue-500 animate-bounce" size={20} />,
-      desc: "흐리고 잔잔한 소나기가 뿌립니다. 울창한 소나무 그늘 숲길이나 바다 동굴길을 걸으며 진한 자연의 향기와 빗소리를 즐기기 좋은 타이밍입니다."
+      icon: <CloudRain className="text-blue-500" size={20} />,
+      desc: "잔잔한 소나기가 예상됩니다. 울창한 숲길이나 동굴 산책로에서 빗소리를 즐겨보세요."
     },
     dusty: {
       temp: "23°C",
@@ -113,34 +113,34 @@ export default function HomeTab({
       rain: "20%",
       wind: "남풍 2.1m/s",
       icon: <Wind className="text-teal-600" size={20} />,
-      desc: "수도권 발 미세먼지 영향이 다소 높습니다. 음이온과 피톤치드가 사방을 에워싸 공기 정화율이 높은 해발 1,000m 고원 침엽수림 코스로 우회하세요."
+      desc: "미세먼지 농도가 다소 높습니다. 음이온과 피톤치드가 풍부한 고원 침엽수림 코스로 우회하세요."
     }
   };
 
   return (
-    <div className="space-y-10 animate-fadeIn pb-12">
+    <div className="space-y-12 animate-fadeIn pb-12">
       
       {/* 1. Header with Title + Climate Widget */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-bento-dark/5 pb-6">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-border-subtle pb-6">
         <div className="text-center sm:text-left">
           <h2 className="text-xl font-display font-black tracking-tight text-bento-dark mb-1">
             모두를 위한 안심 길벗
           </h2>
-          <p className="text-[11px] text-bento-dark/50">지속 가능한 로컬 지원과 포용적인 맞춤형 관광 큐레이터</p>
+          <p className="text-xs text-bento-stone">지속 가능한 로컬 지원과 포용적인 맞춤형 관광 큐레이터</p>
         </div>
 
         {/* Climate Widget Trigger Badge */}
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono font-bold text-bento-dark/40 uppercase hidden md:inline">
-            기상 연동:
+          <span className="text-xs font-medium text-bento-stone hidden md:inline">
+            기상 연동
           </span>
           <button
             onClick={() => setShowWeatherDetails(!showWeatherDetails)}
-            className="px-4 py-2 bg-white hover:bg-bento-bg border border-bento-dark/10 rounded-full text-xs font-semibold text-bento-dark flex items-center gap-2.5 shadow-xs transition-all active:scale-95 cursor-pointer"
+            className="px-4 py-2 bg-white hover:bg-bento-cream border border-border-default rounded-full text-xs font-semibold text-bento-dark flex items-center gap-2.5 shadow-sm transition-all duration-fast ease-out-soft active:scale-95 cursor-pointer"
           >
             {weatherDetailsMap[weatherPreset].icon}
             <span className="font-bold">강원 소멸지역 예보: {weatherPreset === "sunny" ? "맑음" : weatherPreset === "rainy" ? "소나기" : "미세먼지 나쁨"}</span>
-            <span className="text-[10px] font-mono bg-bento-green/10 text-bento-green px-2 py-0.5 rounded-full font-black">자세히</span>
+            <span className="text-xs font-bold bg-bento-green/10 text-bento-green px-2 py-0.5 rounded-full">{showWeatherDetails ? "닫기" : "자세히"}</span>
           </button>
         </div>
       </div>
@@ -152,67 +152,68 @@ export default function HomeTab({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden bg-white rounded-3xl border border-bento-dark/10 p-5 shadow-inner"
+            transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="overflow-hidden bg-white rounded-xl border border-border-default p-5 shadow-md"
           >
             <div className="flex items-start justify-between mb-4">
               <h4 className="text-sm font-display font-black text-bento-dark flex items-center gap-2">
                 <span>실시간 강원 4군 기후 종합관측망</span>
-                <span className="text-[10px] font-mono bg-bento-green text-white px-2 py-0.5 rounded-md">Live API</span>
+                <span className="text-xs font-mono bg-bento-green text-white px-2 py-0.5 rounded-md">Live API</span>
               </h4>
               <button 
                 onClick={() => setShowWeatherDetails(false)} 
-                className="text-xs font-bold text-bento-dark/40 hover:text-bento-dark cursor-pointer"
+                className="text-xs font-bold text-bento-stone hover:text-bento-dark transition-colors duration-fast cursor-pointer"
               >
                 닫기
               </button>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-              <div className="bg-bento-bg p-3.5 rounded-2xl">
-                <span className="text-[10px] text-bento-dark/40 font-mono block mb-1">체감 기온</span>
+              <div className="bg-bento-cream p-3.5 rounded-lg">
+                <span className="text-xs text-bento-stone font-medium block mb-1">체감 기온</span>
                 <strong className="text-lg font-display text-bento-dark">{weatherDetailsMap[weatherPreset].temp}</strong>
               </div>
-              <div className="bg-bento-bg p-3.5 rounded-2xl">
-                <span className="text-[10px] text-bento-dark/40 font-mono block mb-1">미세먼지 지수</span>
+              <div className="bg-bento-cream p-3.5 rounded-lg">
+                <span className="text-xs text-bento-stone font-medium block mb-1">미세먼지 지수</span>
                 <strong className="text-lg font-display text-bento-dark">{weatherDetailsMap[weatherPreset].dust}</strong>
               </div>
-              <div className="bg-bento-bg p-3.5 rounded-2xl">
-                <span className="text-[10px] text-bento-dark/40 font-mono block mb-1">강수 확률</span>
+              <div className="bg-bento-cream p-3.5 rounded-lg">
+                <span className="text-xs text-bento-stone font-medium block mb-1">강수 확률</span>
                 <strong className="text-lg font-display text-bento-dark">{weatherDetailsMap[weatherPreset].rain}</strong>
               </div>
-              <div className="bg-bento-bg p-3.5 rounded-2xl">
-                <span className="text-[10px] text-bento-dark/40 font-mono block mb-1">풍속 및 방향</span>
+              <div className="bg-bento-cream p-3.5 rounded-lg">
+                <span className="text-xs text-bento-stone font-medium block mb-1">풍속 및 방향</span>
                 <strong className="text-sm font-display text-bento-dark">{weatherDetailsMap[weatherPreset].wind}</strong>
               </div>
             </div>
 
-            <div className="bg-bento-olive/15 p-4 rounded-2xl text-xs text-bento-dark/80 leading-relaxed border border-bento-green/10 mb-4">
+            <div className="bg-bento-olive/30 p-4 rounded-lg text-xs text-bento-dark/80 leading-relaxed border border-bento-moss/30 mb-4">
               {weatherDetailsMap[weatherPreset].desc}
             </div>
 
             {/* Simulated Weather Presets Controller for judges/demoers */}
-            <div className="pt-3 border-t border-bento-dark/5 flex items-center justify-between">
-              <span className="text-[10px] font-bold text-bento-dark/40 flex items-center gap-1.5">
-                <Info size={12} className="text-bento-green" />
-                <span>시연용 날씨 강제 변환:</span>
+            <div className="pt-3 border-t border-border-subtle flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <span className="text-xs font-medium text-bento-stone flex items-center gap-1.5">
+                <Info size={12} className="text-bento-green shrink-0" />
+                <span>날씨 체험 모드 — 아래 버튼으로 기상 조건을 바꿔보세요</span>
               </span>
-              <div className="flex gap-1.5">
+              <div className="flex gap-2">
                 {(["sunny", "rainy", "dusty"] as const).map((p) => (
                   <button
                     key={p}
                     onClick={() => setWeatherPreset(p)}
-                    className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-fast cursor-pointer flex items-center gap-1 ${
                       weatherPreset === p
-                        ? "bg-bento-green text-white shadow-xs"
-                        : "bg-bento-bg text-bento-dark/60 hover:bg-bento-dark/5"
+                        ? "bg-bento-green text-white shadow-sm"
+                        : "bg-bento-cream text-bento-dark/70 hover:bg-bento-olive/40"
                     }`}
                   >
                     {p === "sunny" ? (
-                      <span className="flex items-center gap-1"><Sun size={12} className="text-amber-500" /> 맑음</span>
+                      <><Sun size={12} className="text-amber-500" /> 맑음</>
                     ) : p === "rainy" ? (
-                      <span className="flex items-center gap-1"><CloudRain size={12} className="text-blue-500" /> 우천</span>
+                      <><CloudRain size={12} className="text-blue-500" /> 우천</>
                     ) : (
-                      <span className="flex items-center gap-1"><Wind size={12} className="text-teal-600" /> 미세먼지</span>
+                      <><Wind size={12} className="text-teal-600" /> 미세먼지</>
                     )}
                   </button>
                 ))}
@@ -223,22 +224,22 @@ export default function HomeTab({
       </AnimatePresence>
 
       {/* 2. Section: 지금 한산한 인구감소지역 (Tranquil Depopulated Area Picks) */}
-      <div className="bg-gradient-to-br from-[#F3F6F0]/90 to-[#E8ECE2]/50 border border-bento-green/10 p-6 sm:p-8 rounded-[2.5rem] space-y-6 shadow-xs">
+      <div className="bg-bento-olive/25 border border-bento-moss/30 p-6 sm:p-8 rounded-xl space-y-6 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
               <h3 className="text-lg font-display font-black text-bento-dark tracking-tight flex items-center gap-1.5">
-                지금 한산한 인구감소지역 추천 <Leaf size={18} className="text-bento-green animate-pulse" />
+                지금 한산한 인구감소지역 추천 <Leaf size={18} className="text-bento-green" />
               </h3>
             </div>
-            <p className="text-[11px] text-bento-dark/50">
-              관광 집중도가 낮고 혼잡도가 20% 미만인 강원 4개 군의 숨겨진 힐링 명소
+            <p className="text-xs text-bento-stone leading-relaxed">
+              관광 집중도가 낮고 혼잡도 20% 미만인 강원 4개 군의 숨겨진 힐링 명소
             </p>
           </div>
           <button
             onClick={() => onNavigateToTab("search")}
-            className="text-xs font-bold text-bento-green flex items-center gap-1 hover:underline cursor-pointer bg-white/80 backdrop-blur-xs px-3 py-1.5 rounded-full border border-bento-green/5 shadow-xs"
+            className="text-xs font-bold text-bento-green flex items-center gap-1 hover:underline cursor-pointer bg-white/70 backdrop-blur-sm px-3 py-1.5 rounded-full border border-bento-green/10 shadow-sm transition-all duration-fast"
           >
             <span>전체보기</span>
             <ArrowRight size={13} />
@@ -250,9 +251,10 @@ export default function HomeTab({
           {depopulatedTranquil.map((dest) => (
             <motion.div
               key={dest.id}
-              whileHover={{ y: -4 }}
+              whileHover={{ scale: 1.01, y: -2 }}
+              transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
               onClick={() => onSelectDestination(dest)}
-              className="min-w-[270px] bg-white rounded-3xl border border-bento-dark/5 overflow-hidden flex flex-col justify-between hover:shadow-md transition-all cursor-pointer shrink-0"
+              className="min-w-[270px] bg-white rounded-xl border border-border-subtle overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow duration-base cursor-pointer shrink-0"
             >
               <div className="relative h-40">
                 <img
@@ -264,16 +266,16 @@ export default function HomeTab({
                 <div className="absolute inset-0 bg-gradient-to-t from-bento-dark/70 via-transparent to-transparent" />
                 
                 {/* Congestion indicator badge */}
-                <div className="absolute top-3 left-3 px-2.5 py-1 bg-emerald-500/90 text-white rounded-full text-[10px] font-bold flex items-center gap-1">
+                <div className="absolute top-3 left-3 px-2.5 py-1 bg-emerald-500/90 text-white rounded-full text-xs font-bold flex items-center gap-1 shadow-sm">
                   <TrendingDown size={10} />
-                  <span>혼잡도 {dest.congestionLevel}% (한산)</span>
+                  <span>혼잡도 {dest.congestionLevel}%</span>
                 </div>
 
                 <div className="absolute bottom-3 left-3 text-white">
-                  <span className="text-[9px] uppercase font-mono bg-white/20 px-2 py-0.5 rounded-md block w-max font-bold mb-1">
+                  <span className="text-xs font-bold bg-white/20 px-2 py-0.5 rounded-md block w-max mb-1">
                     {dest.region}
                   </span>
-                  <h4 className="font-display font-black text-base tracking-tight leading-none">
+                  <h4 className="font-display font-black text-base tracking-tight leading-tight">
                     {dest.name}
                   </h4>
                 </div>
@@ -285,9 +287,9 @@ export default function HomeTab({
                     e.stopPropagation();
                     onToggleLike(dest.id);
                   }}
-                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur-xs flex items-center justify-center hover:bg-white text-bento-dark/80 transition-colors cursor-pointer"
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white hover:scale-105 transition-all duration-fast cursor-pointer"
                 >
-                  <Heart size={14} className={likedDestinations.includes(dest.id) ? "fill-red-500 text-red-500" : "text-bento-dark/40"} />
+                  <Heart size={14} className={likedDestinations.includes(dest.id) ? "fill-red-500 text-red-500" : "text-bento-stone"} />
                 </button>
               </div>
 
@@ -295,15 +297,17 @@ export default function HomeTab({
                 <p className="text-xs text-bento-dark/60 leading-relaxed line-clamp-2">
                   {dest.description}
                 </p>
-                <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-bento-dark/5">
+                <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-border-subtle">
                   {dest.accessibility.wheelchair && (
-                    <span className="text-[10px] font-bold bg-bento-bg text-bento-dark/70 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                      ♿ 휠체어 데크
+                    <span className="text-xs font-bold bg-bento-cream text-bento-dark/70 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      <Accessibility size={10} />
+                      휠체어 데크
                     </span>
                   )}
                   {dest.petFriendly.allowed && (
-                    <span className="text-[10px] font-bold bg-bento-bg text-bento-dark/70 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                      🐾 반려견 환영
+                    <span className="text-xs font-bold bg-bento-cream text-bento-dark/70 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      <PawPrint size={10} />
+                      반려견 환영
                     </span>
                   )}
                 </div>
@@ -314,26 +318,26 @@ export default function HomeTab({
       </div>
 
       {/* 3. Section: 오늘 날씨엔 이런 코스 (Climate-Adaptive Feed) */}
-      <div className="bg-gradient-to-br from-[#ECF2F6]/90 to-[#DFE9F1]/50 border border-blue-900/5 p-6 sm:p-8 rounded-[2.5rem] space-y-6 shadow-xs">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-blue-900/10 pb-4">
+      <div className="bg-bento-cream/60 border border-border-default p-6 sm:p-8 rounded-xl space-y-6 shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-border-subtle pb-4">
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
               <h3 className="text-lg font-display font-black text-bento-dark tracking-tight flex items-center gap-1.5">
-                오늘 날씨엔 이런 코스 <CloudSun size={18} className="text-blue-500 animate-pulse" />
+                오늘 날씨엔 이런 코스 <CloudSun size={18} className="text-blue-500" />
               </h3>
             </div>
-            <p className="text-[11px] text-bento-dark/50">
+            <p className="text-xs text-bento-stone leading-relaxed">
               실시간 기상 센서에 맞춰 오늘의 대기 상태에 가장 이상적인 무장애 노선을 매칭합니다.
             </p>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-xs border border-blue-200 px-4.5 py-3 rounded-2xl max-w-xl self-stretch lg:self-auto flex items-start gap-2.5 shadow-xs">
+          <div className="bg-white border border-border-subtle px-4 py-3 rounded-xl max-w-xl self-stretch lg:self-auto flex items-start gap-2.5 shadow-sm">
             <Sparkles size={14} className="text-blue-600 shrink-0 mt-0.5" />
-            <p className="text-[11px] text-bento-dark/75 font-semibold leading-relaxed">
+            <p className="text-xs text-bento-dark/75 font-medium leading-relaxed">
               {weatherPreset === "sunny" ? "맑고 상쾌한 햇살 아래, 장애물 없이 푸른 해안 보행 데크를 즐기세요." :
                weatherPreset === "rainy" ? "솔향이 울창하고 비를 가려주는 자작나무 숲길이나 안심 동굴 산책로가 제격입니다." :
-               "미세먼지가 도심을 습격할 땐 공기 정화율이 우수한 1,200m 고원 침엽수림으로 대피해 숨을 쉬어보세요."}
+               "미세먼지가 도심을 습격할 땐 공기 정화율이 우수한 고원 침엽수림으로 대피해 보세요."}
             </p>
           </div>
         </div>
@@ -342,9 +346,10 @@ export default function HomeTab({
           {climateFeed.map((dest) => (
             <motion.div
               key={dest.id}
-              whileHover={{ y: -4 }}
+              whileHover={{ scale: 1.01, y: -2 }}
+              transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
               onClick={() => onSelectDestination(dest)}
-              className="bg-white rounded-3xl border border-bento-dark/5 overflow-hidden flex flex-col justify-between hover:shadow-md transition-all cursor-pointer h-full"
+              className="bg-white rounded-xl border border-border-subtle overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow duration-base cursor-pointer h-full"
             >
               <div className="relative h-40">
                 <img
@@ -355,12 +360,12 @@ export default function HomeTab({
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-bento-dark/75 via-transparent to-transparent" />
                 
-                <span className="absolute top-3 left-3 text-[9px] uppercase font-mono bg-white/20 px-2 py-0.5 rounded-md text-white font-bold">
+                <span className="absolute top-3 left-3 text-xs font-bold bg-white/20 px-2 py-0.5 rounded-md text-white">
                   {dest.region}
                 </span>
 
                 <div className="absolute bottom-3 left-3 text-white">
-                  <h4 className="font-display font-black text-base tracking-tight leading-none">
+                  <h4 className="font-display font-black text-base tracking-tight leading-tight">
                     {dest.name}
                   </h4>
                 </div>
@@ -369,8 +374,8 @@ export default function HomeTab({
                 <p className="text-xs text-bento-dark/60 leading-relaxed line-clamp-2">
                   {dest.description}
                 </p>
-                <div className="pt-2 border-t border-bento-dark/5">
-                  <span className="text-[10px] text-bento-green font-bold flex items-center gap-1.5 leading-relaxed bg-bento-green/10 px-2.5 py-1.5 rounded-xl">
+                <div className="pt-2 border-t border-border-subtle">
+                  <span className="text-xs text-bento-green font-bold flex items-center gap-1.5 leading-relaxed bg-bento-green/10 px-2.5 py-1.5 rounded-lg">
                     <Lightbulb size={12} className="shrink-0 text-bento-green" />
                     <span>{dest.weatherAdjustedRecommendation}</span>
                   </span>
@@ -382,15 +387,15 @@ export default function HomeTab({
       </div>
 
       {/* 4. Section: 당신을 위한 접근성 추천 (Accessibility Personalized Feed) */}
-      <div className="bg-gradient-to-br from-[#FAF3E8]/90 to-[#F2E7D5]/50 border border-bento-sand/60 p-6 sm:p-8 rounded-[2.5rem] space-y-6 shadow-xs">
+      <div className="bg-bento-sand/35 border border-bento-clay/40 p-6 sm:p-8 rounded-xl space-y-6 shadow-sm">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-2 h-2 rounded-full bg-amber-500" />
             <h3 className="text-lg font-display font-black text-bento-dark tracking-tight flex items-center gap-1.5">
-              당신을 위한 접근성 추천 <Star size={18} className="text-amber-500 fill-amber-500" />
+              당신을 위한 접근성 추천 <Star size={18} className="text-amber-500" />
             </h3>
           </div>
-          <p className="text-[11px] text-bento-dark/50">
+          <p className="text-xs text-bento-stone leading-relaxed">
             {hasProfileDefaults 
               ? "MY 설정에 저장하신 배리어프리 조건을 반영한 맞춤 힐링 노선입니다."
               : "동반 반려동물, 유모차 사용, 휠체어 여부에 맞춰 무장애 걷기길을 자동으로 큐레이션합니다."}
@@ -400,77 +405,79 @@ export default function HomeTab({
         {hasProfileDefaults ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {personalizedFeed.map((dest) => (
-              <div
+              <motion.div
                 key={dest.id}
+                whileHover={{ y: -1 }}
+                transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
                 onClick={() => onSelectDestination(dest)}
-                className="bg-white p-4.5 rounded-3xl border border-bento-dark/5 flex gap-4 hover:shadow-md transition-all cursor-pointer items-center"
+                className="bg-white p-4 rounded-xl border border-border-subtle flex gap-4 hover:shadow-md hover:border-border-strong transition-all duration-base cursor-pointer items-center"
               >
                 <img
                   src={dest.image}
                   alt={dest.name}
                   referrerPolicy="no-referrer"
-                  className="w-20 h-20 rounded-2xl object-cover shrink-0"
+                  className="w-20 h-20 rounded-lg object-cover shrink-0"
                 />
                 <div className="space-y-1.5 flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-bento-green font-mono">{dest.region}</span>
+                    <span className="text-xs font-bold text-bento-green">{dest.region}</span>
                     {dest.isDepopulationArea && (
-                      <span className="text-[8px] font-bold bg-bento-olive text-bento-dark px-1.5 py-0.5 rounded-sm">인구감소지</span>
+                      <span className="text-xs font-bold bg-bento-olive text-bento-dark px-1.5 py-0.5 rounded-sm">인구감소지</span>
                     )}
                   </div>
-                  <h4 className="font-display font-black text-sm text-bento-dark tracking-tight truncate leading-none">
+                  <h4 className="font-display font-black text-sm text-bento-dark tracking-tight truncate leading-tight">
                     {dest.name}
                   </h4>
-                  <p className="text-[11px] text-bento-dark/50 truncate leading-relaxed">
+                  <p className="text-xs text-bento-stone truncate leading-relaxed">
                     {dest.accessibility.note}
                   </p>
                   <div className="flex items-center gap-1.5 pt-1">
                     {accessibilityDefaults.wheelchair && (
-                      <span className="text-[9px] bg-bento-green/15 text-bento-green font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+                      <span className="text-xs bg-bento-green/15 text-bento-green font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
                         <Accessibility size={10} />
-                        <span>휠체어 최적</span>
+                        휠체어 최적
                       </span>
                     )}
                     {accessibilityDefaults.stroller && (
-                      <span className="text-[9px] bg-bento-green/15 text-bento-green font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+                      <span className="text-xs bg-bento-green/15 text-bento-green font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
                         <Baby size={10} />
-                        <span>유모차 통행</span>
+                        유모차 통행
                       </span>
                     )}
                     {accessibilityDefaults.petFriendly && (
-                      <span className="text-[9px] bg-bento-green/15 text-bento-green font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+                      <span className="text-xs bg-bento-green/15 text-bento-green font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
                         <PawPrint size={10} />
-                        <span>반려가족</span>
+                        반려가족
                       </span>
                     )}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         ) : (
           /* Profile Empty Call-to-Action Card */
-          <div className="p-6 bg-white rounded-3xl border border-bento-dark/10 shadow-xs flex flex-col md:flex-row items-center justify-between gap-5 text-center md:text-left">
-            <div className="space-y-1.5 max-w-lg">
+          <div className="p-6 bg-white rounded-xl border border-border-default shadow-sm flex flex-col md:flex-row items-center justify-between gap-5 text-center md:text-left">
+            <div className="space-y-2 max-w-lg">
               <div className="flex items-center justify-center md:justify-start gap-1.5">
                 <div className="w-5 h-5 rounded-full bg-bento-green/15 text-bento-green flex items-center justify-center">
                   <Accessibility size={12} />
                 </div>
-                <span className="text-xs font-bold text-bento-green">포용적 맞춤 필터 제안</span>
+                <span className="text-xs font-bold text-bento-green">맞춤 필터를 설정하면 더 정확한 추천을 받을 수 있어요</span>
               </div>
               <h4 className="font-display font-black text-base text-bento-dark tracking-tight">
-                나만의 맞춤 보행 보조 조건(배리어프리)을 설정해 보세요!
+                나만의 배리어프리 보행 조건을 설정해 보세요
               </h4>
-              <p className="text-xs text-bento-dark/60 leading-relaxed">
-                반려동물 동반 여부, 휠체어 소지, 유모차 사용 등 나만의 특수 기준을 프로필에 한 번만 등록하시면, 
-                홈 화면의 실시간 추천과 검색 피드가 나만을 위해 완전히 자동으로 동기화됩니다.
+              <p className="text-xs text-bento-stone leading-relaxed">
+                반려동물 동반, 휠체어 사용, 유모차 여부 등 나만의 조건을 프로필에 등록하면
+                홈 화면의 추천과 검색 결과가 자동으로 맞춰집니다.
               </p>
             </div>
             <button
               onClick={() => onNavigateToTab("my")}
-              className="px-5 py-3 bg-bento-dark hover:bg-bento-dark/90 text-white text-xs font-bold rounded-2xl transition-all cursor-pointer whitespace-nowrap shadow-xs"
+              className="px-5 py-3 bg-bento-dark hover:bg-bento-ink text-white text-xs font-bold rounded-xl transition-colors duration-fast cursor-pointer whitespace-nowrap shadow-sm"
             >
-              내 맞춤 기본값 설정하러 가기
+              내 맞춤 기본값 설정하기
             </button>
           </div>
         )}
