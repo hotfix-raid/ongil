@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useRef, useState, useEffect } from "react";
 import Hero from "./components/Hero";
 import ProblemSection from "./components/ProblemSection";
@@ -43,14 +45,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<"home" | "search" | "map" | "course" | "my">("home");
 
   // User mock authentication states
-  const [user, setUser] = useState<{ name: string; avatarUrl: string } | null>(() => {
-    try {
-      const saved = localStorage.getItem("ongil_user_v1");
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [user, setUser] = useState<{ name: string; avatarUrl: string } | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [modalMode, setModalMode] = useState<"login" | "signup">("login");
 
@@ -65,47 +60,62 @@ export default function App() {
   };
 
   // Global states
-  const [likedDestinations, setLikedDestinations] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem("ongil_liked_v1");
-      return saved ? JSON.parse(saved) : ["d001", "d004"]; // Pre-fill with Goseong & Samcheok for a vibrant start
-    } catch {
-      return ["d001", "d004"];
-    }
-  });
+  const [likedDestinations, setLikedDestinations] = useState<string[]>(["d001", "d004"]); // Pre-fill with Goseong & Samcheok for a vibrant start
 
-  const [accessibilityDefaults, setAccessibilityDefaults] = useState(() => {
-    try {
-      const saved = localStorage.getItem("ongil_accessibility_v1");
-      return saved ? JSON.parse(saved) : {
-        petFriendly: false,
-        wheelchair: false,
-        stroller: false,
-        senior: false,
-        parking: false
-      };
-    } catch {
-      return {
-        petFriendly: false,
-        wheelchair: false,
-        stroller: false,
-        senior: false,
-        parking: false
-      };
-    }
+  const [accessibilityDefaults, setAccessibilityDefaults] = useState({
+    petFriendly: false,
+    wheelchair: false,
+    stroller: false,
+    senior: false,
+    parking: false
   });
+  const [storageHydrated, setStorageHydrated] = useState(false);
 
   // Selected destination to showcase in the unified detail modal
   const [selectedDestination, setSelectedDestination] = useState<MockDestination | null>(null);
 
-  // Sync to local storage
+  // Hydrate browser-only state after the first render so SSR and hydration match.
   useEffect(() => {
+    try {
+      const saved = localStorage.getItem("ongil_user_v1");
+      setUser(saved ? JSON.parse(saved) : null);
+    } catch {
+      // Keep the deterministic default when storage is unavailable or invalid.
+    }
+
+    try {
+      const saved = localStorage.getItem("ongil_liked_v1");
+      setLikedDestinations(saved ? JSON.parse(saved) : ["d001", "d004"]);
+    } catch {
+      // Keep the deterministic default when storage is unavailable or invalid.
+    }
+
+    try {
+      const saved = localStorage.getItem("ongil_accessibility_v1");
+      setAccessibilityDefaults(saved ? JSON.parse(saved) : {
+        petFriendly: false,
+        wheelchair: false,
+        stroller: false,
+        senior: false,
+        parking: false
+      });
+    } catch {
+      // Keep the deterministic default when storage is unavailable or invalid.
+    }
+
+    setStorageHydrated(true);
+  }, []);
+
+  // Sync to local storage after browser state has been hydrated.
+  useEffect(() => {
+    if (!storageHydrated) return;
     localStorage.setItem("ongil_liked_v1", JSON.stringify(likedDestinations));
-  }, [likedDestinations]);
+  }, [likedDestinations, storageHydrated]);
 
   useEffect(() => {
+    if (!storageHydrated) return;
     localStorage.setItem("ongil_accessibility_v1", JSON.stringify(accessibilityDefaults));
-  }, [accessibilityDefaults]);
+  }, [accessibilityDefaults, storageHydrated]);
 
   // Global Handlers
   const handleToggleLike = (id: string) => {

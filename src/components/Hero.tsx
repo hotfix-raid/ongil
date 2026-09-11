@@ -1,6 +1,5 @@
 import { motion } from "motion/react";
 import { Compass, ChevronDown, Sparkles } from "lucide-react";
-// @ts-ignore
 import ongilHero from "../assets/images/ongil_hero_1783066591711.jpg";
 
 interface HeroProps {
@@ -83,7 +82,7 @@ export default function Hero({ onExploreClick }: HeroProps) {
         >
           {/* Background Image with elegant overlay */}
           <img
-            src={ongilHero}
+            src={ongilHero.src}
             alt="온길 강원도 고요한 경관"
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             style={{ filter: "brightness(0.9) contrast(1.05)" }}
