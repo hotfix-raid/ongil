@@ -32,7 +32,7 @@ import {
   PawPrint,
   Car
 } from "lucide-react";
-import { MockDestination, mockDestinations, generate30DaysCongestion } from "../data/destinations";
+import { MockDestination, generate30DaysCongestion } from "../data/destinations";
 
 interface SearchTabProps {
   onSelectDestination: (destination: MockDestination) => void;
@@ -47,6 +47,41 @@ interface SearchTabProps {
   };
 }
 
+interface Sigungu {
+  ldong_regn_cd: string;
+  ldong_signgu_cd: string;
+  signgu_name: string;
+}
+
+interface SigunguResponse {
+  count: number;
+  rows: Sigungu[];
+}
+
+interface TourAttraction {
+  content_id: string | number;
+  title: string;
+  addr1?: string | null;
+  addr2?: string | null;
+  firstimage?: string | null;
+  firstimage2?: string | null;
+  lcls_systm1?: string | null;
+  lcls_systm2?: string | null;
+  lcls_systm3?: string | null;
+  parking?: string | null;
+  chkbabycarriage?: string | null;
+  chkpet?: string | null;
+  mapx?: string | number | null;
+  mapy?: string | number | null;
+  ldong_regn_cd: string;
+  ldong_signgu_cd: string;
+}
+
+interface TourAttractionsResponse {
+  count: number;
+  rows: TourAttraction[];
+}
+
 const next30Days = generate30DaysCongestion();
 
 export default function SearchTab({
@@ -57,7 +92,11 @@ export default function SearchTab({
 }: SearchTabProps) {
   // Main Search State
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSigungu, setSelectedSigungu] = useState<Sigungu | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [sigunguRows, setSigunguRows] = useState<Sigungu[]>([]);
+  const [isSigunguLoading, setIsSigunguLoading] = useState(true);
+  const [sigunguLoadFailed, setSigunguLoadFailed] = useState(false);
 
   // Date selection state
   const [isPeriod, setIsPeriod] = useState(true);
@@ -86,24 +125,45 @@ export default function SearchTab({
   // Overlay state
   const [activeSheet, setActiveSheet] = useState<"date" | "guests" | "filters" | null>(null);
   const [searchTriggered, setSearchTriggered] = useState(false);
-  const [filteredResults, setFilteredResults] = useState<MockDestination[]>([]);
+  const [tourAttractions, setTourAttractions] = useState<TourAttraction[]>([]);
+  const [isTourAttractionsLoading, setIsTourAttractionsLoading] = useState(false);
+  const [tourAttractionsError, setTourAttractionsError] = useState(false);
+  const [imageErrorIds, setImageErrorIds] = useState<Set<string>>(new Set());
   const [searchMessage, setSearchMessage] = useState("");
   const [locationMocked, setLocationMocked] = useState(false);
   const [showSyncAlert, setShowSyncAlert] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
-
-  // Suggested keywords
-  const popularKeywords = [
-    { text: "고성 능파대", badge: "인구감소 한산지" },
-    { text: "태백 바람의 언덕", badge: "미세먼지 안심" },
-    { text: "정선 동강 소금강길", badge: "무장애 안심길" },
-    { text: "삼척 초곡용굴", badge: "열린관광 데크" },
-    { text: "해파랑길 46코스", badge: "두루누비 평지" },
-    { text: "강릉 안목 커피거리", badge: "인파 과밀지" }
-  ];
+  const tourRequestControllerRef = useRef<AbortController | null>(null);
 
   const recentSearches = ["정선 민둥산", "고성 아야진 댕수욕장", "두루누비"];
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadSigungu = async () => {
+      try {
+        const response = await fetch("/api/sigungu", { signal: controller.signal });
+        if (!response.ok) throw new Error("시군구 목록을 불러오지 못했습니다.");
+
+        const data = (await response.json()) as SigunguResponse;
+        if (!controller.signal.aborted) {
+          setSigunguRows(Array.isArray(data.rows) ? data.rows : []);
+        }
+      } catch {
+        if (!controller.signal.aborted) setSigunguLoadFailed(true);
+      } finally {
+        if (!controller.signal.aborted) setIsSigunguLoading(false);
+      }
+    };
+
+    loadSigungu();
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    return () => tourRequestControllerRef.current?.abort();
+  }, []);
 
   // 1. Live Sync on Mount: Read from Profile Settings and pre-fill search filters!
   useEffect(() => {
@@ -142,11 +202,13 @@ export default function SearchTab({
 
   // Execute search whenever toggling congestion or filters directly
   useEffect(() => {
-    handleSearchExecution();
+    if (!selectedSigungu) handleSearchExecution();
   }, [avoidCongestion, filterPetFriendly, filterPetConditions, filterWheelchair, filterStroller, filterParking, filterSenior]);
 
   const handleLocationDetection = () => {
+    resetTourAttractionResults();
     setLocationMocked(true);
+    setSelectedSigungu(null);
     setSearchQuery("삼척시 근덕면 (내 주변)");
     setShowSuggestions(false);
   };
@@ -209,70 +271,60 @@ export default function SearchTab({
     setSearchTriggered(true);
   };
 
-  const handleSearchExecution = () => {
+  const resetTourAttractionResults = () => {
+    tourRequestControllerRef.current?.abort();
+    setTourAttractions([]);
+    setIsTourAttractionsLoading(false);
+    setTourAttractionsError(false);
+  };
+
+  const handleSearchExecution = async () => {
     setSearchTriggered(true);
-    let results = [...mockDestinations];
+    setTourAttractionsError(false);
+    setImageErrorIds(new Set());
 
-    if (searchQuery && !searchQuery.includes("(내 주변)")) {
-      const q = searchQuery.toLowerCase().trim();
-      results = results.filter(
-        d =>
-          d.name.toLowerCase().includes(q) ||
-          d.region.toLowerCase().includes(q) ||
-          d.regionFull.toLowerCase().includes(q) ||
-          d.description.toLowerCase().includes(q) ||
-          d.category.toLowerCase().includes(q)
-      );
-    } else if (searchQuery.includes("(내 주변)")) {
-      results = results.filter(d => d.region === "삼척");
+    if (!selectedSigungu) {
+      tourRequestControllerRef.current?.abort();
+      setTourAttractions([]);
+      setIsTourAttractionsLoading(false);
+      setSearchMessage("목적지 추천 목록에서 시군구를 먼저 선택한 뒤 검색해 주세요.");
+      return;
     }
 
-    if (filterPetFriendly || pets > 0) {
-      results = results.filter(d => d.petFriendly.allowed === true);
-      if (filterPetConditions === "indoor") {
-        results = results.filter(d => d.petFriendly.details.indoor);
-      } else if (filterPetConditions === "large") {
-        results = results.filter(d => d.petFriendly.details.largeDog);
+    tourRequestControllerRef.current?.abort();
+    const controller = new AbortController();
+    tourRequestControllerRef.current = controller;
+    setIsTourAttractionsLoading(true);
+
+    try {
+      const params = new URLSearchParams({
+        ldong_regn_cd: selectedSigungu.ldong_regn_cd,
+        ldong_signgu_cd: selectedSigungu.ldong_signgu_cd
+      });
+      const response = await fetch(`/api/tour-attractions?${params.toString()}`, { signal: controller.signal });
+      if (!response.ok) throw new Error("관광지 목록을 불러오지 못했습니다.");
+
+      const data = (await response.json()) as TourAttractionsResponse;
+      if (!controller.signal.aborted) {
+        const rows = Array.isArray(data.rows) ? data.rows : [];
+        setTourAttractions(rows);
+        setSearchMessage(`${selectedSigungu.signgu_name} 관광지 ${rows.length}곳을 찾았습니다.`);
       }
-    }
-
-    if (filterWheelchair) {
-      results = results.filter(d => d.accessibility.wheelchair);
-    }
-    if (filterStroller || children > 0) {
-      results = results.filter(d => d.accessibility.stroller);
-    }
-    if (filterSenior) {
-      results = results.filter(d => d.accessibility.senior);
-    }
-    if (filterParking) {
-      results = results.filter(d => d.accessibility.parking);
-    }
-
-    if (avoidCongestion) {
-      // Prioritize low congestion
-      results.sort((a, b) => a.congestionLevel - b.congestionLevel);
-    } else {
-      // Standard descending congestion level
-      results.sort((a, b) => b.congestionLevel - a.congestionLevel);
-    }
-
-    setFilteredResults(results);
-
-    let msg = `검색 결과 ${results.length}개의 안심 보행 코스가 발견되었습니다.`;
-    if (avoidCongestion) {
-      const containsHigh = results.some(d => d.congestionStatus === "high");
-      if (containsHigh) {
-        msg = "⚠️ 붐비는 유명 명소가 포함되어 있습니다. 온길의 대안 스팟과 함께 한산한 정취를 비교해보세요.";
-      } else {
-        msg = "🌿 혼잡도가 낮고 차별 없는 무장애 안심 코스 위주로 순위를 자동 정렬했습니다.";
+    } catch {
+      if (!controller.signal.aborted) {
+        setTourAttractions([]);
+        setTourAttractionsError(true);
+        setSearchMessage("관광지 목록을 불러오지 못했습니다. 잠시 후 다시 검색해 주세요.");
       }
+    } finally {
+      if (!controller.signal.aborted) setIsTourAttractionsLoading(false);
     }
-    setSearchMessage(msg);
   };
 
   const handleClearSearch = () => {
+    resetTourAttractionResults();
     setSearchQuery("");
+    setSelectedSigungu(null);
     setSearchTriggered(false);
     setLocationMocked(false);
     setAdults(2);
@@ -345,7 +397,7 @@ export default function SearchTab({
       </div>
 
       {/* 3. Weather Broadcast Banner */}
-      <div className={`p-4 rounded-xl border text-xs flex items-start gap-3 duration-base ease-out-soft ${weatherInfo.status === "warning"
+      {!selectedSigungu && <div className={`p-4 rounded-xl border text-xs flex items-start gap-3 duration-base ease-out-soft ${weatherInfo.status === "warning"
           ? "bg-amber-50 border-amber-200 text-amber-800"
           : weatherInfo.status === "danger"
             ? "bg-red-50 border-red-200 text-red-800"
@@ -363,7 +415,7 @@ export default function SearchTab({
           <span className="font-bold block mb-0.5">실시간 날씨 & 미세먼지 환경 보정</span>
           <p className="leading-relaxed text-[11px]">{weatherInfo.text}</p>
         </div>
-      </div>
+      </div>}
 
       {/* ==================== SEARCH CONTAINER ==================== */}
       <div className="bg-white rounded-xl border border-border-default p-5 shadow-md relative z-30">
@@ -380,6 +432,8 @@ export default function SearchTab({
                 placeholder="정선, 고성, 삼척... 어디로 가시나요?"
                 value={searchQuery}
                 onChange={(e) => {
+                  resetTourAttractionResults();
+                  setSelectedSigungu(null);
                   setSearchQuery(e.target.value);
                   setShowSuggestions(true);
                 }}
@@ -388,7 +442,11 @@ export default function SearchTab({
               />
               {searchQuery && (
                 <button
-                  onClick={() => setSearchQuery("")}
+                  onClick={() => {
+                    resetTourAttractionResults();
+                    setSelectedSigungu(null);
+                    setSearchQuery("");
+                  }}
                   className="absolute right-12 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-bento-bg hover:bg-bento-dark/5 flex items-center justify-center text-bento-dark/40 hover:text-bento-dark cursor-pointer transition-colors duration-fast"
                 >
                   <X size={11} />
@@ -424,6 +482,8 @@ export default function SearchTab({
                           <button
                             key={i}
                             onClick={() => {
+                              resetTourAttractionResults();
+                              setSelectedSigungu(null);
                               setSearchQuery(term);
                               setShowSuggestions(false);
                             }}
@@ -436,23 +496,32 @@ export default function SearchTab({
                     </div>
 
                     <div>
-                      <h4 className="text-[10px] font-bold text-bento-dark/50 mb-2">시범 안심지 추천</h4>
+                      <h4 className="text-[10px] font-bold text-bento-dark/50 mb-2">시군구 선택</h4>
                       <div className="space-y-1">
-                        {popularKeywords.map((item, i) => (
+                        {isSigunguLoading && (
+                          <p className="px-3 py-2 text-[11px] text-bento-dark/40">지역 목록을 불러오는 중입니다.</p>
+                        )}
+                        {!isSigunguLoading && sigunguLoadFailed && (
+                          <p className="px-3 py-2 text-[11px] text-bento-dark/40">지역 목록을 잠시 불러오지 못했습니다.</p>
+                        )}
+                        {!isSigunguLoading && !sigunguLoadFailed && sigunguRows.map((sigungu) => (
                           <button
-                            key={i}
+                            key={`${sigungu.ldong_regn_cd}-${sigungu.ldong_signgu_cd}`}
+                            aria-pressed={selectedSigungu?.ldong_regn_cd === sigungu.ldong_regn_cd && selectedSigungu.ldong_signgu_cd === sigungu.ldong_signgu_cd}
                             onClick={() => {
-                              setSearchQuery(item.text);
+                              resetTourAttractionResults();
+                              setSelectedSigungu(sigungu);
+                              setSearchQuery(sigungu.signgu_name);
                               setShowSuggestions(false);
                             }}
                             className="w-full text-left px-3 py-2 hover:bg-bento-bg rounded-md flex items-center justify-between text-xs text-bento-dark transition-colors duration-fast cursor-pointer"
                           >
                             <div className="flex items-center gap-2">
                               <MapPin size={10} className="text-bento-green" />
-                              <span className="font-bold">{item.text}</span>
+                              <span className="font-bold">{sigungu.signgu_name}</span>
                             </div>
                             <span className="text-[8px] font-bold text-bento-green bg-bento-green/15 px-1.5 py-0.5 rounded-full">
-                              {item.badge}
+                              시군구
                             </span>
                           </button>
                         ))}
@@ -621,105 +690,90 @@ export default function SearchTab({
             </div>
 
             {/* Results Grid - responsive 3 columns on tablet/desktop */}
-            {filteredResults.length > 0 ? (
+            {isTourAttractionsLoading ? (
+              <div className="text-center py-12 bg-white rounded-lg border border-border-default shadow-sm max-w-md mx-auto space-y-3">
+                <div className="w-12 h-12 rounded-full bg-bento-bg flex items-center justify-center mx-auto">
+                  <Search size={24} className="text-bento-green animate-pulse" />
+                </div>
+                <h4 className="font-display font-bold text-bento-dark text-sm">관광지를 불러오는 중입니다</h4>
+                <p className="text-xs text-bento-dark/50 px-6 leading-relaxed">선택한 시군구의 관광지 정보를 확인하고 있어요.</p>
+              </div>
+            ) : tourAttractions.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-                {filteredResults.map((dest) => {
-                  const isAlternative = dest.congestionStatus === "high";
+                {tourAttractions.map((attraction) => {
+                  const attractionId = String(attraction.content_id);
+                  const image = attraction.firstimage || attraction.firstimage2;
+                  const categoryCodes = [attraction.lcls_systm1, attraction.lcls_systm2, attraction.lcls_systm3].filter(Boolean);
+                  const address = [attraction.addr1, attraction.addr2].filter(Boolean).join(" ");
+                  const amenities = [
+                    attraction.parking && { label: "주차", value: attraction.parking, icon: <Car size={10} className="text-bento-green" /> },
+                    attraction.chkbabycarriage && { label: "유모차", value: attraction.chkbabycarriage, icon: <Baby size={10} className="text-amber-500" /> },
+                    attraction.chkpet && { label: "반려동물", value: attraction.chkpet, icon: <PawPrint size={10} className="text-orange-500" /> }
+                  ].filter(Boolean) as { label: string; value: string; icon: React.ReactNode }[];
 
                   return (
                     <motion.div
-                      key={dest.id}
+                      key={attractionId}
                       whileHover={{
                         y: -4,
                         boxShadow: "0 4px 6px -1px color-mix(in srgb, #1A2F23 6%, transparent)"
                       }}
                       transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-                      onClick={() => onSelectDestination(dest)}
-                      className={`bg-white rounded-lg border overflow-hidden flex flex-col justify-between cursor-pointer ${isAlternative ? "border-amber-400 ring-2 ring-amber-400/20" : "border-border-default"
-                        }`}
+                      className="bg-white rounded-lg border border-border-default overflow-hidden flex flex-col justify-between"
                     >
                       <div className="relative h-44">
-                        <img
-                          src={dest.image}
-                          alt={dest.name}
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-bento-dark/70 via-transparent to-transparent" />
+                        {image && !imageErrorIds.has(attractionId) ? (
+                          <img
+                            src={image}
+                            alt={attraction.title}
+                            referrerPolicy="no-referrer"
+                            onError={() => setImageErrorIds((ids) => new Set(ids).add(attractionId))}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-bento-bg flex items-center justify-center text-xs text-bento-dark/40">이미지 없음</div>
+                        )}
+                        {image && !imageErrorIds.has(attractionId) && <div className="absolute inset-0 bg-gradient-to-t from-bento-dark/70 via-transparent to-transparent" />}
 
-                        {/* Top indicators */}
-                        <div className="absolute top-3 left-3 flex flex-wrap gap-1">
-                          <span className={`px-2.5 py-0.5 rounded-sm text-[9px] font-bold text-white flex items-center gap-1 ${dest.congestionStatus === "high"
-                              ? "bg-red-500"
-                              : dest.congestionStatus === "medium"
-                                ? "bg-amber-500"
-                                : "bg-emerald-500"
-                            }`}>
-                            혼잡도 {dest.congestionLevel}%
-                          </span>
-                          {dest.isDepopulationArea && (
-                            <span className="bg-bento-green/95 text-white text-[8px] font-bold px-2 py-0.5 rounded-full">
-                              시범안심지역
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Pinned/Liked */}
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            onToggleLike(dest.id);
+                            onToggleLike(attractionId);
                           }}
                           className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur-xs flex items-center justify-center hover:bg-white text-bento-dark/80 transition-colors cursor-pointer"
                         >
-                          <Heart size={14} className={likedDestinations.includes(dest.id) ? "fill-red-500 text-red-500" : "text-bento-dark/40"} />
+                          <Heart size={14} className={likedDestinations.includes(attractionId) ? "fill-red-500 text-red-500" : "text-bento-dark/40"} />
                         </button>
 
-                        <div className="absolute bottom-3 left-3 text-white">
-                          <span className="text-[9px] font-semibold text-bento-olive/90 block">
-                            {dest.region} · {dest.category}
-                          </span>
+                        <div className={`absolute bottom-3 left-3 right-3 ${image && !imageErrorIds.has(attractionId) ? "text-white" : "text-bento-dark"}`}>
+                          {categoryCodes.length > 0 && (
+                            <span className="text-[9px] font-semibold text-bento-olive/90 block truncate">
+                              {categoryCodes.join(" · ")}
+                            </span>
+                          )}
                           <h4 className="font-display font-black text-sm tracking-tight leading-none mt-1">
-                            {dest.name}
+                            {attraction.title}
                           </h4>
                         </div>
                       </div>
 
                       <div className="p-4 space-y-3.5 flex-1 flex flex-col justify-between">
                         <p className="text-[11px] text-bento-dark/60 leading-relaxed line-clamp-2">
-                          {dest.description}
+                          {address || "주소 정보 없음"}
                         </p>
 
-                        <div className="space-y-1">
-                          <span className="text-[9px] font-semibold text-bento-dark/50 block">보행 편의</span>
-                          <div className="flex flex-wrap gap-1">
-                            {dest.accessibility.wheelchair && (
-                              <span className="bg-bento-bg text-bento-dark/80 text-[9px] font-medium px-2 py-0.5 rounded-sm flex items-center gap-1 border border-border-subtle">
-                                <Accessibility size={10} className="text-bento-green" />
-                                <span>경사로 완비</span>
-                              </span>
-                            )}
-                            {dest.accessibility.stroller && (
-                              <span className="bg-bento-bg text-bento-dark/80 text-[9px] font-medium px-2 py-0.5 rounded-sm flex items-center gap-1 border border-border-subtle">
-                                <Baby size={10} className="text-amber-500" />
-                                <span>유모차 안심</span>
-                              </span>
-                            )}
-                            {dest.petFriendly.allowed && (
-                              <span className="bg-bento-bg text-bento-dark/80 text-[9px] font-medium px-2 py-0.5 rounded-sm flex items-center gap-1 border border-border-subtle">
-                                <PawPrint size={10} className="text-orange-500" />
-                                <span>반려견 동반</span>
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Alternative link notification */}
-                        {isAlternative && dest.alternativeId && (
-                          <div className="p-2 bg-amber-50 rounded-md border border-amber-200 text-[10px] text-amber-800 leading-normal flex items-start gap-1.5">
-                            <AlertTriangle size={12} className="text-amber-600 shrink-0 mt-0.5" />
-                            <span><strong>주말 집중지 경고:</strong> 대안 여행지인 <strong>고성 능파대</strong>로 쾌적한 우회 코스가 준비되어 있습니다. 클릭하여 대안을 조망하세요.</span>
+                        {amenities.length > 0 && (
+                          <div className="space-y-1">
+                            <span className="text-[9px] font-semibold text-bento-dark/50 block">제공 정보</span>
+                            <div className="flex flex-wrap gap-1">
+                              {amenities.map((amenity) => (
+                                <span key={amenity.label} className="bg-bento-bg text-bento-dark/80 text-[9px] font-medium px-2 py-0.5 rounded-sm flex items-center gap-1 border border-border-subtle">
+                                  {amenity.icon}
+                                  <span>{amenity.label}: {amenity.value}</span>
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -733,16 +787,21 @@ export default function SearchTab({
                 <div className="w-12 h-12 rounded-full bg-bento-bg flex items-center justify-center">
                   <Search size={24} className="text-bento-dark/30" />
                 </div>
-                <h4 className="font-display font-bold text-bento-dark text-sm mt-2">조건에 맞는 코스가 없어요</h4>
+                <h4 className="font-display font-bold text-bento-dark text-sm mt-2">
+                  {tourAttractionsError ? "관광지 정보를 불러오지 못했어요" : selectedSigungu ? "등록된 관광지가 없어요" : "목적지를 먼저 선택해 주세요"}
+                </h4>
                 <p className="text-xs text-bento-dark/50 px-6 leading-relaxed">
-                  필터 조건을 너무 많이 적용하셨거나, 해당 지역에 아직 등록된 안심 코스가 없습니다.
-                  보행 필터를 줄이거나 '내 주변' 기능으로 다시 찾아보세요!
+                  {tourAttractionsError
+                    ? "네트워크 상태를 확인한 뒤 검색 버튼을 다시 눌러주세요."
+                    : selectedSigungu
+                      ? "선택한 시군구에 등록된 관광지 정보가 아직 없습니다."
+                      : "목적지 입력창에서 시군구를 선택하면 해당 지역의 관광지를 확인할 수 있습니다."}
                 </p>
                 <button
-                  onClick={handleClearSearch}
+                  onClick={selectedSigungu ? handleSearchExecution : () => searchInputRef.current?.focus()}
                   className="px-4 py-2 bg-bento-green hover:bg-bento-green/90 text-white text-xs font-medium rounded-sm transition-colors duration-base cursor-pointer"
                 >
-                  필터 전체 초기화
+                  {selectedSigungu ? "다시 검색" : "목적지 선택하기"}
                 </button>
               </div>
             )}
@@ -750,34 +809,28 @@ export default function SearchTab({
         )}
       </AnimatePresence>
 
-      {/* 4. Display default suggestions before any search query executed */}
+      {/* 4. Guidance before any search query executed */}
       {!searchTriggered && (
         <div className="space-y-4 pt-4 border-t border-border-subtle">
           <h3 className="text-xs font-semibold text-bento-dark/50 pl-1 flex items-center gap-1.5">
-            <span>강원 소멸 대응 시범지구 실시간 혼잡 예측</span>
+            <span>관광지 검색 안내</span>
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {mockDestinations.slice(0, 4).map((dest) => (
-              <div
-                key={dest.id}
-                onClick={() => onSelectDestination(dest)}
-                className="bg-white rounded-xl border border-border-subtle p-3 flex items-center gap-3 hover:shadow-md transition-all cursor-pointer"
-              >
-                <img
-                  src={dest.image}
-                  alt={dest.name}
-                  referrerPolicy="no-referrer"
-                  className="w-12 h-12 rounded-xl object-cover shrink-0"
-                />
-                <div className="min-w-0 flex-1">
-                  <h4 className="text-xs font-bold text-bento-dark truncate leading-none mb-1">{dest.name}</h4>
-                  <div className="flex items-center justify-between text-[10px] text-bento-dark/40 font-mono">
-                    <span>{dest.region}</span>
-                    <span className="text-bento-green font-bold">혼잡 {dest.congestionLevel}%</span>
-                  </div>
-                </div>
+          <div className="bg-white rounded-xl border border-border-subtle p-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-bento-bg flex items-center justify-center shrink-0">
+                <MapPin size={17} className="text-bento-green" />
               </div>
-            ))}
+              <p className="text-xs text-bento-dark/60 leading-relaxed">
+                목적지 입력창에서 시군구를 선택하면 해당 지역의 관광지를 확인할 수 있습니다.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => searchInputRef.current?.focus()}
+              className="shrink-0 px-3 py-2 bg-bento-green/10 hover:bg-bento-green/15 text-bento-green text-[11px] font-semibold rounded-md transition-colors cursor-pointer"
+            >
+              시군구 선택
+            </button>
           </div>
         </div>
       )}
