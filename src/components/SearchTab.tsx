@@ -1,41 +1,22 @@
-import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "motion/react";
 import {
-  Search,
-  MapPin,
-  Calendar,
-  Users,
-  SlidersHorizontal,
-  Navigation,
-  Sun,
-  CloudRain,
-  Cloud,
-  Wind,
-  Info,
-  Plus,
-  Minus,
+  Baby,
   Check,
   ChevronDown,
-  X,
-  ArrowRight,
-  Sparkles,
-  Compass,
-  AlertTriangle,
-  Flame,
-  Trees,
-  Accessibility,
+  Clock3,
   Footprints,
-  Maximize2,
   Heart,
-  Leaf,
-  Baby,
+  MapPin,
   PawPrint,
-  Car
+  RefreshCw,
+  Search,
+  X
 } from "lucide-react";
-import { MockDestination, generate30DaysCongestion } from "../data/destinations";
 
 interface SearchTabProps {
-  onSelectDestination: (destination: MockDestination) => void;
+  // Kept for the shared tab contract. Search results intentionally do not invent a mock destination.
+  onSelectDestination: (...args: never[]) => void;
   likedDestinations: string[];
   onToggleLike: (id: string) => void;
   accessibilityDefaults: {
@@ -53,12 +34,14 @@ interface Sigungu {
   signgu_name: string;
 }
 
-interface SigunguResponse {
+interface ApiResponse<T> {
   count: number;
-  rows: Sigungu[];
+  page: number;
+  limit: number;
+  rows: T[];
 }
 
-interface TourAttraction {
+interface Attraction {
   content_id: string | number;
   title: string;
   addr1?: string | null;
@@ -66,1086 +49,304 @@ interface TourAttraction {
   firstimage?: string | null;
   firstimage2?: string | null;
   lcls_systm1?: string | null;
-  lcls_systm2?: string | null;
-  lcls_systm3?: string | null;
-  parking?: string | null;
-  chkbabycarriage?: string | null;
-  chkpet?: string | null;
-  mapx?: string | number | null;
-  mapy?: string | number | null;
-  ldong_regn_cd: string;
-  ldong_signgu_cd: string;
+  hasPetInfo?: boolean;
+  hasPhysicalInfo?: boolean;
+  hasVisualInfo?: boolean;
+  hasHearingInfo?: boolean;
+  hasInfantFamilyInfo?: boolean;
+  content_modified_at?: string | null;
 }
 
-interface TourAttractionsResponse {
-  count: number;
-  rows: TourAttraction[];
+interface Course {
+  crs_idx: string;
+  crs_kor_nm: string;
+  crs_dstnc?: number | null;
+  crs_totl_rqrm_hour?: number | null;
+  crs_cycle?: string | null;
+  brd_div?: string | null;
+  sigun?: string | null;
+  route_idx?: string | null;
+  theme_nm?: string | null;
+  gpxpath?: string | null;
+  crs_summary?: string | null;
 }
 
-const next30Days = generate30DaysCongestion();
+type Sort = "relevance" | "name" | "updated";
+type Tab = "attractions" | "courses";
+type Range = "short" | "medium" | "long";
+
+const barrierFilters = [
+  ["physicalInfo", "이동 편의 정보"],
+  ["visualInfo", "시각 안내 정보"],
+  ["hearingInfo", "청각 안내 정보"],
+  ["infantFamilyInfo", "영유아·가족 편의 정보"]
+] as const;
+
+const infoFilterButtons: Array<[string, string, React.ElementType]> = [
+  ["petInfo", "반려동물 안내 있음", PawPrint],
+  ["physicalInfo", "이동 편의 정보", Check],
+  ["visualInfo", "시각 안내 정보", Check],
+  ["hearingInfo", "청각 안내 정보", Check],
+  ["infantFamilyInfo", "영유아·가족 편의 정보", Baby]
+];
+
+const rangeLabels: Record<Range, string> = { short: "짧은 편", medium: "중간", long: "긴 편" };
 
 export default function SearchTab({
-  onSelectDestination,
+  onSelectDestination: _onSelectDestination,
   likedDestinations,
   onToggleLike,
   accessibilityDefaults
 }: SearchTabProps) {
-  // Main Search State
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSigungu, setSelectedSigungu] = useState<Sigungu | null>(null);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [tab, setTab] = useState<Tab>("attractions");
+  const [query, setQuery] = useState("");
+  const [sigungu, setSigungu] = useState<Sigungu | null>(null);
   const [sigunguRows, setSigunguRows] = useState<Sigungu[]>([]);
-  const [isSigunguLoading, setIsSigunguLoading] = useState(true);
-  const [sigunguLoadFailed, setSigunguLoadFailed] = useState(false);
+  const [showRegions, setShowRegions] = useState(false);
+  const [region, setRegion] = useState("");
+  const [boardDivision, setBoardDivision] = useState("");
+  const [distance, setDistance] = useState<Range | "">("");
+  const [duration, setDuration] = useState<Range | "">("");
+  const [cycle, setCycle] = useState("");
+  const [petInfo, setPetInfo] = useState(accessibilityDefaults.petFriendly);
+  const [barrier, setBarrier] = useState<Record<string, boolean>>({
+    physicalInfo: accessibilityDefaults.wheelchair,
+    visualInfo: false,
+    hearingInfo: false,
+    infantFamilyInfo: accessibilityDefaults.stroller
+  });
+  const [sort, setSort] = useState<Sort>("relevance");
+  const [rows, setRows] = useState<Array<Attraction | Course>>([]);
+  const [count, setCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+  const controller = useRef<AbortController | null>(null);
+  const [urlReady, setUrlReady] = useState(false);
+  const pendingSigungu = useRef<{ regionCode: string; sigunguCode: string } | null>(null);
+  const urlStateHydrated = useRef(false);
 
-  // Date selection state
-  const [isPeriod, setIsPeriod] = useState(true);
-  const [selectedStartDate, setSelectedStartDate] = useState<string>("2026-07-06");
-  const [selectedEndDate, setSelectedEndDate] = useState<string>("2026-07-08");
-  const [activeDateSelector, setActiveDateSelector] = useState(false);
-
-  // Guest count state
-  const [adults, setAdults] = useState(2);
-  const [children, setChildren] = useState(0);
-  const [pets, setPets] = useState(0);
-  const [activeGuestSelector, setActiveGuestSelector] = useState(false);
-
-  // Filters state
-  const [filterPetFriendly, setFilterPetFriendly] = useState(false);
-  const [filterPetConditions, setFilterPetConditions] = useState<"any" | "indoor" | "large">("any");
-  const [filterWheelchair, setFilterWheelchair] = useState(false);
-  const [filterStroller, setFilterStroller] = useState(false);
-  const [filterParking, setFilterParking] = useState(false);
-  const [filterSenior, setFilterSenior] = useState(false);
-  const [activeFilterSheet, setActiveFilterSheet] = useState(false);
-
-  // Congestion Avoidance Switch (Default ON)
-  const [avoidCongestion, setAvoidCongestion] = useState(true);
-
-  // Overlay state
-  const [activeSheet, setActiveSheet] = useState<"date" | "guests" | "filters" | null>(null);
-  const [searchTriggered, setSearchTriggered] = useState(false);
-  const [tourAttractions, setTourAttractions] = useState<TourAttraction[]>([]);
-  const [isTourAttractionsLoading, setIsTourAttractionsLoading] = useState(false);
-  const [tourAttractionsError, setTourAttractionsError] = useState(false);
-  const [imageErrorIds, setImageErrorIds] = useState<Set<string>>(new Set());
-  const [searchMessage, setSearchMessage] = useState("");
-  const [locationMocked, setLocationMocked] = useState(false);
-  const [showSyncAlert, setShowSyncAlert] = useState(false);
-
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const tourRequestControllerRef = useRef<AbortController | null>(null);
-
-  const recentSearches = ["정선 민둥산", "고성 아야진 댕수욕장", "두루누비"];
+  const restoreUrlState = useCallback((params: URLSearchParams) => {
+    const nextTab = params.get("tab");
+    setTab(nextTab === "courses" ? "courses" : "attractions");
+    setQuery(params.get("q") || "");
+    const regionCode = params.get("regionCode");
+    const sigunguCode = params.get("sigunguCode");
+    const sigunguMatch = regionCode && sigunguCode
+      ? sigunguRows.find((item) => item.ldong_regn_cd.trim().slice(0, 2) === regionCode && item.ldong_signgu_cd.trim().slice(-3) === sigunguCode)
+      : null;
+    pendingSigungu.current = regionCode && sigunguCode && !sigunguMatch ? { regionCode, sigunguCode } : null;
+    urlStateHydrated.current = !pendingSigungu.current;
+    setSigungu(sigunguMatch || null);
+    setPetInfo(params.has("petInfo") ? params.get("petInfo") === "true" : accessibilityDefaults.petFriendly);
+    setBarrier({
+      physicalInfo: params.has("physicalInfo") ? params.get("physicalInfo") === "true" : accessibilityDefaults.wheelchair,
+      visualInfo: params.get("visualInfo") === "true",
+      hearingInfo: params.get("hearingInfo") === "true",
+      infantFamilyInfo: params.has("infantFamilyInfo") ? params.get("infantFamilyInfo") === "true" : accessibilityDefaults.stroller
+    });
+    setRegion(params.get("region") || "");
+    setBoardDivision(params.get("boardDivision") || "");
+    const nextDistance = params.get("distance");
+    const nextDuration = params.get("duration");
+    setDistance(nextDistance === "short" || nextDistance === "medium" || nextDistance === "long" ? nextDistance : "");
+    setDuration(nextDuration === "short" || nextDuration === "medium" || nextDuration === "long" ? nextDuration : "");
+    setCycle(params.get("cycle") || "");
+    const nextSort = params.get("sort");
+    setSort(nextSort === "name" || nextSort === "updated" ? nextSort : "relevance");
+  }, [accessibilityDefaults, sigunguRows]);
 
   useEffect(() => {
-    const controller = new AbortController();
+    const abort = new AbortController();
+    fetch("/api/sigungu", { signal: abort.signal })
+      .then((response) => (response.ok ? response.json() : Promise.reject()))
+      .then((data: ApiResponse<Sigungu>) => setSigunguRows(Array.isArray(data.rows) ? data.rows : []))
+      .catch(() => undefined)
+      .finally(() => setUrlReady(true));
+    return () => abort.abort();
+  }, []);
 
-    const loadSigungu = async () => {
-      try {
-        const response = await fetch("/api/sigungu", { signal: controller.signal });
-        if (!response.ok) throw new Error("시군구 목록을 불러오지 못했습니다.");
+  useEffect(() => {
+    restoreUrlState(new URLSearchParams(window.location.search));
+    const handlePopState = () => restoreUrlState(new URLSearchParams(window.location.search));
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [restoreUrlState]);
 
-        const data = (await response.json()) as SigunguResponse;
-        if (!controller.signal.aborted) {
-          setSigunguRows(Array.isArray(data.rows) ? data.rows : []);
-        }
-      } catch {
-        if (!controller.signal.aborted) setSigunguLoadFailed(true);
-      } finally {
-        if (!controller.signal.aborted) setIsSigunguLoading(false);
+  useEffect(() => {
+    if (!pendingSigungu.current || sigunguRows.length === 0) return;
+    const match = sigunguRows.find((item) => item.ldong_regn_cd.trim().slice(0, 2) === pendingSigungu.current?.regionCode && item.ldong_signgu_cd.trim().slice(-3) === pendingSigungu.current?.sigunguCode);
+    if (match) setSigungu(match);
+    pendingSigungu.current = null;
+    urlStateHydrated.current = true;
+  }, [sigunguRows]);
+
+  useEffect(() => {
+    if (!urlReady || !urlStateHydrated.current) return;
+    const url = new URL(window.location.href);
+    ["tab", "q", "regionCode", "sigunguCode", "petInfo", "physicalInfo", "visualInfo", "hearingInfo", "infantFamilyInfo", "region", "boardDivision", "distance", "duration", "cycle", "sort"].forEach((key) => url.searchParams.delete(key));
+    if (tab === "courses") url.searchParams.set("tab", "courses");
+    if (query.trim()) url.searchParams.set("q", query.trim());
+    if (tab === "attractions" && sigungu) {
+      url.searchParams.set("regionCode", sigungu.ldong_regn_cd.trim().slice(0, 2));
+      url.searchParams.set("sigunguCode", sigungu.ldong_signgu_cd.trim().slice(-3));
+    }
+    if (tab === "attractions") {
+      if (petInfo) url.searchParams.set("petInfo", "true");
+      barrierFilters.forEach(([key]) => { if (barrier[key]) url.searchParams.set(key, "true"); });
+    } else {
+      [["region", region], ["boardDivision", boardDivision], ["distance", distance], ["duration", duration], ["cycle", cycle]].forEach(([key, value]) => { if (value) url.searchParams.set(key, value); });
+    }
+    if (sort !== "relevance") url.searchParams.set("sort", sort);
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  }, [barrier, boardDivision, cycle, distance, duration, petInfo, query, region, sigungu, sort, tab, urlReady]);
+
+  const fetchResults = useCallback(async () => {
+    controller.current?.abort();
+    const abort = new AbortController();
+    controller.current = abort;
+    setLoading(true);
+    setError(false);
+    setSearched(true);
+    const params = new URLSearchParams({ q: query.trim(), sort, page: "1", limit: "20" });
+    if (tab === "attractions") {
+      if (sigungu) {
+        params.set("regionCode", sigungu.ldong_regn_cd.trim().slice(0, 2));
+        params.set("sigunguCode", sigungu.ldong_signgu_cd.trim().slice(-3));
       }
-    };
-
-    loadSigungu();
-    return () => controller.abort();
-  }, []);
-
-  useEffect(() => {
-    return () => tourRequestControllerRef.current?.abort();
-  }, []);
-
-  // 1. Live Sync on Mount: Read from Profile Settings and pre-fill search filters!
-  useEffect(() => {
-    let synced = false;
-    if (accessibilityDefaults.petFriendly) {
-      setFilterPetFriendly(true);
-      setPets(1);
-      synced = true;
-    }
-    if (accessibilityDefaults.wheelchair) {
-      setFilterWheelchair(true);
-      synced = true;
-    }
-    if (accessibilityDefaults.stroller) {
-      setFilterStroller(true);
-      setChildren(1);
-      synced = true;
-    }
-    if (accessibilityDefaults.senior) {
-      setFilterSenior(true);
-      synced = true;
-    }
-    if (accessibilityDefaults.parking) {
-      setFilterParking(true);
-      synced = true;
-    }
-
-    if (synced) {
-      setShowSyncAlert(true);
-      setTimeout(() => setShowSyncAlert(false), 4500);
-    }
-
-    // Execute initial search on mount with the defaults
-    handleSearchExecution();
-  }, [accessibilityDefaults]);
-
-  // Execute search whenever toggling congestion or filters directly
-  useEffect(() => {
-    if (!selectedSigungu) handleSearchExecution();
-  }, [avoidCongestion, filterPetFriendly, filterPetConditions, filterWheelchair, filterStroller, filterParking, filterSenior]);
-
-  const handleLocationDetection = () => {
-    resetTourAttractionResults();
-    setLocationMocked(true);
-    setSelectedSigungu(null);
-    setSearchQuery("삼척시 근덕면 (내 주변)");
-    setShowSuggestions(false);
-  };
-
-  const getWeatherMessage = () => {
-    const q = searchQuery.toLowerCase();
-    if (q.includes("고성") || q.includes("능파대") || q.includes("아야진")) {
-      return {
-        text: "고성군 기상 정보: 맑음 (24°C) | 초미세먼지 좋음(8㎍/㎡). 해안 보행로와 댕수욕장 산책에 완벽한 무장애 기후 조건입니다. ☀️",
-        status: "success"
-      };
-    }
-    if (q.includes("정선") || q.includes("소금강") || q.includes("민둥산")) {
-      return {
-        text: "정선군 기상 정보: 구름 조금 (22°C) | 초미세먼지 보통(18㎍/㎡). 고원지대의 시원한 바람이 불어 야외 숲길 걷기에 알맞습니다. 🌲",
-        status: "info"
-      };
-    }
-    if (q.includes("태백") || q.includes("바람의 언덕") || q.includes("자작나무")) {
-      return {
-        text: "태백시 대기주의보 연동: 미세먼지 나쁨(45㎍/㎡) 예상 | 기온 23°C. 가급적 마스크를 착용하시거나, 실내 코스 우선 방문을 추천합니다. 😷",
-        status: "warning"
-      };
-    }
-    if (q.includes("삼척") || q.includes("초곡") || q.includes("촛대바위")) {
-      return {
-        text: "삼척시 기상 정보: 흐리고 한때 약한 소나기 (21°C) | 미세먼지 좋음. 초곡용굴 촛대바위길 등 해상 데크는 보행이 원활하나 바닥 미끄럼에 유의하세요. ☔",
-        status: "info"
-      };
-    }
-    if (q.includes("강릉") || q.includes("안목") || q.includes("경포")) {
-      return {
-        text: "강릉시 실시간 과밀 경보: 주말 해안가 불쾌지수 높음 예상 (28°C) | 주차 정체 극심. 차량 흐름 제어를 위해 고성/삼척 등 인근 대안 노선을 제안합니다. 🚗",
-        status: "danger"
-      };
-    }
-    return {
-      text: "강원도 소멸위기 4개 시군(정선·태백·삼척·고성) 실시간 기상 데이터 및 보행 약자 보호 인프라 가동 중 📡",
-      status: "info"
-    };
-  };
-
-  const weatherInfo = getWeatherMessage();
-
-  const applyPreset = (preset: "pet" | "wheelchair" | "stroller" | "forest") => {
-    if (preset === "pet") {
-      setPets(1);
-      setFilterPetFriendly(true);
-      setFilterPetConditions("any");
-    } else if (preset === "wheelchair") {
-      setFilterWheelchair(true);
-    } else if (preset === "stroller") {
-      setFilterStroller(true);
-      setChildren(1);
-    } else if (preset === "forest") {
-      setSearchQuery("정선");
-      setFilterSenior(true);
-      setFilterParking(true);
-    }
-    setSearchTriggered(true);
-  };
-
-  const resetTourAttractionResults = () => {
-    tourRequestControllerRef.current?.abort();
-    setTourAttractions([]);
-    setIsTourAttractionsLoading(false);
-    setTourAttractionsError(false);
-  };
-
-  const handleSearchExecution = async () => {
-    setSearchTriggered(true);
-    setTourAttractionsError(false);
-    setImageErrorIds(new Set());
-
-    if (!selectedSigungu) {
-      tourRequestControllerRef.current?.abort();
-      setTourAttractions([]);
-      setIsTourAttractionsLoading(false);
-      setSearchMessage("목적지 추천 목록에서 시군구를 먼저 선택한 뒤 검색해 주세요.");
-      return;
-    }
-
-    tourRequestControllerRef.current?.abort();
-    const controller = new AbortController();
-    tourRequestControllerRef.current = controller;
-    setIsTourAttractionsLoading(true);
-
-    try {
-      const params = new URLSearchParams({
-        ldong_regn_cd: selectedSigungu.ldong_regn_cd,
-        ldong_signgu_cd: selectedSigungu.ldong_signgu_cd
+      if (petInfo) params.set("petInfo", "true");
+      barrierFilters.forEach(([key]) => {
+        if (barrier[key]) params.set(key, "true");
       });
-      const response = await fetch(`/api/tour-attractions?${params.toString()}`, { signal: controller.signal });
-      if (!response.ok) throw new Error("관광지 목록을 불러오지 못했습니다.");
-
-      const data = (await response.json()) as TourAttractionsResponse;
-      if (!controller.signal.aborted) {
-        const rows = Array.isArray(data.rows) ? data.rows : [];
-        setTourAttractions(rows);
-        setSearchMessage(`${selectedSigungu.signgu_name} 관광지 ${rows.length}곳을 찾았습니다.`);
+    } else {
+      if (region) params.set("region", region);
+      if (boardDivision) params.set("boardDivision", boardDivision);
+      if (distance) params.set("distance", distance);
+      if (duration) params.set("duration", duration);
+      if (cycle) params.set("cycle", cycle);
+    }
+    try {
+      const endpoint = tab === "attractions" ? "/api/tour-attractions" : "/api/dulle-courses";
+      const response = await fetch(`${endpoint}?${params}`, { signal: abort.signal });
+      if (!response.ok) throw new Error("request failed");
+      const data = (await response.json()) as ApiResponse<Attraction | Course>;
+      if (!abort.signal.aborted) {
+        setRows(Array.isArray(data.rows) ? data.rows : []);
+        setCount(Number(data.count) || 0);
+        setImageErrors(new Set());
       }
     } catch {
-      if (!controller.signal.aborted) {
-        setTourAttractions([]);
-        setTourAttractionsError(true);
-        setSearchMessage("관광지 목록을 불러오지 못했습니다. 잠시 후 다시 검색해 주세요.");
+      if (!abort.signal.aborted) {
+        setRows([]);
+        setCount(0);
+        setError(true);
       }
     } finally {
-      if (!controller.signal.aborted) setIsTourAttractionsLoading(false);
+      if (!abort.signal.aborted) setLoading(false);
     }
+  }, [barrier, boardDivision, cycle, distance, duration, petInfo, query, region, sigungu, sort, tab]);
+
+  useEffect(() => {
+    if (!urlReady) return;
+    fetchResults();
+    return () => controller.current?.abort();
+  }, [fetchResults, urlReady]);
+
+  const courseOptions = useMemo(() => ({
+    regions: [...new Set((rows as Course[]).map((row) => row.sigun).filter(Boolean))] as string[],
+    divisions: [...new Set((rows as Course[]).map((row) => row.brd_div).filter(Boolean))] as string[],
+    cycles: [...new Set((rows as Course[]).map((row) => row.crs_cycle).filter(Boolean))] as string[]
+  }), [rows]);
+
+  const reset = () => {
+    setQuery(""); setSigungu(null); setRegion(""); setBoardDivision(""); setDistance(""); setDuration(""); setCycle("");
+    setPetInfo(accessibilityDefaults.petFriendly);
+    setBarrier({ physicalInfo: accessibilityDefaults.wheelchair, visualInfo: false, hearingInfo: false, infantFamilyInfo: accessibilityDefaults.stroller });
+    setSort("relevance");
   };
 
-  const handleClearSearch = () => {
-    resetTourAttractionResults();
-    setSearchQuery("");
-    setSelectedSigungu(null);
-    setSearchTriggered(false);
-    setLocationMocked(false);
-    setAdults(2);
-    setChildren(0);
-    setPets(0);
-    setFilterPetFriendly(false);
-    setFilterWheelchair(false);
-    setFilterStroller(false);
-    setFilterParking(false);
-    setFilterSenior(false);
-  };
-
-  const handleDateClick = (dateStr: string) => {
-    if (!isPeriod) {
-      setSelectedStartDate(dateStr);
-      setSelectedEndDate(dateStr);
+  const chips = useMemo(() => {
+    const values: Array<{ key: string; label: string; remove: () => void }> = [];
+    if (sigungu) values.push({ key: "sigungu", label: sigungu.signgu_name, remove: () => setSigungu(null) });
+    if (tab === "attractions") {
+      if (petInfo) values.push({ key: "petInfo", label: "반려동물 안내 있음", remove: () => setPetInfo(false) });
+      barrierFilters.forEach(([key, label]) => { if (barrier[key]) values.push({ key, label, remove: () => setBarrier((current) => ({ ...current, [key]: false })) }); });
     } else {
-      if (selectedStartDate && selectedEndDate && selectedStartDate !== selectedEndDate) {
-        setSelectedStartDate(dateStr);
-        setSelectedEndDate("");
-      } else if (selectedStartDate && !selectedEndDate) {
-        if (dateStr >= selectedStartDate) {
-          setSelectedEndDate(dateStr);
-        } else {
-          setSelectedStartDate(dateStr);
-        }
-      } else {
-        setSelectedStartDate(dateStr);
-      }
+      [["region", region, setRegion], ["boardDivision", boardDivision, setBoardDivision], ["distance", distance && `거리 ${rangeLabels[distance]}`, setDistance], ["duration", duration && `시간 ${rangeLabels[duration]}`, setDuration], ["cycle", cycle, setCycle]].forEach(([key, value, setter]) => {
+        if (value) values.push({ key: String(key), label: String(value), remove: () => (setter as React.Dispatch<React.SetStateAction<string>>)("") });
+      });
     }
-  };
+    return values;
+  }, [barrier, boardDivision, cycle, distance, duration, petInfo, region, sigungu, tab]);
+
+  const toggle = (key: string) => setBarrier((current) => ({ ...current, [key]: !current[key] }));
 
   return (
-    <>
-    <div className="space-y-6 animate-fadeIn pb-12">
+    <div className="space-y-6 pb-12 animate-fadeIn">
+      <header>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-bento-green">온길 탐색</p>
+        <h2 className="font-display text-3xl font-black tracking-tight text-bento-dark">어디로 걸어볼까요?</h2>
+        <p className="mt-2 max-w-xl text-sm leading-relaxed text-bento-dark/55">등록된 여행 정보만 바탕으로, 지금 찾고 싶은 목적지를 가볍게 좁혀보세요.</p>
+      </header>
 
-      {/* 1. Sync Alert Banner */}
-      <AnimatePresence>
-        {showSyncAlert && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="p-3 bg-bento-green text-white text-xs font-bold rounded-lg flex items-center justify-between shadow-md"
-          >
-            <div className="flex items-center gap-2">
-              <Sparkles size={14} className="text-white shrink-0" />
-              <span>MY 설정의 보행 약자 기본값이 검색 조건에 안전하게 로드되었습니다!</span>
-            </div>
-            <button onClick={() => setShowSyncAlert(false)} className="text-white/60 hover:text-white font-mono shrink-0 font-bold px-2">X</button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 2. Headline */}
-      <div className="text-center md:text-left">
-        <span className="text-xs font-semibold text-bento-green block mb-1">
-          맞춤형 혼잡 회피 여정 검색
-        </span>
-        <h2 className="text-2xl font-display font-black text-bento-dark tracking-tight leading-none mb-1.5 flex items-center gap-2">
-          <span>한산 여정 조건별 탐색</span>
-          <span className="w-8 h-8 rounded-full bg-bento-green/10 flex items-center justify-center">
-            <Search size={18} className="text-bento-green" />
-          </span>
-        </h2>
-        <p className="text-bento-dark/60 text-xs leading-relaxed max-w-2xl">
-          나이, 보행 약자 동반, 반려견 크기까지. 원하는 필터를 켜면 실시간 붐빔 예측 데이터를 매칭해
-          인기 밀집지 대신 가장 쾌적하게 힐링할 수 있는 강원의 골목 안심 코스를 그려냅니다.
-        </p>
+      <div className="flex gap-1 rounded-xl border border-border-default bg-bento-bg/70 p-1" role="tablist">
+        {([["attractions", "관광지", MapPin], ["courses", "걷기 코스", Footprints]] as const).map(([value, label, Icon]) => (
+          <button key={value} role="tab" aria-selected={tab === value} onClick={() => setTab(value)} className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-bold transition-all ${tab === value ? "bg-white text-bento-green shadow-sm" : "text-bento-dark/45 hover:text-bento-dark"}`}><Icon size={16} />{label}</button>
+        ))}
       </div>
 
-      {/* 3. Weather Broadcast Banner */}
-      {!selectedSigungu && <div className={`p-4 rounded-xl border text-xs flex items-start gap-3 duration-base ease-out-soft ${weatherInfo.status === "warning"
-          ? "bg-amber-50 border-amber-200 text-amber-800"
-          : weatherInfo.status === "danger"
-            ? "bg-red-50 border-red-200 text-red-800"
-            : weatherInfo.status === "success"
-              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-              : "bg-white border-border-default text-bento-dark/80"
-        }`}>
-        <div className="mt-0.5 shrink-0">
-          {weatherInfo.status === "warning" ? <AlertTriangle size={15} className="text-amber-600" /> :
-            weatherInfo.status === "danger" ? <Flame size={15} className="text-red-600" /> :
-              weatherInfo.status === "success" ? <Check size={15} className="text-emerald-600" /> :
-                <Info size={15} className="text-bento-green" />}
-        </div>
-        <div>
-          <span className="font-bold block mb-0.5">실시간 날씨 & 미세먼지 환경 보정</span>
-          <p className="leading-relaxed text-[11px]">{weatherInfo.text}</p>
-        </div>
-      </div>}
-
-      {/* ==================== SEARCH CONTAINER ==================== */}
-      <div className="bg-white rounded-xl border border-border-default p-5 shadow-md relative z-30">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-
-          {/* Query Block */}
-          <div className="col-span-1 md:col-span-5 relative">
-            <label className="block text-[11px] font-semibold text-bento-dark/50 mb-1 pl-1">목적지</label>
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-bento-dark/30" size={16} />
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="정선, 고성, 삼척... 어디로 가시나요?"
-                value={searchQuery}
-                onChange={(e) => {
-                  resetTourAttractionResults();
-                  setSelectedSigungu(null);
-                  setSearchQuery(e.target.value);
-                  setShowSuggestions(true);
-                }}
-                onFocus={() => setShowSuggestions(true)}
-                className="w-full pl-11 pr-12 py-3 bg-bento-bg/50 border border-border-default rounded-md text-xs font-medium text-bento-dark focus:outline-none focus:border-bento-green focus:bg-white focus:shadow-sm transition-all duration-base ease-out-soft"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => {
-                    resetTourAttractionResults();
-                    setSelectedSigungu(null);
-                    setSearchQuery("");
-                  }}
-                  className="absolute right-12 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-bento-bg hover:bg-bento-dark/5 flex items-center justify-center text-bento-dark/40 hover:text-bento-dark cursor-pointer transition-colors duration-fast"
-                >
-                  <X size={11} />
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={handleLocationDetection}
-                title="내 주변 한산스팟 찾기"
-                className={`absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-md transition-all duration-fast cursor-pointer ${locationMocked ? "bg-bento-green text-white" : "bg-bento-bg text-bento-green hover:bg-bento-green/10"
-                  }`}
-              >
-                <Navigation size={12} />
-              </button>
-            </div>
-
-            {/* Suggestions drop container */}
-            <AnimatePresence>
-              {showSuggestions && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowSuggestions(false)} />
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg border border-border-default shadow-lg z-50 p-4 max-h-[300px] overflow-y-auto"
-                  >
-                    <div className="mb-3">
-                      <h4 className="text-[10px] font-bold text-bento-dark/50 mb-2">최근 검색</h4>
-                      <div className="flex flex-wrap gap-1.5">
-                        {recentSearches.map((term, i) => (
-                          <button
-                            key={i}
-                            onClick={() => {
-                              resetTourAttractionResults();
-                              setSelectedSigungu(null);
-                              setSearchQuery(term);
-                              setShowSuggestions(false);
-                            }}
-                            className="px-2.5 py-1.5 bg-bento-bg hover:bg-bento-green/10 text-[11px] text-bento-dark/80 rounded-full transition-colors cursor-pointer"
-                          >
-                            {term}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="text-[10px] font-bold text-bento-dark/50 mb-2">시군구 선택</h4>
-                      <div className="space-y-1">
-                        {isSigunguLoading && (
-                          <p className="px-3 py-2 text-[11px] text-bento-dark/40">지역 목록을 불러오는 중입니다.</p>
-                        )}
-                        {!isSigunguLoading && sigunguLoadFailed && (
-                          <p className="px-3 py-2 text-[11px] text-bento-dark/40">지역 목록을 잠시 불러오지 못했습니다.</p>
-                        )}
-                        {!isSigunguLoading && !sigunguLoadFailed && sigunguRows.map((sigungu) => (
-                          <button
-                            key={`${sigungu.ldong_regn_cd}-${sigungu.ldong_signgu_cd}`}
-                            aria-pressed={selectedSigungu?.ldong_regn_cd === sigungu.ldong_regn_cd && selectedSigungu.ldong_signgu_cd === sigungu.ldong_signgu_cd}
-                            onClick={() => {
-                              resetTourAttractionResults();
-                              setSelectedSigungu(sigungu);
-                              setSearchQuery(sigungu.signgu_name);
-                              setShowSuggestions(false);
-                            }}
-                            className="w-full text-left px-3 py-2 hover:bg-bento-bg rounded-md flex items-center justify-between text-xs text-bento-dark transition-colors duration-fast cursor-pointer"
-                          >
-                            <div className="flex items-center gap-2">
-                              <MapPin size={10} className="text-bento-green" />
-                              <span className="font-bold">{sigungu.signgu_name}</span>
-                            </div>
-                            <span className="text-[8px] font-bold text-bento-green bg-bento-green/15 px-1.5 py-0.5 rounded-full">
-                              시군구
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
+      <section className="relative z-20 rounded-2xl border border-border-default bg-white p-4 shadow-md sm:p-5">
+        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="relative">
+            <label className="mb-1.5 block pl-1 text-[11px] font-bold text-bento-dark/50">검색어</label>
+            <Search className="absolute left-4 top-[39px] text-bento-dark/30" size={17} />
+            <input value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") fetchResults(); }} placeholder={tab === "attractions" ? "관광지명 또는 주소를 검색하세요" : "코스명 또는 테마명을 검색하세요"} className="w-full rounded-xl border border-border-default bg-bento-bg/40 py-3.5 pl-11 pr-4 text-sm text-bento-dark outline-none transition focus:border-bento-green focus:bg-white" />
           </div>
-
-          {/* Date Selector */}
-          <div className="col-span-1 md:col-span-3">
-            <label className="block text-[11px] font-semibold text-bento-dark/50 mb-1 pl-1">일정</label>
-            <button
-              onClick={() => {
-                setActiveDateSelector(true);
-                setActiveSheet("date");
-              }}
-              className="w-full px-4 py-3 bg-bento-bg/50 hover:bg-bento-bg border border-border-default rounded-md text-xs font-medium text-bento-dark flex items-center justify-between cursor-pointer transition-colors duration-base"
-            >
-              <div className="flex items-center gap-2 text-left min-w-0">
-                <Calendar size={14} className="text-bento-green shrink-0" />
-                <span className="truncate font-medium">
-                  {selectedStartDate ? `${selectedStartDate.slice(5)}` : "날짜 선택"}
-                  {selectedEndDate && selectedEndDate !== selectedStartDate ? ` ~ ${selectedEndDate.slice(5)}` : ""}
-                </span>
-              </div>
-              <ChevronDown size={12} className="text-bento-dark/30 shrink-0" />
-            </button>
-          </div>
-
-          {/* Guest Selector */}
-          <div className="col-span-1 md:col-span-2">
-            <label className="block text-[11px] font-semibold text-bento-dark/50 mb-1 pl-1">동반 인원</label>
-            <button
-              onClick={() => {
-                setActiveGuestSelector(true);
-                setActiveSheet("guests");
-              }}
-              className="w-full px-4 py-3 bg-bento-bg/50 hover:bg-bento-bg border border-border-default rounded-md text-xs font-medium text-bento-dark flex items-center justify-between cursor-pointer transition-colors duration-base"
-            >
-              <div className="flex items-center gap-2 text-left min-w-0">
-                <Users size={14} className="text-bento-green shrink-0" />
-                <span className="truncate font-medium">
-                  성인 {adults}
-                  {children > 0 ? `, 아동 ${children}` : ""}
-                  {pets > 0 ? <><PawPrint size={11} className="inline text-orange-500" /> {pets}</> : ""}
-                </span>
-              </div>
-              <ChevronDown size={12} className="text-bento-dark/30 shrink-0" />
-            </button>
-          </div>
-
-          {/* Accessibility Filter */}
-          <div className="col-span-1 md:col-span-2">
-            <label className="block text-[11px] font-semibold text-bento-dark/50 mb-1 pl-1">보행 필터</label>
-            <button
-              onClick={() => {
-                setActiveFilterSheet(true);
-                setActiveSheet("filters");
-              }}
-              className={`w-full px-4 py-3 border rounded-md text-xs font-medium flex items-center justify-between cursor-pointer transition-colors duration-base ${filterWheelchair || filterStroller || filterPetFriendly || filterSenior || filterParking
-                  ? "bg-bento-green/15 border-bento-green text-bento-green"
-                  : "bg-bento-bg/50 hover:bg-bento-bg border-border-default text-bento-dark"
-                }`}
-            >
-              <div className="flex items-center gap-2 text-left min-w-0">
-                <SlidersHorizontal size={14} className="shrink-0" />
-                <span className="truncate">
-                  {filterWheelchair || filterStroller || filterPetFriendly || filterSenior || filterParking
-                    ? "필터 가동 중"
-                    : "세부 필터"}
-                </span>
-              </div>
-              <ChevronDown size={12} className="shrink-0 text-bento-dark/30" />
-            </button>
-          </div>
-
+          <button onClick={fetchResults} className="mt-auto flex items-center justify-center gap-2 rounded-xl bg-bento-green px-6 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-bento-green/90 active:scale-[.98]"><Search size={16} />검색</button>
         </div>
 
-        {/* Filters Quick Line & Switch */}
-        <div className="mt-4 pt-4 border-t border-border-subtle flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] font-semibold text-bento-dark/50 mr-1">
-              빠른 필터:
-            </span>
-            <button
-              onClick={() => applyPreset("pet")}
-              className="px-3 py-1.5 bg-bento-bg hover:bg-bento-green/10 border border-border-subtle hover:border-bento-green/30 rounded-md text-[11px] font-medium text-bento-dark/80 flex items-center gap-1.5 transition-all duration-base cursor-pointer"
-            >
-              <PawPrint size={12} className="text-orange-500" />
-              <span>반려견</span>
-            </button>
-            <button
-              onClick={() => applyPreset("wheelchair")}
-              className="px-3 py-1.5 bg-bento-bg hover:bg-bento-green/10 border border-border-subtle hover:border-bento-green/30 rounded-md text-[11px] font-medium text-bento-dark/80 flex items-center gap-1.5 transition-all duration-base cursor-pointer"
-            >
-              <Accessibility size={12} className="text-bento-green" />
-              <span>휠체어 데크</span>
-            </button>
-            <button
-              onClick={() => applyPreset("stroller")}
-              className="px-3 py-1.5 bg-bento-bg hover:bg-bento-green/10 border border-border-subtle hover:border-bento-green/30 rounded-md text-[11px] font-medium text-bento-dark/80 flex items-center gap-1.5 transition-all duration-base cursor-pointer"
-            >
-              <Baby size={12} className="text-amber-500" />
-              <span>유모차 통행</span>
-            </button>
-          </div>
-
-          {/* Smart Avoidance Switch */}
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <span className="text-xs font-semibold text-bento-dark block leading-none mb-0.5">
-                과밀 관광지 자동 우회
-              </span>
-              <span className="text-[10px] text-bento-dark/50 block leading-none">
-                인기 과밀지를 후순위 조정하고 한산지 코스를 선매칭합니다.
-              </span>
-            </div>
-            <button
-              onClick={() => setAvoidCongestion(!avoidCongestion)}
-              className={`w-10 h-5.5 rounded-full transition-all duration-base ease-in-out-soft relative cursor-pointer ${avoidCongestion ? "bg-bento-green" : "bg-bento-stone"
-                }`}
-            >
-              <div className={`w-4 h-4 rounded-full bg-white absolute top-[3px] transition-all duration-base ease-in-out-soft ${avoidCongestion ? "left-[22px]" : "left-1"
-                }`} />
-            </button>
-          </div>
+        <div className={`mt-4 grid gap-3 sm:grid-cols-2 ${tab === "courses" ? "lg:grid-cols-3" : "lg:grid-cols-4"}`}>
+          {tab === "attractions" && <div className="relative">
+            <label className="mb-1.5 block pl-1 text-[11px] font-bold text-bento-dark/50">지역 선택 <span className="font-normal">(선택)</span></label>
+            <button onClick={() => setShowRegions((value) => !value)} className="flex w-full items-center justify-between rounded-xl border border-border-default bg-bento-bg/40 px-3.5 py-3 text-left text-xs font-semibold text-bento-dark"><span className="flex items-center gap-2 truncate"><MapPin size={14} className="text-bento-green" />{sigungu?.signgu_name || "강원도 일부 시군"}</span><ChevronDown size={14} /></button>
+            {showRegions && <div className="absolute left-0 right-0 top-full mt-2 max-h-56 overflow-auto rounded-xl border border-border-default bg-white p-1.5 shadow-xl">{sigunguRows.map((item) => <button key={`${item.ldong_regn_cd}-${item.ldong_signgu_cd}`} onClick={() => { setSigungu(item); setShowRegions(false); }} className="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-xs font-semibold hover:bg-bento-bg">{item.signgu_name}</button>)}</div>}
+          </div>}
+          <Select label="정렬" value={sort} onChange={(value) => setSort(value as Sort)} options={[["relevance", "관련도순"], ["name", "이름순"], ["updated", "최신 정보순"]]} />
+          {tab === "courses" && <Select label="거리" value={distance} onChange={(value) => setDistance(value as Range | "")} options={[["", "거리 전체"], ["short", "짧은 편"], ["medium", "중간"], ["long", "긴 편"]]} />}
+          {tab === "courses" && <Select label="소요 시간" value={duration} onChange={(value) => setDuration(value as Range | "")} options={[["", "시간 전체"], ["short", "짧은 편"], ["medium", "중간"], ["long", "긴 편"]]} />}
         </div>
 
-        {/* Submit CTA */}
-        <div className="mt-5">
-          <button
-            onClick={handleSearchExecution}
-            className="w-full py-3.5 bg-bento-green hover:bg-bento-green/90 active:scale-[0.98] text-white font-display font-bold text-sm rounded-lg shadow-md transition-all duration-base ease-out-soft flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <Search size={16} />
-            <span>한산한 보행 안심지 조건 탐색</span>
-          </button>
-        </div>
+        {tab === "attractions" ? <div className="mt-4 border-t border-border-subtle pt-4"><p className="mb-2 text-[11px] font-bold text-bento-dark/50">정보 등록 조건 <span className="font-normal">· 이용 가능 여부를 보장하지 않아요</span></p><div className="flex flex-wrap gap-2">{infoFilterButtons.map(([key, label, Icon]) => <button key={key} aria-pressed={key === "petInfo" ? petInfo : barrier[key]} onClick={() => key === "petInfo" ? setPetInfo((value) => !value) : toggle(key)} className={`flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition ${((key === "petInfo" ? petInfo : barrier[key])) ? "border-bento-green bg-bento-green/10 text-bento-green" : "border-border-default bg-white text-bento-dark/60 hover:border-bento-green/40"}`}><Icon size={13} />{label}</button>)}</div></div> : <div className="mt-4 grid gap-3 border-t border-border-subtle pt-4 sm:grid-cols-3"><RawSelect label="지역" value={region} onChange={setRegion} options={courseOptions.regions} placeholder="지역 전체" /><RawSelect label="노선 구분" value={boardDivision} onChange={setBoardDivision} options={courseOptions.divisions} placeholder="노선 전체" /><RawSelect label="코스 형태" value={cycle} onChange={setCycle} options={courseOptions.cycles} placeholder="형태 전체" /></div>}
+      </section>
 
-      </div>
+      {chips.length > 0 && <div className="flex flex-wrap items-center gap-2"><span className="text-xs font-bold text-bento-dark/50">적용 중</span>{chips.map((chip) => <button key={chip.key} onClick={chip.remove} className="flex items-center gap-1.5 rounded-full bg-bento-green/10 px-3 py-1.5 text-xs font-semibold text-bento-green">{chip.label}<X size={12} /></button>)}<button onClick={reset} className="ml-auto text-xs font-bold text-bento-dark/45 underline underline-offset-4 hover:text-bento-dark">전체 초기화</button></div>}
 
-      {/* ==================== SEARCH RESULTS INTERACTIVE AREA ==================== */}
-      <AnimatePresence>
-        {searchTriggered && (
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 15 }}
-            className="space-y-4"
-          >
-            {/* Results Title Alert Badge */}
-            <div className="p-3 bg-bento-olive/15 border border-bento-green/10 rounded-lg flex items-center justify-between text-xs font-medium text-bento-dark shadow-sm">
-              <span className="flex items-center gap-2">
-                <Leaf size={14} className="text-bento-green" />
-                <span>{searchMessage}</span>
-              </span>
-              <button
-                onClick={handleClearSearch}
-                className="text-[10px] font-medium text-red-700 bg-red-100 hover:bg-red-200 px-2.5 py-1 rounded-sm cursor-pointer transition-colors duration-fast"
-              >
-                검색 초기화
-              </button>
-            </div>
-
-            {/* Results Grid - responsive 3 columns on tablet/desktop */}
-            {isTourAttractionsLoading ? (
-              <div className="text-center py-12 bg-white rounded-lg border border-border-default shadow-sm max-w-md mx-auto space-y-3">
-                <div className="w-12 h-12 rounded-full bg-bento-bg flex items-center justify-center mx-auto">
-                  <Search size={24} className="text-bento-green animate-pulse" />
-                </div>
-                <h4 className="font-display font-bold text-bento-dark text-sm">관광지를 불러오는 중입니다</h4>
-                <p className="text-xs text-bento-dark/50 px-6 leading-relaxed">선택한 시군구의 관광지 정보를 확인하고 있어요.</p>
-              </div>
-            ) : tourAttractions.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-                {tourAttractions.map((attraction) => {
-                  const attractionId = String(attraction.content_id);
-                  const image = attraction.firstimage || attraction.firstimage2;
-                  const categoryCodes = [attraction.lcls_systm1, attraction.lcls_systm2, attraction.lcls_systm3].filter(Boolean);
-                  const address = [attraction.addr1, attraction.addr2].filter(Boolean).join(" ");
-                  const amenities = [
-                    attraction.parking && { label: "주차", value: attraction.parking, icon: <Car size={10} className="text-bento-green" /> },
-                    attraction.chkbabycarriage && { label: "유모차", value: attraction.chkbabycarriage, icon: <Baby size={10} className="text-amber-500" /> },
-                    attraction.chkpet && { label: "반려동물", value: attraction.chkpet, icon: <PawPrint size={10} className="text-orange-500" /> }
-                  ].filter(Boolean) as { label: string; value: string; icon: React.ReactNode }[];
-
-                  return (
-                    <motion.div
-                      key={attractionId}
-                      whileHover={{
-                        y: -4,
-                        boxShadow: "0 4px 6px -1px color-mix(in srgb, #1A2F23 6%, transparent)"
-                      }}
-                      transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-                      className="bg-white rounded-lg border border-border-default overflow-hidden flex flex-col justify-between"
-                    >
-                      <div className="relative h-44">
-                        {image && !imageErrorIds.has(attractionId) ? (
-                          <img
-                            src={image}
-                            alt={attraction.title}
-                            referrerPolicy="no-referrer"
-                            onError={() => setImageErrorIds((ids) => new Set(ids).add(attractionId))}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-bento-bg flex items-center justify-center text-xs text-bento-dark/40">이미지 없음</div>
-                        )}
-                        {image && !imageErrorIds.has(attractionId) && <div className="absolute inset-0 bg-gradient-to-t from-bento-dark/70 via-transparent to-transparent" />}
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onToggleLike(attractionId);
-                          }}
-                          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur-xs flex items-center justify-center hover:bg-white text-bento-dark/80 transition-colors cursor-pointer"
-                        >
-                          <Heart size={14} className={likedDestinations.includes(attractionId) ? "fill-red-500 text-red-500" : "text-bento-dark/40"} />
-                        </button>
-
-                        <div className={`absolute bottom-3 left-3 right-3 ${image && !imageErrorIds.has(attractionId) ? "text-white" : "text-bento-dark"}`}>
-                          {categoryCodes.length > 0 && (
-                            <span className="text-[9px] font-semibold text-bento-olive/90 block truncate">
-                              {categoryCodes.join(" · ")}
-                            </span>
-                          )}
-                          <h4 className="font-display font-black text-sm tracking-tight leading-none mt-1">
-                            {attraction.title}
-                          </h4>
-                        </div>
-                      </div>
-
-                      <div className="p-4 space-y-3.5 flex-1 flex flex-col justify-between">
-                        <p className="text-[11px] text-bento-dark/60 leading-relaxed line-clamp-2">
-                          {address || "주소 정보 없음"}
-                        </p>
-
-                        {amenities.length > 0 && (
-                          <div className="space-y-1">
-                            <span className="text-[9px] font-semibold text-bento-dark/50 block">제공 정보</span>
-                            <div className="flex flex-wrap gap-1">
-                              {amenities.map((amenity) => (
-                                <span key={amenity.label} className="bg-bento-bg text-bento-dark/80 text-[9px] font-medium px-2 py-0.5 rounded-sm flex items-center gap-1 border border-border-subtle">
-                                  {amenity.icon}
-                                  <span>{amenity.label}: {amenity.value}</span>
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            ) : (
-              /* No Results state */
-              <div className="text-center py-12 bg-white rounded-lg border border-border-default shadow-sm max-w-md mx-auto space-y-3 flex flex-col items-center justify-center">
-                <div className="w-12 h-12 rounded-full bg-bento-bg flex items-center justify-center">
-                  <Search size={24} className="text-bento-dark/30" />
-                </div>
-                <h4 className="font-display font-bold text-bento-dark text-sm mt-2">
-                  {tourAttractionsError ? "관광지 정보를 불러오지 못했어요" : selectedSigungu ? "등록된 관광지가 없어요" : "목적지를 먼저 선택해 주세요"}
-                </h4>
-                <p className="text-xs text-bento-dark/50 px-6 leading-relaxed">
-                  {tourAttractionsError
-                    ? "네트워크 상태를 확인한 뒤 검색 버튼을 다시 눌러주세요."
-                    : selectedSigungu
-                      ? "선택한 시군구에 등록된 관광지 정보가 아직 없습니다."
-                      : "목적지 입력창에서 시군구를 선택하면 해당 지역의 관광지를 확인할 수 있습니다."}
-                </p>
-                <button
-                  onClick={selectedSigungu ? handleSearchExecution : () => searchInputRef.current?.focus()}
-                  className="px-4 py-2 bg-bento-green hover:bg-bento-green/90 text-white text-xs font-medium rounded-sm transition-colors duration-base cursor-pointer"
-                >
-                  {selectedSigungu ? "다시 검색" : "목적지 선택하기"}
-                </button>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 4. Guidance before any search query executed */}
-      {!searchTriggered && (
-        <div className="space-y-4 pt-4 border-t border-border-subtle">
-          <h3 className="text-xs font-semibold text-bento-dark/50 pl-1 flex items-center gap-1.5">
-            <span>관광지 검색 안내</span>
-          </h3>
-          <div className="bg-white rounded-xl border border-border-subtle p-4 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-bento-bg flex items-center justify-center shrink-0">
-                <MapPin size={17} className="text-bento-green" />
-              </div>
-              <p className="text-xs text-bento-dark/60 leading-relaxed">
-                목적지 입력창에서 시군구를 선택하면 해당 지역의 관광지를 확인할 수 있습니다.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => searchInputRef.current?.focus()}
-              className="shrink-0 px-3 py-2 bg-bento-green/10 hover:bg-bento-green/15 text-bento-green text-[11px] font-semibold rounded-md transition-colors cursor-pointer"
-            >
-              시군구 선택
-            </button>
-          </div>
-        </div>
-      )}
-
+      <section aria-live="polite" className="space-y-4">
+        <div className="flex items-end justify-between"><div><p className="text-xs font-bold text-bento-green">{loading ? "검색 중…" : `${count.toLocaleString()}곳`}</p><h3 className="mt-1 font-display text-xl font-black text-bento-dark">{tab === "attractions" ? "관광지" : "걷기 코스"}</h3></div>{!loading && !error && <span className="text-[11px] text-bento-dark/40">최대 20개 표시</span>}</div>
+        {loading ? <Skeletons /> : error ? <State title="목록을 불러오지 못했어요" text="잠시 후 다시 시도해 주세요." action="다시 시도" onClick={fetchResults} /> : rows.length === 0 ? <State title="조건에 맞는 결과가 없어요" text="필터를 조금 줄여 다시 찾아보세요." action="필터 모두 지우기" onClick={reset} /> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{tab === "attractions" ? (rows as Attraction[]).map((row) => <AttractionCard key={String(row.content_id)} row={row} liked={likedDestinations.includes(String(row.content_id))} onLike={onToggleLike} imageError={imageErrors.has(String(row.content_id))} onImageError={() => setImageErrors((current) => new Set(current).add(String(row.content_id)))} />) : (rows as Course[]).map((row) => <CourseCard key={row.crs_idx} row={row} />)}</div>}
+      </section>
+      {!searched && <p className="text-center text-xs text-bento-dark/40">검색어 없이도 지역과 조건으로 둘러볼 수 있어요.</p>}
     </div>
-
-    {/* ==================== BOTTOM SHEETS (DATE/GUESTS/FILTERS OVERLAYS) ==================== */}
-    <AnimatePresence>
-      {activeSheet !== null && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.5 }}
-            exit={{ opacity: 0 }}
-            onClick={() => {
-              setActiveSheet(null);
-              setActiveDateSelector(false);
-              setActiveGuestSelector(false);
-              setActiveFilterSheet(false);
-            }}
-            className="fixed inset-0 bg-bento-dark z-[100]"
-            style={{ marginBottom: 0 }}
-          />
-          <motion.div
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 260 }}
-            className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white rounded-t-2xl border-t border-border-default shadow-lg z-[101] overflow-hidden max-h-[80vh] flex flex-col"
-            style={{ marginBottom: 0 }}
-          >
-            <div className="px-5 py-3.5 border-b border-border-subtle flex items-center justify-between shrink-0">
-              <h3 className="text-xs font-display font-bold text-bento-dark">
-                {activeSheet === "date" ? "일자별 혼잡 예측 캘린더" :
-                  activeSheet === "guests" ? "동반 인원 설정" :
-                    "배리어프리 보행 조건"}
-              </h3>
-              <button
-                onClick={() => {
-                  setActiveSheet(null);
-                  setActiveDateSelector(false);
-                  setActiveGuestSelector(false);
-                  setActiveFilterSheet(false);
-                }}
-                className="w-7 h-7 rounded-full bg-bento-bg hover:bg-bento-dark/5 flex items-center justify-center text-bento-dark/60 hover:text-bento-dark cursor-pointer transition-colors duration-fast"
-              >
-                <X size={12} />
-              </button>
-            </div>
-
-            <div className="p-5 overflow-y-auto flex-1">
-              {/* 1. Date Calendar */}
-              {activeSheet === "date" && (
-                <div className="space-y-4">
-                  <div className="flex bg-bento-bg rounded-md p-0.5">
-                    <button
-                      onClick={() => {
-                        setIsPeriod(false);
-                        setSelectedEndDate(selectedStartDate);
-                      }}
-                      className={`flex-1 py-1.5 text-[11px] font-medium rounded-sm transition-all duration-fast cursor-pointer ${!isPeriod ? "bg-white text-bento-green shadow-sm" : "text-bento-dark/60 hover:text-bento-dark"
-                        }`}
-                    >
-                      당일치기
-                    </button>
-                    <button
-                      onClick={() => setIsPeriod(true)}
-                      className={`flex-1 py-1.5 text-[11px] font-medium rounded-sm transition-all duration-fast cursor-pointer ${isPeriod ? "bg-white text-bento-green shadow-sm" : "text-bento-dark/60 hover:text-bento-dark"
-                        }`}
-                    >
-                      숙박/기간
-                    </button>
-                  </div>
-
-                  <div className="bg-bento-bg/50 p-2.5 rounded-md border border-border-subtle flex items-center justify-center gap-3 text-[10px] font-medium">
-                    <span className="text-bento-dark/50">혼잡도:</span>
-                    <span className="flex items-center gap-1 text-emerald-700"><span className="w-2 h-2 rounded-full bg-emerald-500" /> 한산</span>
-                    <span className="flex items-center gap-1 text-amber-700"><span className="w-2 h-2 rounded-full bg-amber-400" /> 보통</span>
-                    <span className="flex items-center gap-1 text-red-700"><span className="w-2 h-2 rounded-full bg-red-500" /> 혼잡</span>
-                  </div>
-
-                  <div className="grid grid-cols-7 gap-1 text-center font-bold text-[10px] text-bento-dark/50 mb-1">
-                    <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
-                  </div>
-
-                  <div className="grid grid-cols-7 gap-1.5">
-                    {/* Blank days spacing */}
-                    <div className="aspect-square" />
-                    <div className="aspect-square" />
-                    <div className="aspect-square" />
-                    <div className="aspect-square" />
-                    <div className="aspect-square" />
-
-                    {next30Days.map((d, index) => {
-                      const isSelected = selectedStartDate === d.dateStr || selectedEndDate === d.dateStr;
-                      const inRange = selectedStartDate && selectedEndDate && d.dateStr > selectedStartDate && d.dateStr < selectedEndDate;
-
-                      return (
-                        <button
-                          key={index}
-                          onClick={() => handleDateClick(d.dateStr)}
-                          className={`aspect-square rounded-lg flex flex-col items-center justify-center relative transition-all text-xs font-bold cursor-pointer ${isSelected
-                              ? "bg-bento-green text-white"
-                              : inRange
-                                ? "bg-bento-green/15 text-bento-green"
-                                : "bg-bento-bg hover:bg-bento-dark/5 text-bento-dark"
-                            }`}
-                        >
-                          <span>{d.day}</span>
-                          <div className={`w-1.25 h-1.25 rounded-full absolute bottom-1 ${d.level === "high" ? "bg-red-500" : d.level === "medium" ? "bg-amber-400" : "bg-emerald-400"
-                            }`} />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* 2. Guest Controls */}
-              {activeSheet === "guests" && (
-                <div className="space-y-4">
-                  {/* Adults */}
-                  <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
-                    <div>
-                      <span className="text-xs font-bold block text-bento-dark">성인 (만 19세 이상)</span>
-                      <span className="text-[10px] text-bento-dark/50 block">보행 약자 및 안내 포함</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button onClick={() => setAdults(Math.max(1, adults - 1))} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">-</button>
-                      <span className="text-xs font-bold w-4 text-center">{adults}</span>
-                      <button onClick={() => setAdults(adults + 1)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">+</button>
-                    </div>
-                  </div>
-
-                  {/* Children */}
-                  <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
-                    <div>
-                      <span className="text-xs font-bold block text-bento-dark">아동 및 영유아</span>
-                      <span className="text-[10px] text-bento-dark/50 block">휠체어, 유모차 보호자 필요 가능</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button onClick={() => setChildren(Math.max(0, children - 1))} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">-</button>
-                      <span className="text-xs font-bold w-4 text-center">{children}</span>
-                      <button onClick={() => setChildren(children + 1)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">+</button>
-                    </div>
-                  </div>
-
-                  {/* Pets */}
-                  <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
-                    <div>
-                      <span className="text-xs font-bold block text-bento-dark">반려견 동반</span>
-                      <span className="text-[10px] text-bento-dark/50 block">대형견/소형견 야외 구역 매칭 지원</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button onClick={() => setPets(Math.max(0, pets - 1))} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">-</button>
-                      <span className="text-xs font-bold w-4 text-center">{pets}</span>
-                      <button onClick={() => setPets(pets + 1)} className="w-8 h-8 rounded-full bg-white flex items-center justify-center border border-border-default font-bold text-sm cursor-pointer shadow-sm">+</button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* 3. Filters Sheet */}
-              {activeSheet === "filters" && (
-                <div className="space-y-4">
-
-                  {/* Wheelchair */}
-                  <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-full bg-bento-green/10 text-bento-green flex items-center justify-center font-bold">
-                        <Accessibility size={14} />
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold block text-bento-dark">휠체어 안심 보행길 전용</span>
-                        <span className="text-[10px] text-bento-dark/50 block">경사도 5% 미만, 턱 없는 완벽 나무데크길</span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setFilterWheelchair(!filterWheelchair)}
-                      className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${filterWheelchair ? "bg-bento-green" : "bg-bento-dark/20"
-                        }`}
-                    >
-                      <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${filterWheelchair ? "left-5.25" : "left-0.75"
-                        }`} />
-                    </button>
-                  </div>
-
-                  {/* Stroller */}
-                  <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-full bg-bento-green/10 text-bento-green flex items-center justify-center font-bold">
-                        <Baby size={14} />
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold block text-bento-dark">유모차 통행 가능</span>
-                        <span className="text-[10px] text-bento-dark/50 block">비포장 비탈길 제외, 수변/공원 데크길 위주</span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setFilterStroller(!filterStroller)}
-                      className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${filterStroller ? "bg-bento-green" : "bg-bento-green" // keep synced or toggle
-                        }`}
-                    >
-                      <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${filterStroller ? "left-5.25" : "left-0.75"
-                        }`} />
-                    </button>
-                  </div>
-
-                  {/* Pet friendly */}
-                  <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-full bg-bento-green/10 text-bento-green flex items-center justify-center font-bold">
-                        <PawPrint size={14} />
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold block text-bento-dark">반려동물 출입 공식 허용</span>
-                        <span className="text-[10px] text-bento-dark/50 block">목줄 통행 가능 코스 및 전용 해변(댕수욕장)</span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setFilterPetFriendly(!filterPetFriendly)}
-                      className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${filterPetFriendly ? "bg-bento-green" : "bg-bento-dark/20"
-                        }`}
-                    >
-                      <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${filterPetFriendly ? "left-5.25" : "left-0.75"
-                        }`} />
-                    </button>
-                  </div>
-
-                  {/* Large dog / Indoor option (conditional) */}
-                  {filterPetFriendly && (
-                    <div className="p-3 border border-dashed border-border-default rounded-xl bg-bento-bg/30 space-y-2">
-                      <span className="text-[9px] font-bold text-bento-dark/40 uppercase block">반려견 크기 및 실내 조건:</span>
-                      <div className="flex gap-2">
-                        {(["any", "indoor", "large"] as const).map((opt) => (
-                          <button
-                            key={opt}
-                            onClick={() => setFilterPetConditions(opt)}
-                            className={`flex-1 py-1 text-[10px] font-bold rounded-lg border transition-all cursor-pointer ${filterPetConditions === opt
-                                ? "bg-bento-green border-bento-green text-white"
-                                : "bg-white border-border-default text-bento-dark/60"
-                              }`}
-                          >
-                            {opt === "any" ? "상관없음" : opt === "indoor" ? "실내 허용 우선" : "대형견 안심"}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Senior */}
-                  <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-full bg-bento-green/10 text-bento-green flex items-center justify-center font-bold">
-                        <Users size={14} />
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold block text-bento-dark">실버 케어 스마트 쉼터 인접</span>
-                        <span className="text-[10px] text-bento-dark/50 block">중간중간 벤치 및 지붕 대기 쉘터가 구비된 완만지</span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setFilterSenior(!filterSenior)}
-                      className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${filterSenior ? "bg-bento-green" : "bg-bento-dark/20"
-                        }`}
-                    >
-                      <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${filterSenior ? "left-5.25" : "left-0.75"
-                        }`} />
-                    </button>
-                  </div>
-
-                  {/* Parking */}
-                  <div className="flex items-center justify-between p-2.5 bg-bento-bg rounded-xl">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-full bg-bento-green/10 text-bento-green flex items-center justify-center font-bold">
-                        <Car size={14} />
-                      </div>
-                      <div>
-                        <span className="text-xs font-bold block text-bento-dark">교통 약자 주차 주말 원활</span>
-                        <span className="text-[10px] text-bento-dark/50 block">휠체어 이동 여유 폭이 있는 넓은 무료 공영주차장</span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setFilterParking(!filterParking)}
-                      className={`w-10 h-5.5 rounded-full transition-all relative cursor-pointer ${filterParking ? "bg-bento-green" : "bg-bento-dark/20"
-                        }`}
-                    >
-                      <div className={`w-4 h-4 rounded-full bg-white absolute top-0.75 transition-all ${filterParking ? "left-5.25" : "left-0.75"
-                        }`} />
-                    </button>
-                  </div>
-
-                </div>
-              )}
-            </div>
-
-            {/* Sheet Save action */}
-            <div className="p-4 bg-bento-bg border-t border-border-subtle shrink-0">
-              <button
-                onClick={() => {
-                  setActiveSheet(null);
-                  setActiveDateSelector(false);
-                  setActiveGuestSelector(false);
-                  setActiveFilterSheet(false);
-                  handleSearchExecution();
-                }}
-                className="w-full py-3 bg-bento-green hover:bg-bento-green/90 text-white font-display font-bold text-xs rounded-sm shadow-sm transition-all duration-base cursor-pointer"
-              >
-                조건 변경 완료
-              </button>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-    </>
   );
 }
+
+function Select({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: ReadonlyArray<readonly [string, string]> }) {
+  return <label className="relative block"><span className="mb-1.5 block pl-1 text-[11px] font-bold text-bento-dark/50">{label}</span><select value={value} onChange={(event) => onChange(event.target.value)} className="w-full appearance-none rounded-xl border border-border-default bg-bento-bg/40 px-3.5 py-3 text-xs font-semibold text-bento-dark outline-none focus:border-bento-green">{options.map(([key, text]) => <option key={key} value={key}>{text}</option>)}</select><ChevronDown size={13} className="pointer-events-none absolute bottom-3.5 right-3 text-bento-dark/40" /></label>;
+}
+
+function RawSelect({ label, value, onChange, options, placeholder }: { label: string; value: string; onChange: (value: string) => void; options: string[]; placeholder: string }) {
+  return <Select label={label} value={value} onChange={onChange} options={[["", placeholder], ...options.map((option) => [option, option] as const)]} />;
+}
+
+function Skeletons() { return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{[1, 2, 3].map((item) => <div key={item} className="h-72 animate-pulse rounded-2xl border border-border-default bg-white"><div className="h-40 rounded-t-2xl bg-bento-bg" /><div className="space-y-3 p-4"><div className="h-3 w-2/3 rounded bg-bento-bg" /><div className="h-3 w-full rounded bg-bento-bg" /><div className="h-6 w-1/3 rounded-full bg-bento-bg" /></div></div>)}</div>; }
+
+function State({ title, text, action, onClick }: { title: string; text: string; action: string; onClick: () => void }) { return <div className="rounded-2xl border border-border-default bg-white px-6 py-14 text-center shadow-sm"><div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-bento-bg text-bento-green"><RefreshCw size={20} /></div><h4 className="font-display text-base font-black text-bento-dark">{title}</h4><p className="mt-2 text-xs text-bento-dark/50">{text}</p><button onClick={onClick} className="mt-5 rounded-lg bg-bento-green px-4 py-2.5 text-xs font-bold text-white">{action}</button></div>; }
+
+function AttractionCard({ row, liked, onLike, imageError, onImageError }: { row: Attraction; liked: boolean; onLike: (id: string) => void; imageError: boolean; onImageError: () => void }) {
+  const id = String(row.content_id); const image = row.firstimage || row.firstimage2;
+  const badges = [row.hasPetInfo && "반려동물 안내 있음", row.hasPhysicalInfo && "이동 편의 정보 등록", row.hasVisualInfo && "시각 안내 정보 등록", row.hasHearingInfo && "청각 안내 정보 등록", row.hasInfantFamilyInfo && "영유아·가족 정보 등록"].filter(Boolean).slice(0, 3) as string[];
+  return <motion.article whileHover={{ y: -4 }} className="overflow-hidden rounded-2xl border border-border-default bg-white shadow-sm transition-shadow hover:shadow-lg"><div className="relative h-44 bg-bento-bg">{image && !imageError ? <img src={image} alt={row.title} onError={onImageError} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-xs text-bento-dark/35">이미지 없음</div>}<button aria-label={`${row.title} 좋아요`} onClick={() => onLike(id)} className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-bento-dark/50 shadow-sm"><Heart size={16} className={liked ? "fill-red-500 text-red-500" : ""} /></button></div><div className="space-y-3 p-4"><div><p className="text-[10px] font-bold text-bento-green">{row.lcls_systm1 || "관광지"}</p><h4 className="mt-1 line-clamp-1 font-display text-base font-black text-bento-dark">{row.title}</h4></div><p className="line-clamp-2 text-xs leading-relaxed text-bento-dark/55">{[row.addr1, row.addr2].filter(Boolean).join(" ") || "주소 정보 없음"}</p>{badges.length > 0 && <div className="flex flex-wrap gap-1.5">{badges.map((badge) => <span key={badge} className="rounded-full bg-bento-bg px-2 py-1 text-[10px] font-semibold text-bento-dark/65">{badge}</span>)}</div>}</div></motion.article>;
+}
+
+function CourseCard({ row }: { row: Course }) { return <motion.article whileHover={{ y: -4 }} className="rounded-2xl border border-border-default bg-white p-5 shadow-sm transition-shadow hover:shadow-lg"><div className="mb-5 flex h-32 items-center justify-center rounded-xl bg-gradient-to-br from-bento-bg to-bento-olive/20 text-bento-green"><Footprints size={36} strokeWidth={1.4} /></div><p className="text-[10px] font-bold text-bento-green">{row.theme_nm || row.brd_div || "걷기 코스"}</p><h4 className="mt-1 line-clamp-2 font-display text-base font-black text-bento-dark">{row.crs_kor_nm}</h4><p className="mt-2 line-clamp-2 min-h-8 text-xs leading-relaxed text-bento-dark/55">{row.crs_summary || "코스 상세 안내가 등록되어 있습니다."}</p><div className="mt-4 flex flex-wrap gap-2 text-[10px] font-semibold text-bento-dark/60">{row.sigun && <span className="flex items-center gap-1"><MapPin size={12} />{row.sigun}</span>}{row.crs_dstnc != null && <span>{row.crs_dstnc}km</span>}{row.crs_totl_rqrm_hour != null && <span className="flex items-center gap-1"><Clock3 size={12} />{row.crs_totl_rqrm_hour}시간</span>}{row.crs_cycle && <span>{row.crs_cycle}</span>}{row.gpxpath && <span className="rounded-full bg-bento-bg px-2 py-1">GPX 제공</span>}</div></motion.article>; }
