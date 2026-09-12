@@ -7,7 +7,6 @@ import {
   ChevronDown,
   Clock,
   Heart,
-  MapPin,
   PawPrint,
   RefreshCw,
   Search,
@@ -99,7 +98,6 @@ export default function SearchTab({
   const [regionCode, setRegionCode] = useState("");
   const [sigungu, setSigungu] = useState<Sigungu | null>(null);
   const [sigunguRows, setSigunguRows] = useState<Sigungu[]>([]);
-  const [showRegions, setShowRegions] = useState(false);
   const [petInfo, setPetInfo] = useState(accessibilityDefaults.petFriendly);
   const [barrier, setBarrier] = useState<Record<string, boolean>>({
     physicalInfo: accessibilityDefaults.wheelchair,
@@ -254,13 +252,12 @@ export default function SearchTab({
   }, [appliedQuery, buildParams]);
 
   // Track the latest fetchResults in a ref so the trigger effect below
-  // doesn't re-fire every time the callback's closure changes (which happens
-  // when any buildParams dependency updates). The effect should only fire when
-  // the user actually asks for new results (searchTick), the URL state has
-  // been hydrated (urlReady + urlStateHydrated), or search inputs change
-  // through the auto-fetch path.
+  // doesn't re-fire every time the callback's closure changes.
   const fetchResultsRef = useRef(fetchResults);
   fetchResultsRef.current = fetchResults;
+  const filterKey = `${regionCode}|${sigungu?.ldong_signgu_cd.trim().slice(-3) || ""}|${forecastDate}|${sort}|${petInfo}|${barrierFilters.map(([key]) => barrier[key]).join(",")}`;
+  const lastFilterKey = useRef<string | null>(null);
+  const lastSearchTick = useRef(searchTick);
 
   const applySearch = () => {
     setAppliedQuery(query.trim());
@@ -299,17 +296,16 @@ export default function SearchTab({
   }, [count, loadMore, loading, loadingMore, rows.length]);
 
   useEffect(() => {
-    // The sigungu fetch handler hydrates `sigungu` in the same React batch as
-    // setSigunguRows and setUrlReady, so by the time urlReady flips and this
-    // effect runs, buildParams already reflects the correct filter values. We
-    // use a ref (fetchResultsRef) so this effect only fires on actual
-    // user/URL-hydration triggers, not every time the callback closure changes
-    // (which used to cause double /api/tour-attractions requests when sigungu
-    // was hydrated mid-flight from URL state).
     if (!urlReady || !urlStateHydrated.current) return;
+    const filterChanged = lastFilterKey.current !== filterKey;
+    const searchRequested = lastSearchTick.current !== searchTick;
+    const previousRequestAborted = controller.current?.signal.aborted ?? false;
+    if (!filterChanged && !searchRequested && !previousRequestAborted) return;
+    lastFilterKey.current = filterKey;
+    lastSearchTick.current = searchTick;
     fetchResultsRef.current();
     return () => controller.current?.abort();
-  }, [searchTick, urlReady]);
+  }, [filterKey, searchTick, urlReady]);
 
   const reset = () => {
     setQuery(""); setAppliedQuery(""); setRegionCode(""); setSigungu(null);
@@ -349,11 +345,7 @@ export default function SearchTab({
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Select label="시도 선택 (선택)" value={regionCode} onChange={(value) => { setRegionCode(value); setSigungu(null); }} options={[["", "시도 전체"] as const, ...regionRows.map((region) => [region.ldong_regn_cd.trim(), region.regn_name] as const)]} />
-          <div className="relative">
-            <label className="mb-1.5 block pl-1 text-[11px] font-bold text-bento-dark/50">지역 선택 <span className="font-normal">(선택)</span></label>
-            <button onClick={() => setShowRegions((value) => !value)} className="flex w-full items-center justify-between rounded-xl border border-border-default bg-bento-bg/40 px-3.5 py-3 text-left text-xs font-semibold text-bento-dark"><span className="flex items-center gap-2 truncate"><MapPin size={14} className="text-bento-green" />{sigungu?.signgu_name || "시군구 전체"}</span><ChevronDown size={14} /></button>
-            {showRegions && <div className="absolute left-0 right-0 top-full mt-2 max-h-56 overflow-auto rounded-xl border border-border-default bg-white p-1.5 shadow-xl">{sigunguRows.map((item) => <button key={`${item.ldong_regn_cd}-${item.ldong_signgu_cd}`} onClick={() => { setSigungu(item); setRegionCode(item.ldong_regn_cd.trim()); setShowRegions(false); }} className="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-xs font-semibold hover:bg-bento-bg">{item.signgu_name}</button>)}</div>}
-          </div>
+          <Select label={<>지역 선택 <span className="font-normal">(선택)</span></>} value={sigungu ? `${sigungu.ldong_regn_cd.trim()}-${sigungu.ldong_signgu_cd.trim().slice(-3)}` : ""} onChange={(value) => { const selected = sigunguRows.find((item) => `${item.ldong_regn_cd.trim()}-${item.ldong_signgu_cd.trim().slice(-3)}` === value); setSigungu(selected ?? null); if (selected) setRegionCode(selected.ldong_regn_cd.trim()); }} options={[ ["", "시군구 전체"] as const, ...sigunguRows.map((item) => [`${item.ldong_regn_cd.trim()}-${item.ldong_signgu_cd.trim().slice(-3)}`, item.signgu_name] as const) ]} />
           <label className="relative block"><span className="mb-1.5 block pl-1 text-[11px] font-bold text-bento-dark/50">여행 일자</span><input type="date" value={forecastDate} onChange={(event) => onForecastDateChange(event.target.value)} className="w-full rounded-xl border border-border-default bg-bento-bg/40 px-3.5 py-3 text-xs font-semibold text-bento-dark outline-none focus:border-bento-green" /></label>
           <Select label="정렬" value={sort} onChange={(value) => setSort(value as Sort)} options={[["congestion", "혼잡도 낮은 순"], ["name", "이름순"]]} />
         </div>
@@ -373,7 +365,7 @@ export default function SearchTab({
   );
 }
 
-function Select({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: ReadonlyArray<readonly [string, string]> }) {
+function Select({ label, value, onChange, options }: { label: React.ReactNode; value: string; onChange: (value: string) => void; options: ReadonlyArray<readonly [string, string]> }) {
   return <label className="relative block"><span className="mb-1.5 block pl-1 text-[11px] font-bold text-bento-dark/50">{label}</span><select value={value} onChange={(event) => onChange(event.target.value)} className="w-full appearance-none rounded-xl border border-border-default bg-bento-bg/40 px-3.5 py-3 text-xs font-semibold text-bento-dark outline-none focus:border-bento-green">{options.map(([key, text]) => <option key={key} value={key}>{text}</option>)}</select><ChevronDown size={13} className="pointer-events-none absolute bottom-3.5 right-3 text-bento-dark/40" /></label>;
 }
 
