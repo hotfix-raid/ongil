@@ -20,6 +20,7 @@ import MyTab from "./components/MyTab";
 import KakaoLoginModal from "./components/KakaoLoginModal";
 import DestinationDetail from "./components/DestinationDetail";
 import SearchDestinationDetail from "./components/SearchDestinationDetail";
+import CourseDetail from "./components/CourseDetail";
 
 import { MockDestination, mockDestinations } from "./data/destinations";
 import { 
@@ -78,6 +79,20 @@ export default function App() {
   // Selected search result destination (real DB data by content_id)
   const [selectedSearchContentId, setSelectedSearchContentId] = useState<string | null>(null);
   const [searchForecastDate, setSearchForecastDate] = useState(() => new Date().toISOString().slice(0, 10));
+
+  // Selected walking course detail sheet
+  const [selectedCrsIdx, setSelectedCrsIdx] = useState<string | null>(null);
+  const [courseSheetReady, setCourseSheetReady] = useState(false);
+
+  useEffect(() => {
+    if (!selectedCrsIdx) {
+      setCourseSheetReady(false);
+      return;
+    }
+    setCourseSheetReady(false);
+    const timer = setTimeout(() => setCourseSheetReady(true), 260);
+    return () => clearTimeout(timer);
+  }, [selectedCrsIdx]);
 
   // Hydrate browser-only state after the first render so SSR and hydration match.
   useEffect(() => {
@@ -359,6 +374,7 @@ export default function App() {
                 onSelectDestination={setSelectedDestination}
                 likedDestinations={likedDestinations}
                 onToggleLike={handleToggleLike}
+                onSelectCourse={setSelectedCrsIdx}
               />
             )}
 
@@ -523,7 +539,19 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* 5. KAKAO MOCK LOGIN MODAL */}
+      {/* 5. COURSE DETAIL SHEET */}
+      <AnimatePresence>
+        {selectedCrsIdx && (
+          <CourseDetail
+            crsIdx={selectedCrsIdx}
+            variant="sheet"
+            onClose={() => setSelectedCrsIdx(null)}
+            ready={courseSheetReady}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* 6. KAKAO MOCK LOGIN MODAL */}
       <AnimatePresence>
         {showLoginModal && (
           <KakaoLoginModal
