@@ -160,6 +160,10 @@ export async function GET(request: NextRequest) {
     };
     const countWhere = buildWhere(addCountParam);
     const countWhereClause = countWhere.conditions.length ? `WHERE ${countWhere.conditions.join(" AND ")}` : "";
+    const regionParams = themes.map((theme) => String(theme));
+    const regionThemeClause = themes.length
+      ? ` AND c.route_idx IN (${themes.map((_, index) => `$${index + 1}`).join(", ")})`
+      : "";
 
     const [rowsResult, countResult, themeResult, regionResult, levelResult] = await Promise.all([
       pool.query(
@@ -188,8 +192,9 @@ export async function GET(request: NextRequest) {
       pool.query(
         `SELECT DISTINCT TRIM(c.sigun) AS sigun
          FROM dulle_course AS c
-         WHERE c.sigun IS NOT NULL AND BTRIM(c.sigun) <> ''
-         ORDER BY 1 ASC`
+         WHERE c.sigun IS NOT NULL AND BTRIM(c.sigun) <> ''${regionThemeClause}
+         ORDER BY 1 ASC`,
+        regionParams
       ),
       pool.query(
         `SELECT DISTINCT c.crs_level AS level

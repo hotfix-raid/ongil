@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import {
   Footprints,
+  ArrowLeft,
   Search,
   RefreshCw,
   Sparkles,
@@ -63,6 +64,7 @@ const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
 ];
 
 const PAGE_LIMIT = 20;
+const WALKING_THEME_NAMES = ["남파랑길", "서해랑길", "DMZ 평화의 길", "해파랑길"] as const;
 
 export default function CourseTab({
   onSelectDestination: _onSelectDestination,
@@ -79,6 +81,7 @@ export default function CourseTab({
   const [distance, setDistance] = useState<Preset>("all");
   const [duration, setDuration] = useState<Preset>("all");
   const [sort, setSort] = useState<SortKey>("course");
+  const [showThemeLanding, setShowThemeLanding] = useState(true);
 
   // 데이터 상태
   const [themes, setThemes] = useState<WalkingThemeRow[] | null>(null);
@@ -187,9 +190,6 @@ export default function CourseTab({
     return () => observer.disconnect();
   }, [loadMore, courses.length]);
 
-  const toggleTheme = (routeIdx: string) =>
-    setSelectedThemes((current) => (current.includes(routeIdx) ? current.filter((t) => t !== routeIdx) : [...current, routeIdx]));
-
   const toggleLevel = (level: string) =>
     setSelectedLevels((current) => (current.includes(level) ? current.filter((l) => l !== level) : [...current, level]));
 
@@ -207,13 +207,88 @@ export default function CourseTab({
   const activeFilterCount =
     selectedThemes.length + (selectedRegion !== "all" ? 1 : 0) + selectedLevels.length + (distance !== "all" ? 1 : 0) + (duration !== "all" ? 1 : 0);
 
+  const themeForName = (name: string) => themes?.find((theme) => theme.theme_nm.includes(name));
+  const selectedTheme = themes?.find((theme) => selectedThemes.includes(theme.route_idx));
+  const selectedThemeName = selectedTheme
+    ? WALKING_THEME_NAMES.find((name) => selectedTheme.theme_nm.includes(name)) ?? selectedTheme.theme_nm
+    : null;
+
+  if (showThemeLanding) {
+    return (
+      <div className="space-y-6 animate-fadeIn pb-12">
+        <div className="text-center md:text-left">
+          <span className="text-sm font-semibold text-bento-green block mb-1">두루누비 무장애 걷기 코스</span>
+          <h2 className="text-2xl font-display font-black text-bento-dark tracking-tight leading-none mb-1.5 flex items-center gap-2 justify-center md:justify-start">
+            <span>어떤 길을 걸어볼까요?</span>
+            <span className="w-8 h-8 rounded-full bg-bento-green/10 flex items-center justify-center"><Footprints size={18} className="text-bento-green" /></span>
+          </h2>
+          <p className="text-bento-dark/60 text-xs leading-relaxed max-w-2xl">걷고 싶은 테마를 고르면 그 길에 맞는 코스를 바로 찾아볼 수 있어요.</p>
+        </div>
+        {themes ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {WALKING_THEME_NAMES.map((name) => {
+              const theme = themeForName(name);
+              if (!theme) return null;
+              const accent = themeAccent(theme.theme_nm);
+              return (
+                <motion.button
+                  key={name}
+                  type="button"
+                  whileHover={{ y: -4 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.2 }}
+                  onClick={() => { setSelectedThemes([theme.route_idx]); setShowThemeLanding(false); }}
+                  className={`group relative overflow-hidden rounded-2xl border border-border-default bg-white p-5 text-left shadow-sm transition-shadow hover:shadow-lg ${accent.inactiveHoverBorder}`}
+                  aria-label={`${name} 코스 찾아보기`}
+                >
+                  <div className={`absolute -right-8 -top-10 h-32 w-32 rounded-full opacity-10 ${accent.primaryBg}`} />
+                  <div className="relative flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="font-display text-xl font-black tracking-tight text-bento-dark">{name}</h3>
+                    </div>
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${accent.softBg} ${accent.primaryText} transition-transform group-hover:translate-x-1`} aria-hidden="true">→</span>
+                  </div>
+                  <p className="relative mt-4 min-h-[3.25rem] text-xs leading-relaxed text-bento-dark/60 line-clamp-3 whitespace-pre-line">{htmlToLines(theme.theme_descs) || "이 테마의 걷기 코스를 만나보세요."}</p>
+                  <div className="relative mt-4 flex items-center gap-3 border-t border-border-subtle pt-3 text-[10px] font-medium text-bento-dark/50" aria-label={`${theme.courseCount}개 코스, 총 ${theme.totalDistanceKm.toLocaleString()}킬로미터`}>
+                    <span className="inline-flex items-center gap-1.5">
+                      <Footprints size={12} className={accent.primaryText} aria-hidden="true" />
+                      <span><strong className="font-bold text-bento-dark">{theme.courseCount}</strong>개 코스</span>
+                    </span>
+                    <span className="h-3.5 border-l border-border-subtle" aria-hidden="true" />
+                    <span className="inline-flex items-center gap-1.5">
+                      <Route size={12} className={accent.primaryText} aria-hidden="true" />
+                      <span>총 <strong className="font-bold text-bento-dark">{theme.totalDistanceKm.toLocaleString()}</strong>km</span>
+                    </span>
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" aria-label="테마 불러오는 중">
+            {[1, 2, 3, 4].map((item) => <div key={item} className="h-44 rounded-2xl border border-border-default bg-white shadow-sm animate-pulse" />)}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
       {/* 1. Header */}
-      <div className="text-center md:text-left">
+      <div className="relative pt-10 text-center md:pl-12 md:pt-0 md:text-left">
+        <button
+          type="button"
+          onClick={() => { resetFilters(); setShowThemeLanding(true); }}
+          className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full text-bento-dark/55 transition hover:bg-bento-bg hover:text-bento-green cursor-pointer"
+          aria-label="테마 선택으로 돌아가기"
+          title="테마 선택으로 돌아가기"
+        >
+          <ArrowLeft size={16} aria-hidden="true" />
+        </button>
         <span className="text-sm font-semibold text-bento-green block mb-1">두루누비 무장애 걷기 코스</span>
         <h2 className="text-2xl font-display font-black text-bento-dark tracking-tight leading-none mb-1.5 flex items-center gap-2 justify-center md:justify-start">
-          <span>걷기 코스 전용 탐색</span>
+          <span>{selectedThemeName ? `${selectedThemeName} 코스 탐색` : "걷기 코스 전용 탐색"}</span>
           <span className="w-8 h-8 rounded-full bg-bento-green/10 flex items-center justify-center">
             <Footprints size={18} className="text-bento-green" />
           </span>
@@ -224,38 +299,7 @@ export default function CourseTab({
         </p>
       </div>
 
-      {/* 2. 테마 카드 섹션 */}
-      {themes && themes.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {themes.map((theme) => {
-            const active = selectedThemes.includes(theme.route_idx);
-            const accent = themeAccent(theme.theme_nm);
-            return (
-              <button
-                key={theme.route_idx}
-                onClick={() => toggleTheme(theme.route_idx)}
-                aria-pressed={active}
-                className={`p-3.5 rounded-xl border text-left transition-all duration-base cursor-pointer ${
-                  active
-                    ? `${accent.activeBg} text-white ${accent.activeBorder} shadow-md`
-                    : `bg-white border-border-default shadow-sm ${accent.inactiveHoverBorder}`
-                }`}
-              >
-                <div className="flex items-center gap-1.5 mb-1">
-                  <Route size={13} className={active ? "text-white" : accent.inactiveIcon} />
-                  {active && <Check size={13} />}
-                </div>
-                <p className={`text-xs font-bold leading-tight ${active ? "text-white" : "text-bento-dark"}`}>{theme.theme_nm}</p>
-                <p className={`text-[10px] mt-1 font-mono ${active ? "text-white/80" : "text-bento-dark/50"}`}>
-                  {theme.courseCount}개 코스 · {theme.totalDistanceKm.toLocaleString()}km
-                </p>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* 3. Filter Control Panel */}
+      {/* 2. Filter Control Panel */}
       <div className="bg-white p-4 rounded-xl border border-border-default shadow-sm space-y-3">
         {/* 검색어 */}
         <div className="relative">
