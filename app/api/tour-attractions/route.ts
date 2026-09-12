@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
-const SORTS = ["relevance", "name", "updated"] as const;
+const SORTS = ["congestion", "name"] as const;
 
 const pool = new Pool({
   host: process.env.SUPABASE_DB_HOST ?? "aws-0-ap-northeast-2.pooler.supabase.com",
@@ -44,7 +44,9 @@ export async function GET(request: NextRequest) {
   const q = qValue?.trim() || undefined;
   const regionCode = searchParams.get("regionCode") ?? searchParams.get("ldong_regn_cd");
   const sigunguCode = searchParams.get("sigunguCode") ?? searchParams.get("ldong_signgu_cd");
-  const sort = searchParams.get("sort") ?? "relevance";
+  const rawSort = searchParams.get("sort") ?? "congestion";
+  // Legacy shared URLs may still carry old sort values; normalize them to the congestion default.
+  const sort = rawSort === "relevance" || rawSort === "updated" ? "congestion" : rawSort;
   const pageValue = searchParams.get("page");
   const limitValue = searchParams.get("limit");
 
@@ -56,8 +58,13 @@ export async function GET(request: NextRequest) {
     return badRequest("sigunguCode must be exactly 3 digits");
   }
   if (!SORTS.includes(sort as (typeof SORTS)[number])) {
-    return badRequest("sort must be one of relevance, name, or updated");
+    return badRequest("sort must be one of congestion or name");
   }
+  const dateValue = searchParams.get("date");
+  if (dateValue !== null && !/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+    return badRequest("date must be in YYYY-MM-DD format");
+  }
+  const dateYYYYMMDD = dateValue === null ? null : dateValue.replace(/-/g, "");
 
   const page = pageValue === null ? DEFAULT_PAGE : Number(pageValue);
   const limit = limitValue === null ? DEFAULT_LIMIT : Number(limitValue);
@@ -97,32 +104,38 @@ export async function GET(request: NextRequest) {
     if (searchParams.get("hearingInfo") === "true") conditions.push("COALESCE(b.has_hearing_disability_info, 0) > 0");
     if (searchParams.get("infantFamilyInfo") === "true") conditions.push("COALESCE(b.has_infant_family_info, 0) > 0");
 
-    const orderBy = sort === "updated"
-      ? "a.content_modified_at DESC NULLS LAST, a.title ASC, a.content_id ASC"
-      : sort === "name"
-        ? "a.title ASC, a.content_id ASC"
-        : q
-          ? `CASE WHEN a.title ILIKE $1 ESCAPE '\\' THEN 0 ELSE 1 END,
-             CASE WHEN CONCAT_WS(' ', a.addr1, a.addr2) ILIKE $1 ESCAPE '\\' THEN 0 ELSE 1 END,
-             a.title ASC, a.content_id ASC`
-          : "a.title ASC, a.content_id ASC";
+    const orderBy = sort === "name"
+      ? "a.title ASC, a.content_id ASC"
+      : dateYYYYMMDD === null
+        ? // No forecast date selected: fall back to name order (no congestion data to rank by).
+          "a.title ASC, a.content_id ASC"
+        : // Congestion ascending: emptiest first. Rows without a forecast go last.
+          `c.cnctr_rate ASC NULLS LAST, a.title ASC, a.content_id ASC`;
+    const cnctrSelect = dateYYYYMMDD === null ? 'NULL::numeric AS "cnctrRate"' : 'c.cnctr_rate AS "cnctrRate"';
+    const cnctrJoin = dateYYYYMMDD === null ? "" : `LEFT JOIN LATERAL (
+      SELECT f.cnctr_rate FROM tourist_visitor_forecast AS f
+      WHERE f.content_id = a.content_id AND f.base_ymd = ${addParam(dateYYYYMMDD)}
+      ORDER BY f.cnctr_rate DESC LIMIT 1
+    ) AS c ON true`;
     const limitParam = addParam(limit);
     const offsetParam = addParam((page - 1) * limit);
 
     const { rows } = await pool.query(
       `SELECT a.content_id, a.title, a.addr1, a.addr2, a.firstimage, a.firstimage2,
               a.ldong_regn_cd, a.ldong_signgu_cd, a.lcls_systm1, a.lcls_systm2,
-              a.lcls_systm3, a.parking, a.chkbabycarriage, a.chkpet, a.mapx, a.mapy,
+              a.lcls_systm3, a.parking, a.usetime, a.chkbabycarriage, a.chkpet, a.mapx, a.mapy,
               a.content_modified_at,
               ${petInfoExpression} AS "hasPetInfo",
               (COALESCE(b.has_physical_disability_info, 0) > 0) AS "hasPhysicalInfo",
               (COALESCE(b.has_visual_disability_info, 0) > 0) AS "hasVisualInfo",
               (COALESCE(b.has_hearing_disability_info, 0) > 0) AS "hasHearingInfo",
               (COALESCE(b.has_infant_family_info, 0) > 0) AS "hasInfantFamilyInfo",
+              ${cnctrSelect},
               COUNT(*) OVER()::int AS "_totalCount"
        FROM tour_attraction AS a
        LEFT JOIN barrier_free_info AS b ON b.content_id = a.content_id
        LEFT JOIN pet_tursm_info AS p ON p.content_id = a.content_id
+       ${cnctrJoin}
        ${conditions.length ? `WHERE ${conditions.join(" AND ")}` : ""}
        ORDER BY ${orderBy}
        LIMIT ${limitParam} OFFSET ${offsetParam}`,
