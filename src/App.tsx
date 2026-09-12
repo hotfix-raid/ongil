@@ -19,6 +19,7 @@ import CourseTab from "./components/CourseTab";
 import MyTab from "./components/MyTab";
 import KakaoLoginModal from "./components/KakaoLoginModal";
 import DestinationDetail from "./components/DestinationDetail";
+import SearchDestinationDetail from "./components/SearchDestinationDetail";
 
 import { MockDestination, mockDestinations } from "./data/destinations";
 import { 
@@ -73,6 +74,10 @@ export default function App() {
 
   // Selected destination to showcase in the unified detail modal
   const [selectedDestination, setSelectedDestination] = useState<MockDestination | null>(null);
+
+  // Selected search result destination (real DB data by content_id)
+  const [selectedSearchContentId, setSelectedSearchContentId] = useState<string | null>(null);
+  const [searchForecastDate, setSearchForecastDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   // Hydrate browser-only state after the first render so SSR and hydration match.
   useEffect(() => {
@@ -333,7 +338,9 @@ export default function App() {
             
             {activeTab === "search" && (
               <SearchTab
-                onSelectDestination={setSelectedDestination}
+                onSelectDestination={(id) => setSelectedSearchContentId(String(id))}
+                forecastDate={searchForecastDate}
+                onForecastDateChange={setSearchForecastDate}
                 likedDestinations={likedDestinations}
                 onToggleLike={handleToggleLike}
                 accessibilityDefaults={accessibilityDefaults}
@@ -503,7 +510,20 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* 4. KAKAO MOCK LOGIN MODAL */}
+      {/* 4. SEARCH RESULT DETAIL MODAL (real DB data) */}
+      <AnimatePresence>
+        {selectedSearchContentId && (
+          <SearchDestinationDetail
+            contentId={selectedSearchContentId}
+            forecastDate={searchForecastDate}
+            onClose={() => setSelectedSearchContentId(null)}
+            isLiked={likedDestinations.includes(selectedSearchContentId)}
+            onToggleLike={handleToggleLike}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* 5. KAKAO MOCK LOGIN MODAL */}
       <AnimatePresence>
         {showLoginModal && (
           <KakaoLoginModal
