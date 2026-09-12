@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Pool } from "pg";
+import pool from "../../../src/lib/db/pool";
 
 export const runtime = "nodejs";
 
@@ -7,15 +7,6 @@ const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
 const SORTS = ["congestion", "name"] as const;
-
-const pool = new Pool({
-  host: process.env.SUPABASE_DB_HOST ?? "aws-0-ap-northeast-2.pooler.supabase.com",
-  port: 5432,
-  database: "postgres",
-  user: process.env.SUPABASE_DB_USER ?? "postgres.trhyuntncdckzrqbkdwa",
-  password: process.env.SUPABASE_DB_PASSWORD,
-  ssl: { rejectUnauthorized: false },
-});
 
 const petInfoExpression = `(
   NULLIF(BTRIM(COALESCE(p.acmpy_psbl_cpam, '')), '') IS NOT NULL OR

@@ -150,7 +150,7 @@ export default function DestinationDetail({
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="font-display font-bold text-sm tracking-tight">
-                  실시간 혼잡도 {destination.congestionLevel}% — {cStyle.text}
+                  예상 혼잡도 {destination.congestionLevel}% — {cStyle.text}
                 </span>
               </div>
               <p className="text-xs leading-relaxed opacity-90">{cStyle.desc}</p>

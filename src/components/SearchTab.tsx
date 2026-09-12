@@ -129,13 +129,17 @@ export default function SearchTab({
     const regionCode = params.get("regionCode");
     const sigunguCode = params.get("sigunguCode");
     const validRegionCode = regionCode && /^\d{2}$/.test(regionCode) ? regionCode : "";
+    // Inline match handles popstate where the URL sigunguCode changes without
+    // a regionCode change (so the sigungu fetch wouldn't re-run). The fetch
+    // handler below covers the initial-mount case where sigunguRows is still
+    // empty here.
     const sigunguMatch = validRegionCode && sigunguCode
-      ? sigunguRows.find((item) => item.ldong_regn_cd.trim().slice(0, 2) === validRegionCode && item.ldong_signgu_cd.trim().slice(-3) === sigunguCode)
+      ? sigunguRows.find((item) => item.ldong_regn_cd.trim().slice(0, 2) === validRegionCode && item.ldong_signgu_cd.trim().slice(-3) === sigunguCode) ?? null
       : null;
     pendingSigungu.current = validRegionCode && sigunguCode && !sigunguMatch ? { regionCode: validRegionCode, sigunguCode } : null;
     urlStateHydrated.current = !pendingSigungu.current;
     setRegionCode(validRegionCode);
-    setSigungu(sigunguMatch || null);
+    setSigungu(sigunguMatch);
     setPetInfo(params.has("petInfo") ? params.get("petInfo") === "true" : accessibilityDefaults.petFriendly);
     setBarrier({
       physicalInfo: params.has("physicalInfo") ? params.get("physicalInfo") === "true" : accessibilityDefaults.wheelchair,
@@ -162,8 +166,28 @@ export default function SearchTab({
     const abort = new AbortController();
     fetch(regionCode ? `/api/sigungu?regionCode=${regionCode}` : "/api/sigungu", { signal: abort.signal })
       .then((response) => (response.ok ? response.json() : Promise.reject()))
-      .then((data: ApiResponse<Sigungu>) => setSigunguRows(Array.isArray(data.rows) ? data.rows : []))
-      .catch(() => undefined)
+      .then((data: ApiResponse<Sigungu>) => {
+        if (abort.signal.aborted) return;
+        const rows = Array.isArray(data.rows) ? data.rows : [];
+        setSigunguRows(rows);
+        // Hydrate sigungu from pending URL params in the same batch as
+        // setSigunguRows so that fetchResults captures the correct filter
+        // on the first call.
+        const pending = pendingSigungu.current;
+        if (pending) {
+          const match = rows.find(
+            (item) =>
+              item.ldong_regn_cd.trim().slice(0, 2) === pending.regionCode &&
+              item.ldong_signgu_cd.trim().slice(-3) === pending.sigunguCode
+          );
+          if (match) setSigungu(match);
+          pendingSigungu.current = null;
+        }
+        urlStateHydrated.current = true;
+      })
+      .catch(() => {
+        if (!abort.signal.aborted) urlStateHydrated.current = true;
+      })
       .finally(() => { if (!abort.signal.aborted) setUrlReady(true); });
     return () => abort.abort();
   }, [regionCode]);
@@ -174,14 +198,6 @@ export default function SearchTab({
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, [restoreUrlState]);
-
-  useEffect(() => {
-    if (!pendingSigungu.current || sigunguRows.length === 0) return;
-    const match = sigunguRows.find((item) => item.ldong_regn_cd.trim().slice(0, 2) === pendingSigungu.current?.regionCode && item.ldong_signgu_cd.trim().slice(-3) === pendingSigungu.current?.sigunguCode);
-    if (match) setSigungu(match);
-    pendingSigungu.current = null;
-    urlStateHydrated.current = true;
-  }, [sigunguRows]);
 
   useEffect(() => {
     if (!urlReady || !urlStateHydrated.current) return;
@@ -237,6 +253,15 @@ export default function SearchTab({
     }
   }, [appliedQuery, buildParams]);
 
+  // Track the latest fetchResults in a ref so the trigger effect below
+  // doesn't re-fire every time the callback's closure changes (which happens
+  // when any buildParams dependency updates). The effect should only fire when
+  // the user actually asks for new results (searchTick), the URL state has
+  // been hydrated (urlReady + urlStateHydrated), or search inputs change
+  // through the auto-fetch path.
+  const fetchResultsRef = useRef(fetchResults);
+  fetchResultsRef.current = fetchResults;
+
   const applySearch = () => {
     setAppliedQuery(query.trim());
     setSearchTick((value) => value + 1);
@@ -274,10 +299,17 @@ export default function SearchTab({
   }, [count, loadMore, loading, loadingMore, rows.length]);
 
   useEffect(() => {
-    if (!urlReady) return;
-    fetchResults();
+    // The sigungu fetch handler hydrates `sigungu` in the same React batch as
+    // setSigunguRows and setUrlReady, so by the time urlReady flips and this
+    // effect runs, buildParams already reflects the correct filter values. We
+    // use a ref (fetchResultsRef) so this effect only fires on actual
+    // user/URL-hydration triggers, not every time the callback closure changes
+    // (which used to cause double /api/tour-attractions requests when sigungu
+    // was hydrated mid-flight from URL state).
+    if (!urlReady || !urlStateHydrated.current) return;
+    fetchResultsRef.current();
     return () => controller.current?.abort();
-  }, [fetchResults, searchTick, urlReady]);
+  }, [searchTick, urlReady]);
 
   const reset = () => {
     setQuery(""); setAppliedQuery(""); setRegionCode(""); setSigungu(null);
