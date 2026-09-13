@@ -19,6 +19,8 @@ AI 에이전트가 개발 시 이 문서를 스키마의 단일 소스로 사용
 | `dulle_course` | 141 | `crs_idx` | 둘레길/걷기 코스 |
 | `walking_trail_theme` | 4 | `route_idx` | 걷기 라인(테마) 메타 |
 | `tourist_visitor_forecast` | 4,380 | (`base_ymd`,`area_cd`,`signgu_cd`,`tats_nm`) | 관광지별 방문자 예측(혼잡도) |
+| `users` | 0 (신규) | `id` | 회원 (카카오 OAuth) |
+| `sessions` | 0 (신규) | `token_hash` | 로그인 세션 |
 
 ## 관계 (ERD)
 
@@ -31,9 +33,11 @@ tour_attraction (content_id, VARCHAR(20))
   └── tourist_visitor_forecast.content_id -- 논리적 1:N, FK 제약 없음, PK에도 포함 안 됨
 
 walking_trail_theme (route_idx) ──< dulle_course.route_idx  -- 논리적 1:N, FK 제약 없음
+
+users (id) ──< sessions.user_id  -- 실제 FK, ON DELETE CASCADE
 ```
 
-**주의**: 실제 FK 제약은 `sigungu→region` 하나뿐. 나머지는 논리적 관계일 뿐이므로 조인 시 존재하지 않는 `content_id`/`route_idx`가 있어도 DB가 막아주지 않는다.
+**주의**: 관광 데이터 8개 테이블 사이의 실제 FK 제약은 `sigungu→region` 하나뿐이며, 나머지는 논리적 관계일 뿐이므로 조인 시 존재하지 않는 `content_id`/`route_idx`가 있어도 DB가 막아주지 않는다. `users`/`sessions`는 별도 도메인(인증)이라 `sessions.user_id → users.id`에 실제 FK가 걸려 있다.
 
 ## 공통 컨벤션
 
@@ -185,6 +189,31 @@ walking_trail_theme (route_idx) ──< dulle_course.route_idx  -- 논리적 1:N
 | `content_id` | `VARCHAR(20)` | NOT NULL | 관광공사 콘텐츠 ID — `tour_attraction.content_id` 조인 (FK 아님) |
 | `cnctr_rate` | `numeric` | NOT NULL | 혼잡도/집중률 (예측 지표) |
 | `created_at` | `timestamp` | NOT NULL, 기본 `now()` | 시간대 없음 |
+
+## users — 회원 (카카오 OAuth)
+
+카카오 로그인으로 생성/갱신되는 회원 레코드. PK: `id`. 마이그레이션: [`docs/migrations/001_users_and_sessions.sql`](migrations/001_users_and_sessions.sql).
+
+| 컬럼 | 타입 | NULL | 설명 |
+|---|---|---|---|
+| `id` | `uuid` | NOT NULL, **PK**, 기본 `gen_random_uuid()` | 내부 회원 ID |
+| `kakao_id` | `bigint` | NOT NULL, UNIQUE | 카카오 회원번호 (`GET /v2/user/me`의 `id`) |
+| `nickname` | `VARCHAR(100)` | NULL | 카카오 프로필 닉네임 (로그인마다 최신값으로 갱신) |
+| `avatar_url` | `text` | NULL | 카카오 프로필 이미지 URL |
+| `created_at` / `updated_at` | `timestamptz` | NOT NULL, 기본 `now()` | |
+
+## sessions — 로그인 세션
+
+브라우저 쿠키(`ongil_session`)가 가리키는 서버 세션. PK: `token_hash`.
+
+| 컬럼 | 타입 | NULL | 설명 |
+|---|---|---|---|
+| `token_hash` | `CHAR(64)` | NOT NULL, **PK** | 세션 토큰의 SHA-256 해시(hex). 원본 토큰은 쿠키에만 존재 |
+| `user_id` | `uuid` | NOT NULL, FK→`users.id` (CASCADE) | 세션 소유 회원 |
+| `created_at` | `timestamptz` | NOT NULL, 기본 `now()` | |
+| `expires_at` | `timestamptz` | NOT NULL | 만료 시각 (기본 발급 시점 + 30일) |
+
+만료된 행은 물리적으로 삭제되지 않고 조회 시 `expires_at > now()`로만 걸러진다 — 트래픽이 늘면 만료 행을 정리하는 배치가 필요.
 
 ---
 

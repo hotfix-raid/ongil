@@ -41,24 +41,24 @@ import {
 } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 
+/** Used when a logged-in user's Kakao profile has no profile image. */
+const DEFAULT_AVATAR_URL = "https://api.dicebear.com/7.x/adventurer/svg?seed=ongil_user";
+
 export default function App() {
   // Navigation & View Mode states
   const [viewMode, setViewMode] = useState<"app" | "intro">("app");
   const [activeTab, setActiveTab] = useState<"home" | "search" | "map" | "course" | "my">("home");
 
-  // User mock authentication states
+  // User authentication state (Kakao OAuth session, via /api/auth/*)
   const [user, setUser] = useState<{ name: string; avatarUrl: string } | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [modalMode, setModalMode] = useState<"login" | "signup">("login");
 
-  const handleLoginSuccess = (userData: { name: string; avatarUrl: string }) => {
-    setUser(userData);
-    localStorage.setItem("ongil_user_v1", JSON.stringify(userData));
-  };
-
   const handleLogout = () => {
     setUser(null);
-    localStorage.removeItem("ongil_user_v1");
+    fetch("/api/auth/logout", { method: "POST" }).catch(() => {
+      // Best-effort: client-side state is already cleared regardless.
+    });
   };
 
   // Global states
@@ -94,15 +94,25 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [selectedCrsIdx]);
 
+  // Hydrate the logged-in user from the server session (Kakao OAuth), if any.
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : { user: null }))
+      .then((data: { user: { nickname: string | null; avatarUrl: string | null } | null }) => {
+        if (data.user) {
+          setUser({
+            name: data.user.nickname || "온길러",
+            avatarUrl: data.user.avatarUrl || DEFAULT_AVATAR_URL,
+          });
+        }
+      })
+      .catch(() => {
+        // Keep the signed-out default when the session check fails.
+      });
+  }, []);
+
   // Hydrate browser-only state after the first render so SSR and hydration match.
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("ongil_user_v1");
-      setUser(saved ? JSON.parse(saved) : null);
-    } catch {
-      // Keep the deterministic default when storage is unavailable or invalid.
-    }
-
     try {
       const saved = localStorage.getItem("ongil_liked_v1");
       setLikedDestinations(saved ? JSON.parse(saved) : ["d001", "d004"]);
@@ -557,7 +567,6 @@ export default function App() {
           <KakaoLoginModal
             isOpen={showLoginModal}
             onClose={() => setShowLoginModal(false)}
-            onLoginSuccess={handleLoginSuccess}
             initialMode={modalMode}
           />
         )}
