@@ -1,59 +1,42 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion } from "motion/react";
-import { X, MessageCircle, Lock, ShieldCheck, Mail, CheckCircle2, Loader2, AlertTriangle } from "lucide-react";
+import { X, MessageCircle, ShieldCheck, CheckCircle2, Loader2, AlertTriangle } from "lucide-react";
 
 interface KakaoLoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLoginSuccess: (user: { name: string; avatarUrl: string }) => void;
   initialMode?: "login" | "signup";
 }
 
 export default function KakaoLoginModal({
   isOpen,
   onClose,
-  onLoginSuccess,
   initialMode = "login"
 }: KakaoLoginModalProps) {
   const [mode, setMode] = useState<"login" | "signup">(initialMode);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState("");
 
-  // Sign up form state
-  const [email, setEmail] = useState("");
-  const [nickname, setNickname] = useState("");
+  // Sign up form state — Kakao supplies nickname/profile image itself, so
+  // signup only needs consent, not a separate identity form.
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [agreedPrivacy, setAgreedPrivacy] = useState(false);
   const [formError, setFormError] = useState("");
 
   if (!isOpen) return null;
 
-  const handleKakaoAction = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (mode === "signup" && (!email || !nickname || !agreedTerms || !agreedPrivacy)) {
-      setFormError("필수 입력 사항 및 동의가 필요합니다.");
+  const handleKakaoAction = () => {
+    if (mode === "signup" && (!agreedTerms || !agreedPrivacy)) {
+      setFormError("필수 약관에 동의해 주세요.");
       return;
     }
 
     setFormError("");
-
     setIsLoading(true);
-    setLoadingStep(mode === "login" ? "카카오 계정 확인 중..." : "회원 정보 생성 중...");
-
-    setTimeout(() => {
-      setLoadingStep("프로필 동기화 중...");
-
-      setTimeout(() => {
-        setIsLoading(false);
-        onLoginSuccess({
-          name: mode === "signup" ? nickname : "온길러",
-          avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=" + (mode === "signup" ? nickname : "ongil_user")
-        });
-        onClose();
-      }, 800);
-
-    }, 800);
+    setLoadingStep("카카오 로그인 페이지로 이동 중...");
+    // Full-page redirect into Kakao's OAuth authorize screen; the callback
+    // route creates the session and sends the browser back to "/".
+    window.location.href = "/api/auth/kakao/login";
   };
 
   return (
@@ -129,46 +112,12 @@ export default function KakaoLoginModal({
             <div className="py-12 flex flex-col items-center justify-center space-y-4">
               <Loader2 size={28} className="text-bento-green animate-spin" />
               <span className="text-xs font-bold text-bento-dark">{loadingStep}</span>
-              <span className="text-[10px] text-bento-dark/40">안전한 연동 목업 환경입니다.</span>
+              <span className="text-[10px] text-bento-dark/40">카카오 로그인으로 안전하게 연결됩니다.</span>
             </div>
           ) : (
             <div className="space-y-5 text-left">
               {mode === "signup" && (
-                <form onSubmit={handleKakaoAction} className="space-y-4">
-                  <div>
-                    <label className="text-xs font-sans font-semibold text-bento-dark/60 block mb-1.5">
-                      이메일 주소
-                    </label>
-                    <div className="relative">
-                      <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-bento-dark/40" />
-                      <input
-                        type="email"
-                        required
-                        placeholder="example@gmail.com"
-                        value={email}
-                        onChange={(e) => { setEmail(e.target.value); setFormError(""); }}
-                        className="w-full pl-9 pr-4 py-2.5 bg-bento-bg border border-border-default rounded-sm text-sm font-sans focus:outline-none focus:border-bento-green focus:ring-1 focus:ring-bento-green/20 transition-all duration-fast"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-sans font-semibold text-bento-dark/60 block mb-1.5">
-                      닉네임
-                    </label>
-                    <div className="relative">
-                      <Lock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-bento-dark/40" />
-                      <input
-                        type="text"
-                        required
-                        placeholder="예: 온길동"
-                        value={nickname}
-                        onChange={(e) => { setNickname(e.target.value); setFormError(""); }}
-                        className="w-full pl-9 pr-4 py-2.5 bg-bento-bg border border-border-default rounded-sm text-sm font-sans focus:outline-none focus:border-bento-green focus:ring-1 focus:ring-bento-green/20 transition-all duration-fast"
-                      />
-                    </div>
-                  </div>
-
+                <div className="space-y-4">
                   {/* Consent */}
                   <div className="bg-bento-bg p-3.5 rounded-md border border-border-subtle space-y-2 text-xs text-bento-dark/60">
                     <div className="flex items-center gap-2">
@@ -204,12 +153,12 @@ export default function KakaoLoginModal({
                       <span>{formError}</span>
                     </motion.p>
                   )}
-                </form>
+                </div>
               )}
 
               {/* Kakao CTA */}
               <button
-                onClick={mode === "signup" ? handleKakaoAction : (e) => handleKakaoAction(e)}
+                onClick={handleKakaoAction}
                 className="w-full py-3 rounded-sm bg-[#FEE500] hover:bg-[#FDD800] text-[#191919] font-bold text-sm flex items-center justify-center gap-2 transition-all duration-base shadow-sm cursor-pointer active:scale-98"
               >
                 <MessageCircle size={16} className="fill-[#191919]" />
