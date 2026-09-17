@@ -168,10 +168,11 @@ export default function MyTab({
       <AnimatePresence>
         {toastMessage && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="p-3.5 bg-bento-green text-white text-xs font-semibold rounded-lg flex items-center gap-2.5 shadow-sm"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            role="status"
+            className="fixed left-1/2 -translate-x-1/2 bottom-24 z-50 w-[calc(100%-32px)] max-w-md p-3.5 bg-bento-green text-white text-xs font-semibold rounded-lg flex items-center gap-2.5 shadow-lg pointer-events-none"
           >
             <Sparkles size={14} />
             <span>{toastMessage}</span>
