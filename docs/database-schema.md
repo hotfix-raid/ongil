@@ -21,6 +21,7 @@ AI 에이전트가 개발 시 이 문서를 스키마의 단일 소스로 사용
 | `tourist_visitor_forecast` | 4,380 | (`base_ymd`,`area_cd`,`signgu_cd`,`tats_nm`) | 관광지별 방문자 예측(혼잡도) |
 | `users` | 0 (신규) | `id` | 회원 (카카오 OAuth) |
 | `sessions` | 0 (신규) | `token_hash` | 로그인 세션 |
+| `user_likes` | 0 (신규) | (`user_id`,`target_type`,`target_id`) | 회원 좋아요(찜) — 관광지/코스 |
 
 ## 관계 (ERD)
 
@@ -34,7 +35,8 @@ tour_attraction (content_id, VARCHAR(20))
 
 walking_trail_theme (route_idx) ──< dulle_course.route_idx  -- 논리적 1:N, FK 제약 없음
 
-users (id) ──< sessions.user_id  -- 실제 FK, ON DELETE CASCADE
+users (id) ──< sessions.user_id    -- 실제 FK, ON DELETE CASCADE
+users (id) ──< user_likes.user_id  -- 실제 FK, ON DELETE CASCADE
 ```
 
 **주의**: 관광 데이터 8개 테이블 사이의 실제 FK 제약은 `sigungu→region` 하나뿐이며, 나머지는 논리적 관계일 뿐이므로 조인 시 존재하지 않는 `content_id`/`route_idx`가 있어도 DB가 막아주지 않는다. `users`/`sessions`는 별도 도메인(인증)이라 `sessions.user_id → users.id`에 실제 FK가 걸려 있다.
@@ -200,6 +202,7 @@ users (id) ──< sessions.user_id  -- 실제 FK, ON DELETE CASCADE
 | `kakao_id` | `bigint` | NOT NULL, UNIQUE | 카카오 회원번호 (`GET /v2/user/me`의 `id`) |
 | `nickname` | `VARCHAR(100)` | NULL | 카카오 프로필 닉네임 (로그인마다 최신값으로 갱신) |
 | `avatar_url` | `text` | NULL | 카카오 프로필 이미지 URL |
+| `accessibility_defaults` | `jsonb` | NOT NULL, 기본 `'{}'` | 마이페이지 "나의 안심보행 기본값". `{petFriendly, wheelchair, stroller, senior, parking}` 모두 boolean. 저장 전이면 `{}` (클라이언트가 전부 false로 채움). 마이그레이션 002 |
 | `created_at` / `updated_at` | `timestamptz` | NOT NULL, 기본 `now()` | |
 
 ## sessions — 로그인 세션
@@ -214,6 +217,17 @@ users (id) ──< sessions.user_id  -- 실제 FK, ON DELETE CASCADE
 | `expires_at` | `timestamptz` | NOT NULL | 만료 시각 (기본 발급 시점 + 30일) |
 
 만료된 행은 물리적으로 삭제되지 않고 조회 시 `expires_at > now()`로만 걸러진다 — 트래픽이 늘면 만료 행을 정리하는 배치가 필요.
+
+## user_likes — 회원 좋아요(찜)
+
+로그인 회원의 좋아요 목록. 게스트는 브라우저 localStorage에만 저장된다. 마이그레이션: [`docs/migrations/002_user_likes_and_settings.sql`](migrations/002_user_likes_and_settings.sql). API: `GET/PUT/DELETE /api/likes`.
+
+| 컬럼 | 타입 | NULL | 설명 |
+|---|---|---|---|
+| `user_id` | `uuid` | NOT NULL, **PK(1st)**, FK→`users.id` (CASCADE) | 회원 |
+| `target_type` | `VARCHAR(10)` | NOT NULL, **PK(2nd)**, CHECK `place`/`course` | `place`=관광지, `course`=걷기 코스 |
+| `target_id` | `VARCHAR(30)` | NOT NULL, **PK(3rd)** | `place`면 `tour_attraction.content_id` 또는 목업 id(`d001` 등), `course`면 `dulle_course.crs_idx` — FK 아님 |
+| `created_at` | `timestamptz` | NOT NULL, 기본 `now()` | 좋아요 시각 |
 
 ---
 
