@@ -42,6 +42,28 @@ import { AnimatePresence } from "motion/react";
 /** Used when a logged-in user's Kakao profile has no profile image. */
 const DEFAULT_AVATAR_URL = "https://api.dicebear.com/7.x/adventurer/svg?seed=ongil_user";
 
+const DEFAULT_ACCESSIBILITY = {
+  petFriendly: false,
+  wheelchair: false,
+  stroller: false,
+  senior: false,
+  parking: false
+};
+const DEFAULT_LIKES = ["d001", "d004"]; // Pre-fill with Goseong & Samcheok for a vibrant start
+
+type AccessibilityDefaults = typeof DEFAULT_ACCESSIBILITY;
+
+// Guests keep likes/defaults in localStorage; logged-in users use the DB via /api/likes and /api/settings/accessibility.
+function loadLocal<T>(key: string, fallback: T): T {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : fallback;
+  } catch {
+    // Keep the deterministic default when storage is unavailable or invalid.
+    return fallback;
+  }
+}
+
 export default function App() {
   // Navigation & View Mode states
   const [viewMode, setViewMode] = useState<"app" | "intro">("app");
@@ -54,21 +76,18 @@ export default function App() {
 
   const handleLogout = () => {
     setUser(null);
+    // Drop the account's likes/defaults from screen; fall back to this device's guest data.
+    setLikedDestinations(loadLocal("ongil_liked_v1", DEFAULT_LIKES));
+    setAccessibilityDefaults(loadLocal("ongil_accessibility_v1", DEFAULT_ACCESSIBILITY));
     fetch("/api/auth/logout", { method: "POST" }).catch(() => {
       // Best-effort: client-side state is already cleared regardless.
     });
   };
 
   // Global states
-  const [likedDestinations, setLikedDestinations] = useState<string[]>(["d001", "d004"]); // Pre-fill with Goseong & Samcheok for a vibrant start
+  const [likedDestinations, setLikedDestinations] = useState<string[]>(DEFAULT_LIKES);
 
-  const [accessibilityDefaults, setAccessibilityDefaults] = useState({
-    petFriendly: false,
-    wheelchair: false,
-    stroller: false,
-    senior: false,
-    parking: false
-  });
+  const [accessibilityDefaults, setAccessibilityDefaults] = useState<AccessibilityDefaults>(DEFAULT_ACCESSIBILITY);
   const [storageHydrated, setStorageHydrated] = useState(false);
 
   // Selected destination to showcase in the unified detail modal
@@ -102,6 +121,16 @@ export default function App() {
             name: data.user.nickname || "온길러",
             avatarUrl: data.user.avatarUrl || DEFAULT_AVATAR_URL,
           });
+          fetch("/api/likes?type=place")
+            .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
+            .then((likes: { ids: string[] }) => setLikedDestinations(likes.ids))
+            .catch((e) => console.error("Failed to load likes", e));
+          fetch("/api/settings/accessibility")
+            .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
+            .then((settings: { accessibilityDefaults: Partial<AccessibilityDefaults> }) =>
+              setAccessibilityDefaults({ ...DEFAULT_ACCESSIBILITY, ...settings.accessibilityDefaults })
+            )
+            .catch((e) => console.error("Failed to load accessibility defaults", e));
         }
       })
       .catch(() => {
@@ -111,53 +140,68 @@ export default function App() {
 
   // Hydrate browser-only state after the first render so SSR and hydration match.
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("ongil_liked_v1");
-      setLikedDestinations(saved ? JSON.parse(saved) : ["d001", "d004"]);
-    } catch {
-      // Keep the deterministic default when storage is unavailable or invalid.
-    }
-
-    try {
-      const saved = localStorage.getItem("ongil_accessibility_v1");
-      setAccessibilityDefaults(saved ? JSON.parse(saved) : {
-        petFriendly: false,
-        wheelchair: false,
-        stroller: false,
-        senior: false,
-        parking: false
-      });
-    } catch {
-      // Keep the deterministic default when storage is unavailable or invalid.
-    }
-
+    setLikedDestinations(loadLocal("ongil_liked_v1", DEFAULT_LIKES));
+    setAccessibilityDefaults(loadLocal("ongil_accessibility_v1", DEFAULT_ACCESSIBILITY));
     setStorageHydrated(true);
   }, []);
 
-  // Sync to local storage after browser state has been hydrated.
+  // Sync guest state to local storage after browser state has been hydrated.
+  // Logged-in state lives in the DB, so it must not overwrite this device's guest data.
   useEffect(() => {
-    if (!storageHydrated) return;
+    if (!storageHydrated || user) return;
     localStorage.setItem("ongil_liked_v1", JSON.stringify(likedDestinations));
   }, [likedDestinations, storageHydrated]);
 
   useEffect(() => {
-    if (!storageHydrated) return;
+    if (!storageHydrated || user) return;
     localStorage.setItem("ongil_accessibility_v1", JSON.stringify(accessibilityDefaults));
   }, [accessibilityDefaults, storageHydrated]);
 
   // Global Handlers
   const handleToggleLike = (id: string) => {
-    setLikedDestinations(prev => 
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-    );
+    const liked = !likedDestinations.includes(id);
+    const apply = (on: boolean) =>
+      setLikedDestinations(prev => (on ? [...prev.filter(item => item !== id), id] : prev.filter(item => item !== id)));
+    apply(liked);
+    if (!user) return;
+    fetch("/api/likes", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "place", id, liked })
+    })
+      .then((res) => { if (!res.ok) throw new Error(`HTTP ${res.status}`); })
+      .catch((e) => {
+        console.error("Failed to save like", e);
+        apply(!liked); // Roll back so the UI never shows an unsaved like.
+      });
   };
 
   const handleClearLikes = () => {
+    const previous = likedDestinations;
     setLikedDestinations([]);
+    if (!user) return;
+    fetch("/api/likes?type=place", { method: "DELETE" })
+      .then((res) => { if (!res.ok) throw new Error(`HTTP ${res.status}`); })
+      .catch((e) => {
+        console.error("Failed to clear likes", e);
+        setLikedDestinations(previous);
+      });
   };
 
-  const handleUpdateAccessibilityDefaults = (newDefaults: any) => {
+  const handleUpdateAccessibilityDefaults = (newDefaults: AccessibilityDefaults) => {
+    const previous = accessibilityDefaults;
     setAccessibilityDefaults(newDefaults);
+    if (!user) return;
+    fetch("/api/settings/accessibility", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newDefaults)
+    })
+      .then((res) => { if (!res.ok) throw new Error(`HTTP ${res.status}`); })
+      .catch((e) => {
+        console.error("Failed to save accessibility defaults", e);
+        setAccessibilityDefaults(previous);
+      });
   };
 
   const handleSelectAlternative = (altId: string) => {
@@ -339,6 +383,7 @@ export default function App() {
             {activeTab === "home" && (
               <HomeTab
                 onSelectDestination={setSelectedDestination}
+                onSelectAttraction={setSelectedSearchContentId}
                 likedDestinations={likedDestinations}
                 onToggleLike={handleToggleLike}
                 accessibilityDefaults={accessibilityDefaults}

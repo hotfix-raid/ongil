@@ -513,9 +513,9 @@ export default function MyTab({
       <div className="p-4 bg-bento-dark/[0.03] border border-border-subtle rounded-lg text-[10px] text-bento-dark/50 leading-relaxed flex gap-2.5 items-start">
         <Info size={12} className="text-bento-green shrink-0 mt-0.5" />
         <div>
-          <span className="font-semibold text-bento-dark block mb-0.5">안심 로컬 암호화 및 오프라인 상태 관리</span>
+          <span className="font-semibold text-bento-dark block mb-0.5">찜 목록 및 안심 기준 저장 안내</span>
           <p>
-            온길은 개인의 거동 상태, 반려동물 품종, 장애 여부 등의 사생활 민감 지표를 외부에 저장하지 않고, 기기 내 안전영역에 암호화하여 로컬 캐싱합니다.
+            로그인하면 찜한 명소·코스와 안심보행 기본값이 온길 계정에 저장되어 다른 기기에서도 유지됩니다. 로그인하지 않은 경우에는 이 기기 브라우저에만 저장됩니다.
           </p>
         </div>
       </div>

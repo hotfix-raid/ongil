@@ -66,6 +66,8 @@ export default function CourseDetail({ crsIdx, variant = "sheet", onClose, ready
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  // true = 로그인 사용자 → 좋아요를 DB(/api/likes)에 저장, false = 게스트 → localStorage
+  const [likesInDb, setLikesInDb] = useState(false);
   const controller = useRef<AbortController | null>(null);
 
   const isSheet = variant === "sheet";
@@ -74,13 +76,28 @@ export default function CourseDetail({ crsIdx, variant = "sheet", onClose, ready
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    try {
-      const raw = window.localStorage.getItem(LIKED_COURSES_KEY);
-      const liked = raw ? (JSON.parse(raw) as string[]) : [];
-      setIsLiked(liked.includes(crsIdx));
-    } catch {
-      setIsLiked(false);
-    }
+    let cancelled = false;
+    const loadLocal = () => {
+      try {
+        const raw = window.localStorage.getItem(LIKED_COURSES_KEY);
+        const liked = raw ? (JSON.parse(raw) as string[]) : [];
+        setIsLiked(liked.includes(crsIdx));
+      } catch {
+        setIsLiked(false);
+      }
+    };
+    loadLocal();
+    fetch("/api/likes?type=course")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json: { ids: string[] } | null) => {
+        if (cancelled || !json) return; // 401(게스트) 등 → localStorage 값 유지
+        setLikesInDb(true);
+        setIsLiked(json.ids.includes(crsIdx));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, [crsIdx, LIKED_COURSES_KEY]);
 
   const fetchDetail = async () => {
@@ -148,6 +165,23 @@ export default function CourseDetail({ crsIdx, variant = "sheet", onClose, ready
 
   const toggleLike = () => {
     if (typeof window === "undefined") return;
+    if (likesInDb) {
+      const next = !isLiked;
+      setIsLiked(next);
+      fetch("/api/likes", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "course", id: crsIdx, liked: next }),
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        })
+        .catch((e) => {
+          console.error("Failed to save course like", e);
+          setIsLiked(!next); // 저장 실패 시 되돌림
+        });
+      return;
+    }
     setIsLiked((prev) => {
       const next = !prev;
       try {
