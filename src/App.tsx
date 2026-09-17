@@ -383,6 +383,7 @@ export default function App() {
             {activeTab === "home" && (
               <HomeTab
                 onSelectDestination={setSelectedDestination}
+                onSelectAttraction={setSelectedSearchContentId}
                 likedDestinations={likedDestinations}
                 onToggleLike={handleToggleLike}
                 accessibilityDefaults={accessibilityDefaults}

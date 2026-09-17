@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Compass, 
@@ -23,8 +23,25 @@ import {
 } from "lucide-react";
 import { MockDestination, mockDestinations } from "../data/destinations";
 
+// Subset of a /api/tour-attractions row used by the home recommendation cards.
+interface HomeAttraction {
+  content_id: string;
+  title: string;
+  addr1: string | null;
+  firstimage: string | null;
+  firstimage2: string | null;
+  hasPetInfo: boolean;
+  hasPhysicalInfo: boolean;
+  hasInfantFamilyInfo: boolean;
+  cnctrRate: string | number | null;
+}
+
+const QUIET_COUNT = 3;
+const PERSONAL_COUNT = 2;
+
 interface HomeTabProps {
   onSelectDestination: (destination: MockDestination) => void;
+  onSelectAttraction: (contentId: string) => void;
   likedDestinations: string[];
   onToggleLike: (id: string) => void;
   accessibilityDefaults: {
@@ -39,19 +56,57 @@ interface HomeTabProps {
 
 export default function HomeTab({
   onSelectDestination,
+  onSelectAttraction,
   likedDestinations,
   onToggleLike,
   accessibilityDefaults,
   onNavigateToTab
 }: HomeTabProps) {
+  const { petFriendly, wheelchair, stroller } = accessibilityDefaults;
+
+  // Real DB recommendations: user's MY filters (same mapping as SearchTab), emptiest forecast first.
+  // ponytail: senior/parking defaults have no DB-backed filter yet, so they don't narrow results.
+  const [attractions, setAttractions] = useState<HomeAttraction[] | null>(null); // null = loading
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams({
+      date: new Date().toISOString().slice(0, 10),
+      sort: "congestion",
+      limit: String(QUIET_COUNT + PERSONAL_COUNT)
+    });
+    if (petFriendly) params.set("petInfo", "true");
+    if (wheelchair) params.set("physicalInfo", "true");
+    if (stroller) params.set("infantFamilyInfo", "true");
+
+    const abort = new AbortController();
+    setAttractions(null);
+    setLoadError(false);
+    fetch(`/api/tour-attractions?${params}`, { signal: abort.signal })
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
+      .then((data: { rows: HomeAttraction[] }) => setAttractions(data.rows))
+      .catch((e) => {
+        if (abort.signal.aborted) return;
+        console.error("Failed to load home recommendations", e);
+        setAttractions([]);
+        setLoadError(true);
+      });
+    return () => abort.abort();
+  }, [petFriendly, wheelchair, stroller]);
+
+  const hasDbFilters = petFriendly || wheelchair || stroller;
+  const quietFeed = attractions?.slice(0, QUIET_COUNT) ?? [];
+  const personalizedFeed = attractions?.slice(QUIET_COUNT) ?? [];
+  const feedStatus = attractions === null
+    ? "추천 명소를 불러오는 중이에요…"
+    : loadError
+      ? "추천 명소를 불러오지 못했어요. 잠시 후 다시 시도해 주세요."
+      : hasDbFilters
+        ? "MY 안심 기준에 맞는 명소가 아직 없어요. 기준을 조금 줄여보세요."
+        : "추천할 명소가 없어요.";
   // Simulated Weather state: Let the user change weather to see real-time curation shift!
   const [weatherPreset, setWeatherPreset] = useState<"sunny" | "rainy" | "dusty">("sunny");
   const [showWeatherDetails, setShowWeatherDetails] = useState(false);
-
-  // Filter 1: Tranquil Depopulated Areas (지금 한산한 인구감소지역)
-  const depopulatedTranquil = mockDestinations.filter(
-    d => d.isDepopulationArea && d.congestionStatus === "low"
-  );
 
   // Filter 2: Climate-Adaptive Recommendations (오늘 날씨엔 이런 코스)
   const getClimateRecommendations = () => {
@@ -69,26 +124,7 @@ export default function HomeTab({
 
   const climateFeed = getClimateRecommendations();
 
-  // Filter 3: Personalized Accessibility Recommendations
   const hasProfileDefaults = Object.values(accessibilityDefaults).some(Boolean);
-  const getPersonalizedRecommendations = () => {
-    let list = [...mockDestinations];
-    if (accessibilityDefaults.wheelchair) {
-      list = list.filter(d => d.accessibility.wheelchair);
-    }
-    if (accessibilityDefaults.stroller) {
-      list = list.filter(d => d.accessibility.stroller);
-    }
-    if (accessibilityDefaults.petFriendly) {
-      list = list.filter(d => d.petFriendly.allowed);
-    }
-    if (accessibilityDefaults.senior) {
-      list = list.filter(d => d.accessibility.senior);
-    }
-    return list.slice(0, 2);
-  };
-
-  const personalizedFeed = getPersonalizedRecommendations();
 
   const weatherDetailsMap = {
     sunny: {
@@ -234,7 +270,9 @@ export default function HomeTab({
               </h3>
             </div>
             <p className="text-xs text-bento-stone leading-relaxed">
-              관광 집중도가 낮고 혼잡도 20% 미만인 강원 4개 군의 숨겨진 힐링 명소
+              {hasDbFilters
+                ? "MY 안심 기준을 반영해, 오늘 혼잡 예측이 가장 낮은 강원 4개 군의 명소"
+                : "오늘 혼잡 예측이 가장 낮은 강원 4개 군의 숨겨진 힐링 명소"}
             </p>
           </div>
           <button
@@ -248,35 +286,49 @@ export default function HomeTab({
 
         {/* Horizontal Card Track on mobile, Grid on desktop */}
         <div className="flex overflow-x-auto gap-4 pb-4 scrollbar-thin scrollbar-thumb-bento-dark/10 md:grid md:grid-cols-3 md:overflow-x-visible md:pb-0">
-          {depopulatedTranquil.map((dest) => (
+          {quietFeed.length === 0 && (
+            <p className="text-xs text-bento-stone py-6">{feedStatus}</p>
+          )}
+          {quietFeed.map((row) => {
+            const id = String(row.content_id);
+            const image = row.firstimage || row.firstimage2;
+            return (
             <motion.div
-              key={dest.id}
+              key={id}
               whileHover={{ scale: 1.01, y: -2 }}
               transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-              onClick={() => onSelectDestination(dest)}
+              onClick={() => onSelectAttraction(id)}
               className="min-w-[270px] bg-white rounded-xl border border-border-subtle overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow duration-base cursor-pointer shrink-0"
             >
-              <div className="relative h-40">
-                <img
-                  src={dest.image}
-                  alt={dest.name}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
-                />
+              <div className="relative h-40 bg-bento-cream">
+                {image ? (
+                  <img
+                    src={image}
+                    alt={row.title}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-xs text-bento-dark/35">이미지 없음</div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-bento-dark/70 via-transparent to-transparent" />
                 
                 {/* Congestion indicator badge */}
-                <div className="absolute top-3 left-3 px-2.5 py-1 bg-emerald-500/90 text-white rounded-full text-xs font-bold flex items-center gap-1 shadow-sm">
-                  <TrendingDown size={10} />
-                  <span>혼잡도 {dest.congestionLevel}%</span>
-                </div>
+                {row.cnctrRate != null && (
+                  <div className="absolute top-3 left-3 px-2.5 py-1 bg-emerald-500/90 text-white rounded-full text-xs font-bold flex items-center gap-1 shadow-sm">
+                    <TrendingDown size={10} />
+                    <span>혼잡 예측 {Math.round(Number(row.cnctrRate))}%</span>
+                  </div>
+                )}
 
                 <div className="absolute bottom-3 left-3 text-white">
-                  <span className="text-xs font-bold bg-white/20 px-2 py-0.5 rounded-md block w-max mb-1">
-                    {dest.region}
-                  </span>
+                  {row.addr1 && (
+                    <span className="text-xs font-bold bg-white/20 px-2 py-0.5 rounded-md block w-max mb-1">
+                      {row.addr1.split(" ")[1]}
+                    </span>
+                  )}
                   <h4 className="font-display font-black text-base tracking-tight leading-tight">
-                    {dest.name}
+                    {row.title}
                   </h4>
                 </div>
 
@@ -285,35 +337,43 @@ export default function HomeTab({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onToggleLike(dest.id);
+                    onToggleLike(id);
                   }}
+                  aria-label={`${row.title} 좋아요`}
                   className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white hover:scale-105 transition-all duration-fast cursor-pointer"
                 >
-                  <Heart size={14} className={likedDestinations.includes(dest.id) ? "fill-red-500 text-red-500" : "text-bento-stone"} />
+                  <Heart size={14} className={likedDestinations.includes(id) ? "fill-red-500 text-red-500" : "text-bento-stone"} />
                 </button>
               </div>
 
               <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
                 <p className="text-xs text-bento-dark/60 leading-relaxed line-clamp-2">
-                  {dest.description}
+                  {row.addr1 || "주소 정보 없음"}
                 </p>
                 <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-border-subtle">
-                  {dest.accessibility.wheelchair && (
+                  {row.hasPhysicalInfo && (
                     <span className="text-xs font-bold bg-bento-cream text-bento-dark/70 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                       <Accessibility size={10} />
-                      휠체어 데크
+                      이동 편의 정보
                     </span>
                   )}
-                  {dest.petFriendly.allowed && (
+                  {row.hasInfantFamilyInfo && (
+                    <span className="text-xs font-bold bg-bento-cream text-bento-dark/70 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      <Baby size={10} />
+                      영유아·가족 편의
+                    </span>
+                  )}
+                  {row.hasPetInfo && (
                     <span className="text-xs font-bold bg-bento-cream text-bento-dark/70 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                       <PawPrint size={10} />
-                      반려견 환영
+                      반려동물 안내
                     </span>
                   )}
                 </div>
               </div>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -404,47 +464,59 @@ export default function HomeTab({
 
         {hasProfileDefaults ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {personalizedFeed.map((dest) => (
+            {personalizedFeed.length === 0 && (
+              <p className="text-xs text-bento-stone py-4">
+                {attractions === null || loadError || quietFeed.length === 0
+                  ? feedStatus
+                  : "위 추천 외에 MY 안심 기준에 맞는 명소가 더 없어요."}
+              </p>
+            )}
+            {personalizedFeed.map((row) => {
+              const id = String(row.content_id);
+              const image = row.firstimage || row.firstimage2;
+              return (
               <motion.div
-                key={dest.id}
+                key={id}
                 whileHover={{ y: -1 }}
                 transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-                onClick={() => onSelectDestination(dest)}
+                onClick={() => onSelectAttraction(id)}
                 className="bg-white p-4 rounded-xl border border-border-subtle flex gap-4 hover:shadow-md hover:border-border-strong transition-all duration-base cursor-pointer items-center"
               >
-                <img
-                  src={dest.image}
-                  alt={dest.name}
-                  referrerPolicy="no-referrer"
-                  className="w-20 h-20 rounded-lg object-cover shrink-0"
-                />
+                {image ? (
+                  <img
+                    src={image}
+                    alt={row.title}
+                    referrerPolicy="no-referrer"
+                    className="w-20 h-20 rounded-lg object-cover shrink-0"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-lg bg-bento-cream shrink-0" />
+                )}
                 <div className="space-y-1.5 flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-bento-green">{dest.region}</span>
-                    {dest.isDepopulationArea && (
-                      <span className="text-xs font-bold bg-bento-olive text-bento-dark px-1.5 py-0.5 rounded-sm">인구감소지</span>
-                    )}
+                    {row.addr1 && <span className="text-xs font-bold text-bento-green">{row.addr1.split(" ")[1]}</span>}
+                    <span className="text-xs font-bold bg-bento-olive text-bento-dark px-1.5 py-0.5 rounded-sm">인구감소지</span>
                   </div>
                   <h4 className="font-display font-black text-sm text-bento-dark tracking-tight truncate leading-tight">
-                    {dest.name}
+                    {row.title}
                   </h4>
                   <p className="text-xs text-bento-stone truncate leading-relaxed">
-                    {dest.accessibility.note}
+                    {row.addr1 || "주소 정보 없음"}
                   </p>
                   <div className="flex items-center gap-1.5 pt-1">
-                    {accessibilityDefaults.wheelchair && (
+                    {wheelchair && row.hasPhysicalInfo && (
                       <span className="text-xs bg-bento-green/15 text-bento-green font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
                         <Accessibility size={10} />
-                        휠체어 최적
+                        이동 편의
                       </span>
                     )}
-                    {accessibilityDefaults.stroller && (
+                    {stroller && row.hasInfantFamilyInfo && (
                       <span className="text-xs bg-bento-green/15 text-bento-green font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
                         <Baby size={10} />
-                        유모차 통행
+                        유모차·가족
                       </span>
                     )}
-                    {accessibilityDefaults.petFriendly && (
+                    {petFriendly && row.hasPetInfo && (
                       <span className="text-xs bg-bento-green/15 text-bento-green font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
                         <PawPrint size={10} />
                         반려가족
@@ -453,7 +525,8 @@ export default function HomeTab({
                   </div>
                 </div>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           /* Profile Empty Call-to-Action Card */
