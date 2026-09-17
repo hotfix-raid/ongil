@@ -34,7 +34,7 @@ interface HomeTabProps {
     senior: boolean;
     parking: boolean;
   };
-  onNavigateToTab: (tab: "home" | "search" | "map" | "course" | "my") => void;
+  onNavigateToTab: (tab: "home" | "search" | "course" | "my") => void;
 }
 
 export default function HomeTab({
