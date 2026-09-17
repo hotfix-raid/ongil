@@ -14,7 +14,6 @@ import FooterSection from "./components/FooterSection";
 
 import HomeTab from "./components/HomeTab";
 import SearchTab from "./components/SearchTab";
-import MapTab from "./components/MapTab";
 import CourseTab from "./components/CourseTab";
 import MyTab from "./components/MyTab";
 import KakaoLoginModal from "./components/KakaoLoginModal";
@@ -26,7 +25,6 @@ import { MockDestination, mockDestinations } from "./data/destinations";
 import { 
   Compass, 
   Search, 
-  Map as MapIcon, 
   Footprints, 
   User, 
   BookOpen, 
@@ -47,7 +45,7 @@ const DEFAULT_AVATAR_URL = "https://api.dicebear.com/7.x/adventurer/svg?seed=ong
 export default function App() {
   // Navigation & View Mode states
   const [viewMode, setViewMode] = useState<"app" | "intro">("app");
-  const [activeTab, setActiveTab] = useState<"home" | "search" | "map" | "course" | "my">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "search" | "course" | "my">("home");
 
   // User authentication state (Kakao OAuth session, via /api/auth/*)
   const [user, setUser] = useState<{ name: string; avatarUrl: string } | null>(null);
@@ -169,7 +167,7 @@ export default function App() {
     }
   };
 
-  const handleNavigateToTab = (tab: "home" | "search" | "map" | "course" | "my") => {
+  const handleNavigateToTab = (tab: "home" | "search" | "course" | "my") => {
     setActiveTab(tab);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -291,19 +289,6 @@ export default function App() {
                 <span>여정 탐색</span>
               </button>
 
-              {/* Map */}
-              <button
-                onClick={() => handleNavigateToTab("map")}
-                className={`w-full px-4 py-2.5 rounded-md text-sm font-medium text-left flex items-center gap-3 transition-colors duration-fast cursor-pointer relative ${
-                  activeTab === "map"
-                    ? "bg-bento-green/10 text-bento-green before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-[3px] before:h-5 before:rounded-full before:bg-bento-green"
-                    : "text-bento-dark/70 hover:bg-bento-cream/60 hover:text-bento-dark"
-                }`}
-              >
-                <MapIcon size={16} strokeWidth={activeTab === "map" ? 2.5 : 2} />
-                <span>안심 관측도</span>
-              </button>
-
               {/* Course */}
               <button
                 onClick={() => handleNavigateToTab("course")}
@@ -372,13 +357,6 @@ export default function App() {
               />
             )}
 
-            {activeTab === "map" && (
-              <MapTab
-                onSelectDestination={setSelectedDestination}
-                accessibilityDefaults={accessibilityDefaults}
-              />
-            )}
-
             {activeTab === "course" && (
               <CourseTab
                 onSelectDestination={setSelectedDestination}
@@ -428,17 +406,6 @@ export default function App() {
             >
               <Search size={20} strokeWidth={activeTab === "search" ? 2.5 : 2} />
               <span className="text-[10px] mt-1 font-medium leading-none">탐색</span>
-            </button>
-
-            {/* Map */}
-            <button
-              onClick={() => handleNavigateToTab("map")}
-              className={`flex flex-col items-center justify-center w-14 py-2 rounded-lg transition-colors duration-fast cursor-pointer ${
-                activeTab === "map" ? "text-bento-green bg-bento-green/[0.06] font-semibold" : "text-bento-dark/50 hover:text-bento-dark/70"
-              }`}
-            >
-              <MapIcon size={20} strokeWidth={activeTab === "map" ? 2.5 : 2} />
-              <span className="text-[10px] mt-1 font-medium leading-none">관측도</span>
             </button>
 
             {/* Course */}
