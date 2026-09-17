@@ -71,6 +71,8 @@ export default function App() {
 
   // User authentication state (Kakao OAuth session, via /api/auth/*)
   const [user, setUser] = useState<{ name: string; avatarUrl: string } | null>(null);
+  // Hide GNB auth buttons until /api/auth/me resolves, so logged-in users don't see 로그인/회원가입 flash.
+  const [authChecked, setAuthChecked] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [modalMode, setModalMode] = useState<"login" | "signup">("login");
 
@@ -135,7 +137,8 @@ export default function App() {
       })
       .catch(() => {
         // Keep the signed-out default when the session check fails.
-      });
+      })
+      .finally(() => setAuthChecked(true));
   }, []);
 
   // Hydrate browser-only state after the first render so SSR and hydration match.
@@ -251,7 +254,9 @@ export default function App() {
           {/* Quick status badge / Action */}
           <div className="flex items-center gap-2">
 
-            {user ? (
+            {!authChecked ? (
+              <div className="w-32 h-8 rounded-sm bg-bento-dark/5 animate-pulse" aria-hidden="true" />
+            ) : user ? (
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5 bg-white border border-border-default px-2.5 py-1.5 rounded-md">
                   <img

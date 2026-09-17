@@ -1,14 +1,5 @@
 import { NextResponse } from "next/server";
-import { Pool } from "pg";
-
-const pool = new Pool({
-  host: process.env.SUPABASE_DB_HOST ?? "aws-0-ap-northeast-2.pooler.supabase.com",
-  port: 5432,
-  database: "postgres",
-  user: process.env.SUPABASE_DB_USER ?? "postgres.trhyuntncdckzrqbkdwa",
-  password: process.env.SUPABASE_DB_PASSWORD,
-  ssl: { rejectUnauthorized: false },
-});
+import pool from "@/src/lib/db/pool";
 
 export async function GET() {
   try {
@@ -17,6 +8,7 @@ export async function GET() {
     );
     return NextResponse.json({ count: rows.length, rows });
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+    console.error("Failed to fetch regions", e);
+    return NextResponse.json({ error: "Failed to fetch regions" }, { status: 500 });
   }
 }
