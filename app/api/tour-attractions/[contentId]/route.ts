@@ -1,16 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Pool } from "pg";
+import pool from "@/src/lib/db/pool";
 
 export const runtime = "nodejs";
-
-const pool = new Pool({
-  host: process.env.SUPABASE_DB_HOST ?? "aws-0-ap-northeast-2.pooler.supabase.com",
-  port: 5432,
-  database: "postgres",
-  user: process.env.SUPABASE_DB_USER ?? "postgres.trhyuntncdckzrqbkdwa",
-  password: process.env.SUPABASE_DB_PASSWORD,
-  ssl: { rejectUnauthorized: false },
-});
 
 // pet_tursm_info columns are NOT NULL DEFAULT '': a row whose content
 // columns are all empty/blank is treated as absent (petInfo: null).
