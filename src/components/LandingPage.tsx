@@ -14,12 +14,14 @@ import {
   Map,
   Search,
   ShieldCheck,
+  Sparkles,
   Waves,
 } from "lucide-react";
 import ongilHero from "../assets/images/ongil_hero_1783066591711.jpg";
 
 interface LandingPageProps {
   onExploreClick: () => void;
+  onAssistantClick: () => void;
 }
 
 const steps = [
@@ -80,7 +82,7 @@ const congestionBands = [
   { label: "높음", rule: "50 초과", tone: "bg-[#c86c5b]", width: "w-[82%]" },
 ];
 
-export default function LandingPage({ onExploreClick }: LandingPageProps) {
+export default function LandingPage({ onExploreClick, onAssistantClick }: LandingPageProps) {
   return (
     <div className="overflow-hidden bg-[#f7f5ef] text-[#19332b]">
       <main>
@@ -177,6 +179,51 @@ export default function LandingPage({ onExploreClick }: LandingPageProps) {
                     <p className="mt-3 text-sm leading-6 text-[#19332b]/60">{body}</p>
                   </article>
                 ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="ai-assistant" className="border-b border-[#19332b]/10 bg-[#e7ebd8] px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
+          <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-24">
+            <div>
+              <p className="mb-4 text-xs font-bold tracking-[0.18em] text-[#d46c45]">A MORE PERSONAL WAY TO CHOOSE</p>
+              <h2 className="font-display text-4xl font-black leading-tight tracking-[-0.04em] sm:text-5xl">
+                조건을 말하면,
+                <br />
+                <span className="text-[#2d5a27]">여행지를 찾아드려요.</span>
+              </h2>
+              <p className="mt-6 max-w-lg leading-7 text-[#19332b]/65">
+                AI 어시스턴트가 좋아하는 풍경과 여행 방식 같은 취향을 듣고, 이동·접근성 정보를 함께 살펴 나에게 맞는 여행지를 추천해드려요.
+              </p>
+              <button
+                onClick={onAssistantClick}
+                className="mt-8 inline-flex items-center gap-3 rounded-full bg-[#19332b] px-6 py-4 text-sm font-bold text-white shadow-[0_12px_30px_rgba(25,51,43,0.14)] transition duration-300 hover:-translate-y-1 hover:bg-[#2d5a27] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#d46c45]"
+              >
+                AI 어시스턴트에게 물어보기 <ArrowRight size={17} />
+              </button>
+            </div>
+
+            <div className="relative overflow-hidden rounded-[2rem] bg-[#19332b] p-8 text-white shadow-[0_20px_50px_rgba(25,51,43,0.14)] sm:p-10">
+              <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full border-[24px] border-white/10" />
+              <div className="relative">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#dfe6c7] text-[#2d5a27]">
+                    <Sparkles size={21} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold tracking-[0.16em] text-[#dfe6c7]">ONGIL AI</p>
+                    <p className="mt-1 text-lg font-bold">나에게 맞는 여행 찾기</p>
+                  </div>
+                </div>
+                <div className="mt-10 rounded-2xl bg-white/10 p-5">
+                  <p className="text-sm leading-6 text-white/85">“사람이 많지 않고, 휠체어로 이동하기 편한 바닷가 산책지를 추천해줘.”</p>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-[#dfe6c7]">
+                  <span className="rounded-full border border-white/15 px-3 py-2">여행 취향</span>
+                  <span className="rounded-full border border-white/15 px-3 py-2">이동 편의</span>
+                  <span className="rounded-full border border-white/15 px-3 py-2">접근성 안내</span>
+                </div>
               </div>
             </div>
           </div>
