@@ -12,11 +12,19 @@ interface AssistantTabProps {
   isRoomDrawerOpen: boolean;
   onRoomDrawerOpenChange: (open: boolean) => void;
   roomTriggerRef: React.RefObject<HTMLButtonElement | null>;
+  onSelectAttraction: (contentId: string) => void;
+  onSelectCourse: (crsIdx: string) => void;
 }
 
 interface Source {
   title: string;
   url: string;
+}
+
+interface AssistantCard {
+  type: "attraction" | "course";
+  id: string;
+  title: string;
 }
 
 interface Message {
@@ -26,6 +34,7 @@ interface Message {
   role: "user" | "assistant";
   text: string;
   sources?: Source[];
+  cards?: AssistantCard[];
 }
 
 interface AssistantRoom {
@@ -104,6 +113,19 @@ function normalizeSources(value: unknown): Source[] {
   }, []);
 }
 
+function normalizeCards(value: unknown): AssistantCard[] {
+  if (!Array.isArray(value)) return [];
+  return value.reduce<AssistantCard[]>((cards, item) => {
+    if (!item || typeof item !== "object") return cards;
+    const card = item as Record<string, unknown>;
+    if ((card.type !== "attraction" && card.type !== "course") ||
+        typeof card.id !== "string" || !card.id.trim() ||
+        typeof card.title !== "string" || !card.title.trim()) return cards;
+    cards.push({ type: card.type, id: card.id, title: card.title.trim() });
+    return cards;
+  }, []);
+}
+
 function normalizeRoom(value: unknown): AssistantRoom | null {
   if (!value || typeof value !== "object") return null;
   const room = value as Record<string, unknown>;
@@ -133,10 +155,11 @@ function normalizeStoredMessage(value: unknown): Message | null {
     status,
     text: message.content,
     sources: normalizeSources(message.sources),
+    cards: normalizeCards(message.cards),
   };
 }
 
-export default function AssistantTab({ user, onLoginClick, isRoomDrawerOpen, onRoomDrawerOpenChange, roomTriggerRef }: AssistantTabProps) {
+export default function AssistantTab({ user, onLoginClick, isRoomDrawerOpen, onRoomDrawerOpenChange, roomTriggerRef, onSelectAttraction, onSelectCourse }: AssistantTabProps) {
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -552,12 +575,12 @@ export default function AssistantTab({ user, onLoginClick, isRoomDrawerOpen, onR
               : message));
             return;
           }
-          if (record.type === "completed" && Array.isArray(record.sources)) {
+          if (record.type === "completed") {
             if (typeof record.message !== "string") throw new Error("stream-malformed");
             const finalMessage = record.message;
             completed = true;
             setMessages((current) => current.map((message) => message.id === assistantMessageId
-              ? { ...message, text: finalMessage, sources: normalizeSources(record.sources), status: "complete" }
+              ? { ...message, text: finalMessage, sources: normalizeSources(record.sources), cards: normalizeCards(record.cards), status: "complete" }
               : message));
             if (activeRoomId) setRoomsRefreshKey((current) => current + 1);
             return;
@@ -716,6 +739,20 @@ export default function AssistantTab({ user, onLoginClick, isRoomDrawerOpen, onR
                 {/*<span className="px-1 text-[10px] font-semibold text-bento-dark/40">{message.role === "user" ? "나" : "온길 AI"}</span>*/}
                 <div className={`rounded-2xl px-4 py-3 text-xs leading-7 ${message.role === "user" ? "rounded-tr-sm bg-bento-green text-white" : "rounded-tl-sm border border-border-subtle bg-white text-bento-dark shadow-sm"}`}>
                   {message.role === "assistant" ? <MarkdownMessage content={message.text} /> : <p className="whitespace-pre-wrap">{message.text}</p>}
+                  {message.role === "assistant" && message.status === "complete" && message.cards && message.cards.length > 0 && (
+                    <div className="mt-3 grid gap-2 border-t border-bento-dark/10 pt-3 sm:grid-cols-2" aria-label="추천 장소">
+                      {message.cards.map((card) => (
+                        <button
+                          type="button"
+                          key={`${card.type}-${card.id}`}
+                          onClick={() => card.type === "course" ? onSelectCourse(card.id) : onSelectAttraction(card.id)}
+                          className="group flex min-h-11 items-center rounded-xl border border-border-default bg-bento-bg/55 px-3 text-xs font-bold text-bento-dark transition hover:-translate-y-0.5 hover:border-bento-green/45 hover:bg-white hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bento-green focus-visible:ring-offset-2"
+                        >
+                          <span className="truncate">{card.title}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   {message.sources && message.sources.length > 0 && (
                     <div className="mt-3 border-t border-bento-dark/10 pt-2.5">
                       <p className="mb-1.5 text-[10px] font-bold text-bento-dark/45">참고한 출처</p>

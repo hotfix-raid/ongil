@@ -13,6 +13,21 @@ import {
   X
 } from "lucide-react";
 
+// 로컬 기준 오늘(YYYY-MM-DD) — UTC 기반 toISOString과 달리 시차로 인한 하루 오차를 막는다.
+function todayLocalISO(): string {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+// 로컬 기준 오늘 + days(YYYY-MM-DD)
+function plusDaysLocalISO(days: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
 interface SearchTabProps {
   // Opens the real DB-backed detail modal by content_id.
   onSelectDestination: (contentId: string) => void;
@@ -346,7 +361,7 @@ export default function SearchTab({
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Select label="시도 선택 (선택)" value={regionCode} onChange={(value) => { setRegionCode(value); setSigungu(null); }} options={[["", "시도 전체"] as const, ...regionRows.map((region) => [region.ldong_regn_cd.trim(), region.regn_name] as const)]} />
           <Select label={<>지역 선택 <span className="font-normal">(선택)</span></>} value={sigungu ? `${sigungu.ldong_regn_cd.trim()}-${sigungu.ldong_signgu_cd.trim().slice(-3)}` : ""} onChange={(value) => { const selected = sigunguRows.find((item) => `${item.ldong_regn_cd.trim()}-${item.ldong_signgu_cd.trim().slice(-3)}` === value); setSigungu(selected ?? null); if (selected) setRegionCode(selected.ldong_regn_cd.trim()); }} options={[ ["", "시군구 전체"] as const, ...sigunguRows.map((item) => [`${item.ldong_regn_cd.trim()}-${item.ldong_signgu_cd.trim().slice(-3)}`, item.signgu_name] as const) ]} />
-          <label className="relative block"><span className="mb-1.5 block pl-1 text-[11px] font-bold text-bento-dark/50">여행 일자</span><input type="date" value={forecastDate} onChange={(event) => onForecastDateChange(event.target.value)} className="w-full rounded-xl border border-border-default bg-bento-bg/40 px-3.5 py-3 text-xs font-semibold text-bento-dark outline-none focus:border-bento-green" /></label>
+          <label className="relative block"><span className="mb-1.5 block pl-1 text-[11px] font-bold text-bento-dark/50">여행 일자</span><input type="date" value={forecastDate} min={todayLocalISO()} max={plusDaysLocalISO(30)} onChange={(event) => { const next = event.target.value; if (!next || (next >= todayLocalISO() && next <= plusDaysLocalISO(30))) onForecastDateChange(next); }} className="w-full rounded-xl border border-border-default bg-bento-bg/40 px-3.5 py-3 text-xs font-semibold text-bento-dark outline-none focus:border-bento-green" /></label>
           <Select label="정렬" value={sort} onChange={(value) => setSort(value as Sort)} options={[["congestion", "혼잡도 낮은 순"], ["name", "이름순"]]} />
         </div>
 

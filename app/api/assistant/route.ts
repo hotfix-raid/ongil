@@ -157,7 +157,7 @@ function duplicateResponse(state: AssistantRequestState, errorId: string): Respo
         assistantMessageId: state.assistantMessageId,
       });
       if (state.assistant.status === "complete") {
-        emit({ type: "completed", message: state.assistant.content, sources: state.assistant.sources });
+        emit({ type: "completed", message: state.assistant.content, sources: state.assistant.sources, cards: state.assistant.cards });
       } else if (state.assistant.status === "failed" || state.assistant.status === "cancelled") {
         emit({
           type: "error",
@@ -276,12 +276,24 @@ export async function POST(request: NextRequest) {
             } else if (result) {
               let persisted = false;
               try {
-                persisted = await markAssistantComplete(user.id, prepared.roomId, prepared.assistantMessageId, result.message, result.sources);
+                persisted = await markAssistantComplete(
+                  user.id,
+                  prepared.roomId,
+                  prepared.assistantMessageId,
+                  result.message,
+                  result.sources,
+                  result.cards
+                );
               } catch (error) {
                 logAssistantError(errorId, "persistence", error);
               }
               if (persisted) {
-                enqueueEvent({ type: "completed", message: result.message, sources: normalizeAssistantSources(result.sources) });
+                enqueueEvent({
+                  type: "completed",
+                  message: result.message,
+                  sources: normalizeAssistantSources(result.sources),
+                  cards: result.cards,
+                });
               } else {
                 logAssistantLifecycle(errorId, startedAt, "persistence_conflict", { status: "complete" });
                 try {

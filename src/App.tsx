@@ -481,6 +481,8 @@ export default function App() {
                 isRoomDrawerOpen={isAssistantRoomDrawerOpen}
                 onRoomDrawerOpenChange={setIsAssistantRoomDrawerOpen}
                 roomTriggerRef={assistantRoomTriggerRef}
+                onSelectAttraction={(contentId) => setSelectedSearchContentId(contentId)}
+                onSelectCourse={(crsIdx) => setSelectedCrsIdx(crsIdx)}
                 onLoginClick={() => {
                   setModalMode("login");
                   setShowLoginModal(true);

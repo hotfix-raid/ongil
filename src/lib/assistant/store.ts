@@ -1,7 +1,7 @@
 import type { PoolClient } from "pg";
 import pool from "@/src/lib/db/pool";
 import { AssistantDatabaseError } from "@/src/lib/assistant/errors";
-import type { AssistantCitation } from "@/src/lib/assistant/assistant";
+import { normalizeAssistantCards, type AssistantCitation, type AssistantResultCard } from "@/src/lib/assistant/assistant";
 
 const MAX_SOURCE_COUNT = 20;
 const MAX_SOURCE_TITLE = 240;
@@ -18,6 +18,7 @@ export type StoredMessage = {
   status: "in_progress" | "complete" | "failed" | "cancelled";
   content: string;
   sources: AssistantCitation[];
+  cards: AssistantResultCard[];
   clientRequestId: string | null;
   errorCode: string | null;
   errorId: string | null;
@@ -90,11 +91,22 @@ function parseSources(value: unknown): AssistantCitation[] {
   return sources;
 }
 
+function parseStoredSources(value: unknown): { sources: AssistantCitation[]; cards: AssistantResultCard[] } {
+  if (Array.isArray(value)) return { sources: parseSources(value), cards: [] };
+  if (typeof value !== "object" || value === null) return { sources: [], cards: [] };
+  const record = value as Record<string, unknown>;
+  return {
+    sources: parseSources(record.sources),
+    cards: normalizeAssistantCards(record.cards),
+  };
+}
+
 export function normalizeAssistantSources(value: unknown): AssistantCitation[] {
   return parseSources(value);
 }
 
 function messageFromRow(row: Record<string, unknown>): StoredMessage {
+  const storedSources = parseStoredSources(row.sources);
   return {
     id: row.id as string,
     roomId: row.roomId as string,
@@ -102,7 +114,8 @@ function messageFromRow(row: Record<string, unknown>): StoredMessage {
     role: row.role as StoredMessage["role"],
     status: row.status as StoredMessage["status"],
     content: typeof row.content === "string" ? row.content : "",
-    sources: parseSources(row.sources),
+    sources: storedSources.sources,
+    cards: storedSources.cards,
     clientRequestId: row.clientRequestId as string | null,
     errorCode: row.errorCode as string | null,
     errorId: row.errorId as string | null,
@@ -306,6 +319,7 @@ export async function prepareAssistantRequest(
         status: "in_progress",
         content: "",
         sources: [],
+        cards: [],
         clientRequestId: null,
         errorCode: null,
         errorId: null,
@@ -339,7 +353,8 @@ export async function markAssistantComplete(
   roomId: string,
   assistantMessageId: string,
   content: string,
-  sources: unknown
+  sources: unknown,
+  cards: unknown = []
 ): Promise<boolean> {
   try {
     const result = await pool.query(
@@ -349,7 +364,14 @@ export async function markAssistantComplete(
        FROM assistant_rooms AS r
        WHERE m.id = $1 AND m.room_id = r.id AND r.id = $2 AND r.user_id = $3
          AND m.role = 'assistant' AND m.status = 'in_progress'`,
-      [assistantMessageId, roomId, userId, content, MAX_PARTIAL_CONTENT, JSON.stringify(parseSources(sources))]
+      [
+        assistantMessageId,
+        roomId,
+        userId,
+        content,
+        MAX_PARTIAL_CONTENT,
+        JSON.stringify({ sources: parseSources(sources), cards: normalizeAssistantCards(cards) }),
+      ]
     );
     if (result.rowCount !== 1) return false;
     await pool.query("UPDATE assistant_rooms SET updated_at = now() WHERE id = $1 AND user_id = $2", [roomId, userId]);

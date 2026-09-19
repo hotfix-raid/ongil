@@ -13,7 +13,8 @@ import {
   Accessibility,
   Info,
   Navigation,
-  RefreshCw
+  RefreshCw,
+  ArrowLeft
 } from "lucide-react";
 
 interface SearchDestinationDetailProps {
@@ -22,6 +23,7 @@ interface SearchDestinationDetailProps {
   onClose: () => void;
   isLiked: boolean;
   onToggleLike: (id: string) => void;
+  presentation?: "modal" | "page";
 }
 
 interface AttractionDetail {
@@ -250,7 +252,8 @@ export default function SearchDestinationDetail({
   forecastDate,
   onClose,
   isLiked,
-  onToggleLike
+  onToggleLike,
+  presentation = "modal"
 }: SearchDestinationDetailProps) {
   const [data, setData] = useState<DetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -282,6 +285,7 @@ export default function SearchDestinationDetail({
   }, [fetchDetail, retryCount]);
 
   useEffect(() => {
+    if (presentation === "page") return;
     const root = document.getElementById("root");
     const target = root ?? document.body;
     const original = target.style.overflow;
@@ -289,7 +293,7 @@ export default function SearchDestinationDetail({
     return () => {
       target.style.overflow = original;
     };
-  }, []);
+  }, [presentation]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -328,16 +332,16 @@ export default function SearchDestinationDetail({
     hasValue(attraction?.mapx) && hasValue(attraction?.mapy);
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-0 md:p-4 overflow-hidden">
+    <div className={presentation === "page" ? "min-h-screen bg-bento-bg md:p-6" : "fixed inset-0 z-[200] flex items-center justify-center overflow-hidden p-0 md:p-4"}>
       {/* Backdrop */}
-      <motion.div
+      {presentation === "modal" && <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.25, ease: "easeOut" }}
         onClick={onClose}
         className="fixed inset-0 bg-bento-ink/60 backdrop-blur-xs"
-      />
+      />}
 
       {/* Modal Card */}
       <motion.div
@@ -348,7 +352,7 @@ export default function SearchDestinationDetail({
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: "100%", opacity: 0.5 }}
         transition={{ duration: 0.25, ease: "easeOut" }}
-        className="relative bg-bento-bg w-full h-full md:h-[90vh] md:max-w-2xl md:rounded-lg shadow-lg flex flex-col overflow-hidden z-10"
+        className={`relative z-10 flex w-full flex-col overflow-hidden bg-bento-bg shadow-lg ${presentation === "page" ? "min-h-screen md:mx-auto md:min-h-0 md:max-w-2xl md:rounded-lg" : "h-full md:h-[90vh] md:max-w-2xl md:rounded-lg"}`}
       >
         {loading ? (
           <DetailSkeleton />
@@ -381,20 +385,22 @@ export default function SearchDestinationDetail({
                   className="w-10 h-10 rounded-full bg-white/95 backdrop-blur-xs hover:bg-white text-bento-dark flex items-center justify-center shadow-sm transition-all duration-fast active:scale-95 cursor-pointer"
                   aria-label="닫기"
                 >
-                  <X size={18} />
+                  {presentation === "page" ? <ArrowLeft size={18} /> : <X size={18} />}
                 </button>
-                <button
-                  onClick={() => onToggleLike(contentId)}
-                  className="w-10 h-10 rounded-full bg-white/95 backdrop-blur-xs hover:bg-white text-bento-dark flex items-center justify-center shadow-sm transition-all duration-fast active:scale-95 cursor-pointer"
-                  aria-label={isLiked ? "좋아요 취소" : "좋아요"}
-                >
-                  <Heart
-                    size={18}
-                    className={
-                      isLiked ? "fill-red-500 text-red-500" : "text-bento-dark/60"
-                    }
-                  />
-                </button>
+                {presentation === "modal" && (
+                  <button
+                    onClick={() => onToggleLike(contentId)}
+                    className="w-10 h-10 rounded-full bg-white/95 backdrop-blur-xs hover:bg-white text-bento-dark flex items-center justify-center shadow-sm transition-all duration-fast active:scale-95 cursor-pointer"
+                    aria-label={isLiked ? "좋아요 취소" : "좋아요"}
+                  >
+                    <Heart
+                      size={18}
+                      className={
+                        isLiked ? "fill-red-500 text-red-500" : "text-bento-dark/60"
+                      }
+                    />
+                  </button>
+                )}
               </div>
 
               {/* Title Layer */}

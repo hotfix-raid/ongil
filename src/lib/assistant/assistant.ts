@@ -55,6 +55,34 @@ export type AssistantCitation = {
   url: string;
 };
 
+export type AssistantResultCard = {
+  type: "attraction" | "course";
+  id: string;
+  title: string;
+};
+
+const MAX_RESULT_CARD_TITLE = 240;
+
+export function normalizeAssistantCards(value: unknown): AssistantResultCard[] {
+  if (!Array.isArray(value)) return [];
+  const cards: AssistantResultCard[] = [];
+  const seen = new Set<string>();
+  for (const item of value) {
+    if (typeof item !== "object" || item === null) continue;
+    const record = item as Record<string, unknown>;
+    if (record.type !== "attraction" && record.type !== "course") continue;
+    const id = typeof record.id === "string" ? record.id.trim() : "";
+    const title = typeof record.title === "string" ? record.title.trim() : "";
+    if (!id || !title) continue;
+    const key = `${record.type}:${id}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    cards.push({ type: record.type, id, title: title.slice(0, MAX_RESULT_CARD_TITLE) });
+    if (cards.length >= 8) break;
+  }
+  return cards;
+}
+
 const FUNCTION_TOOLS = [
   {
     type: "function",
@@ -735,6 +763,32 @@ async function executeTool(name: string, argumentsValue: unknown, tool: Assistan
   throw new Error("Unknown assistant function");
 }
 
+function resultCardsFromTool(name: string, result: unknown): AssistantResultCard[] {
+  if (
+    name !== "lookup_courses" &&
+    name !== "lookup_related_attractions" &&
+    name !== "lookup_visitor_forecast"
+  ) {
+    return [];
+  }
+  if (!Array.isArray(result)) return [];
+  const type = name === "lookup_courses" ? "course" : "attraction";
+  return result.flatMap((item) => {
+    if (typeof item !== "object" || item === null) return [];
+    const record = item as Record<string, unknown>;
+    const idValue = type === "course" ? record.crs_idx : record.content_id;
+    const titleValue = type === "course" ? record.crs_kor_nm : record.title;
+    const id = typeof idValue === "string" || typeof idValue === "number" ? String(idValue).trim() : "";
+    const title = typeof titleValue === "string" ? titleValue.trim() : "";
+    return id && title ? [{ type, id, title }] : [];
+  });
+}
+
+function cardTitleInMessage(card: AssistantResultCard, message: string): boolean {
+  const normalize = (value: string) => value.replace(/\s+/g, " ").trim().toLocaleLowerCase();
+  return normalize(message).includes(normalize(card.title));
+}
+
 function parseToolArguments(value: unknown): unknown {
   if (typeof value !== "string" || value.length > 4_000) throw new Error("Invalid tool arguments");
   return JSON.parse(value) as unknown;
@@ -1058,6 +1112,7 @@ async function executeAssistant(
   message: string;
   citations: AssistantCitation[];
   sources: AssistantCitation[];
+  cards: AssistantResultCard[];
 }> {
   const executionStartedAt = Date.now();
   const deadlineAt = executionStartedAt + MAX_EXECUTION_MS;
@@ -1089,6 +1144,7 @@ async function executeAssistant(
     collectCitations(response, citations);
     let toolRounds = 0;
     let toolCalls = 0;
+    const toolCards: AssistantResultCard[] = [];
 
     for (let round = 0; round < MAX_TOOL_ROUNDS; round += 1) {
       const calls = functionCalls(response);
@@ -1137,6 +1193,7 @@ async function executeAssistant(
           try {
             if (parseError) throw parseError;
             const result = await withDeadline(executeTool(toolName, parsedArguments, tool), deadlineAt);
+            toolCards.push(...resultCardsFromTool(toolName, result));
             logAssistantToolDiagnostic(
               tool,
               parsedArguments,
@@ -1200,7 +1257,8 @@ async function executeAssistant(
     const message = rawMessage.length > MAX_OUTPUT_CHARS
       ? `${rawMessage.slice(0, MAX_OUTPUT_CHARS - 1)}…`
       : rawMessage;
-    return { message, citations, sources: citations };
+    const cards = normalizeAssistantCards(toolCards.filter((card) => cardTitleInMessage(card, message)));
+    return { message, citations, sources: citations, cards };
   } finally {
     clearTimeout(timeout);
     externalSignal?.removeEventListener("abort", abortInternal);
@@ -1213,7 +1271,7 @@ export function runAssistantStream(
   onDelta: AssistantDeltaHandler,
   externalSignal?: AbortSignal,
   errorId = "unknown"
-): Promise<{ message: string; citations: AssistantCitation[]; sources: AssistantCitation[] }> {
+): Promise<{ message: string; citations: AssistantCitation[]; sources: AssistantCitation[]; cards: AssistantResultCard[] }> {
   return executeAssistant(messages, apiKey, onDelta, externalSignal, errorId);
 }
 
@@ -1221,6 +1279,7 @@ export async function runAssistant(messages: AssistantMessage[], apiKey: string)
   message: string;
   citations: AssistantCitation[];
   sources: AssistantCitation[];
+  cards: AssistantResultCard[];
 }> {
   return executeAssistant(messages, apiKey);
 }
