@@ -7,7 +7,6 @@ import {
   isMissingAssistantQuotaTable,
 } from "@/src/lib/assistant/errors";
 
-const ROLLING_LIMIT = 10;
 const DAILY_LIMIT = 100;
 const CONCURRENT_LIMIT = 2;
 const RESERVATION_TTL_MS = 35_000;
@@ -79,20 +78,14 @@ export async function reserveAssistantRequest(userId: string): Promise<Assistant
     const { rows } = await client.query(
       `WITH bounds AS (
         SELECT now() AS as_of,
-               now() - interval '1 hour' AS rolling_start,
                date_trunc('day', (now() AT TIME ZONE 'UTC')) AT TIME ZONE 'UTC' AS day_start,
                date_trunc('day', ((now() AT TIME ZONE 'UTC') + interval '1 day')) AT TIME ZONE 'UTC' AS next_day_start
       )
       SELECT
-        COUNT(*) FILTER (WHERE u.started_at >= (SELECT rolling_start FROM bounds))::int AS "rollingCount",
         COUNT(*) FILTER (WHERE u.started_at >= (SELECT day_start FROM bounds))::int AS "dailyCount",
         COUNT(*) FILTER (
           WHERE u.finished_at IS NULL AND u.reservation_expires_at > (SELECT as_of FROM bounds)
         )::int AS "concurrentCount",
-        EXTRACT(EPOCH FROM (
-          MIN(u.started_at) FILTER (WHERE u.started_at >= (SELECT rolling_start FROM bounds))
-          + interval '1 hour' - (SELECT as_of FROM bounds)
-        )) AS "rollingRetry",
         EXTRACT(EPOCH FROM (
           MIN(u.reservation_expires_at) FILTER (
             WHERE u.finished_at IS NULL AND u.reservation_expires_at > (SELECT as_of FROM bounds)
@@ -108,7 +101,6 @@ export async function reserveAssistantRequest(userId: string): Promise<Assistant
 
     const usage = rows[0] as Record<string, unknown>;
     const retryCandidates: number[] = [];
-    if (Number(usage.rollingCount) >= ROLLING_LIMIT) retryCandidates.push(retrySeconds(usage.rollingRetry));
     if (Number(usage.dailyCount) >= DAILY_LIMIT) retryCandidates.push(retrySeconds(usage.dailyRetry));
     if (Number(usage.concurrentCount) >= CONCURRENT_LIMIT) {
       retryCandidates.push(retrySeconds(usage.concurrentRetry));

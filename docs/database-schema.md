@@ -22,7 +22,7 @@ AI 에이전트가 개발 시 이 문서를 스키마의 단일 소스로 사용
 | `users` | 0 (신규) | `id` | 회원 (카카오 OAuth) |
 | `sessions` | 0 (신규) | `token_hash` | 로그인 세션 |
 | `assistant_usage_user` | 사용자별 | `user_id` | AI 어시스턴트 예약 직렬화용 잠금 행 |
-| `assistant_request_usage` | 요청별 | `request_id` | AI 어시스턴트 rolling/daily/concurrent 사용량 |
+| `assistant_request_usage` | 요청별 | `request_id` | AI 어시스턴트 daily/concurrent 사용량 |
 | `user_likes` | 0 (신규) | (`user_id`,`target_type`,`target_id`) | 회원 좋아요(찜) — 관광지/코스 |
 
 ## 관계 (ERD)
@@ -232,15 +232,15 @@ users (id) ──< assistant_request_usage.user_id    -- 실제 FK, ON DELETE CA
 `finished_at`이 없는 예약도 `reservation_expires_at`이 지나면 다음 예약 시 회수되므로
 프로세스 장애가 concurrent 슬롯을 영구 점유하지 않는다.
 
-현재 서버 제한은 사용자당 최근 1시간 10회, UTC 기준 하루 100회, 동시 예약 2개다.
-완료 요청은 rolling/daily 계산을 위해 보존되며, 하루가 지난 완료 행은 다음 예약 시 정리된다.
+현재 서버 제한은 UTC 기준 사용자당 하루 100회, 동시 예약 2개다.
+완료 요청은 daily 계산을 위해 보존되며, 하루가 지난 완료 행은 다음 예약 시 정리된다.
 
 | 테이블 | 컬럼 | 설명 |
 |---|---|---|
 | `assistant_usage_user` | `user_id` | `users.id` FK, 사용자별 예약 직렬화 잠금 행, PK |
 | `assistant_request_usage` | `request_id` | 애플리케이션이 생성하는 요청 예약 UUID, PK |
 |  | `user_id` | `users.id` FK |
-|  | `started_at` | rolling/daily 사용량 계산 기준 시각 |
+|  | `started_at` | daily 사용량 계산 기준 시각 |
 |  | `reservation_expires_at` | 미완료 예약의 자동 회수 시각 |
 |  | `finished_at` | 서버가 finally에서 기록하는 완료 시각; NULL이면 in-flight |
 
