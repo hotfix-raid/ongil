@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import LandingPage from "./components/LandingPage";
 
 import HomeTab from "./components/HomeTab";
@@ -27,7 +27,8 @@ import {
   X,
   Layers,
   Smartphone,
-  Accessibility
+  Accessibility,
+  MessageCircle
 } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 
@@ -71,11 +72,17 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>("home");
 
   // User authentication state (Kakao OAuth session, via /api/auth/*)
-  const [user, setUser] = useState<{ name: string; avatarUrl: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; name: string; avatarUrl: string } | null>(null);
   // Hide GNB auth buttons until /api/auth/me resolves, so logged-in users don't see 로그인/회원가입 flash.
   const [authChecked, setAuthChecked] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [modalMode, setModalMode] = useState<"login" | "signup">("login");
+  const [isAssistantRoomDrawerOpen, setIsAssistantRoomDrawerOpen] = useState(false);
+  const assistantRoomTriggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (viewMode !== "app" || activeTab !== "assistant") setIsAssistantRoomDrawerOpen(false);
+  }, [activeTab, viewMode]);
 
   const handleLogout = () => {
     setUser(null);
@@ -120,9 +127,10 @@ export default function App() {
   useEffect(() => {
     fetch("/api/auth/me")
       .then((res) => (res.ok ? res.json() : { user: null }))
-      .then((data: { user: { nickname: string | null; avatarUrl: string | null } | null }) => {
+      .then((data: { user: { id: string; nickname: string | null; avatarUrl: string | null } | null }) => {
         if (data.user) {
           setUser({
+            id: data.user.id,
             name: data.user.nickname || "온길러",
             avatarUrl: data.user.avatarUrl || DEFAULT_AVATAR_URL,
           });
@@ -285,6 +293,19 @@ export default function App() {
           {/* Quick status badge / Action */}
           <div className="flex items-center gap-2">
 
+            {viewMode === "app" && activeTab === "assistant" && (
+              <button
+                ref={assistantRoomTriggerRef}
+                type="button"
+                onClick={() => setIsAssistantRoomDrawerOpen(true)}
+                className="flex shrink-0 items-center gap-1.5 rounded-lg border border-border-default bg-white px-2.5 py-2 text-xs font-bold text-bento-dark shadow-sm transition hover:border-bento-green/40 hover:text-bento-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bento-green focus-visible:ring-offset-2 md:hidden"
+                aria-label="대화방 열기"
+              >
+                <MessageCircle size={15} aria-hidden="true" />
+                <span>대화방</span>
+              </button>
+            )}
+
             {!authChecked ? (
               <div className="w-32 h-8 rounded-sm bg-bento-dark/5 animate-pulse" aria-hidden="true" />
             ) : user ? (
@@ -299,12 +320,6 @@ export default function App() {
                     {user.name}님
                   </span>
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 text-xs font-medium rounded-sm border border-red-200/60 transition-colors duration-fast cursor-pointer"
-                >
-                  로그아웃
-                </button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
@@ -463,6 +478,11 @@ export default function App() {
             {activeTab === "assistant" && (
               <AssistantTab
                 user={user}
+                isRoomDrawerOpen={isAssistantRoomDrawerOpen}
+                onRoomDrawerOpenChange={setIsAssistantRoomDrawerOpen}
+                roomTriggerRef={assistantRoomTriggerRef}
+                onSelectAttraction={(contentId) => setSelectedSearchContentId(contentId)}
+                onSelectCourse={(crsIdx) => setSelectedCrsIdx(crsIdx)}
                 onLoginClick={() => {
                   setModalMode("login");
                   setShowLoginModal(true);
@@ -481,6 +501,7 @@ export default function App() {
                   setModalMode("login");
                   setShowLoginModal(true);
                 }}
+                onLogout={handleLogout}
               />
             )}
 
@@ -567,9 +588,9 @@ export default function App() {
               <span className="text-[10px] mt-1 font-medium leading-none">MY</span>
               
               {/* Micro dot on Mobile bottom bar if filters are saved */}
-              {Object.values(accessibilityDefaults).some(Boolean) && (
+              {/*{Object.values(accessibilityDefaults).some(Boolean) && (
                 <span className="absolute top-2 right-3 w-1.5 h-1.5 rounded-full bg-bento-green animate-pulse" />
-              )}
+              )}*/}
             </button>
 
           </nav>

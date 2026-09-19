@@ -95,7 +95,7 @@ export default function FavoritesTab({ likedPlaces, onToggleLike, onSelectDestin
     <div className="space-y-7 pb-12 animate-fadeIn">
       <header>
         <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-bento-green">온길 보관함</span>
-        <h2 className="flex items-center gap-2 font-display text-3xl font-black tracking-tight text-bento-dark">즐겨찾기 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50"><Heart size={17} className="fill-red-400 text-red-400" /></span></h2>
+        <h2 className="flex items-center gap-2 font-display text-2xl font-black tracking-tight text-bento-dark md:text-3xl">즐겨찾기 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50"><Heart size={17} className="fill-red-400 text-red-400" /></span></h2>
         <p className="mt-2 max-w-xl text-sm leading-relaxed text-bento-dark/55">다시 걷고 싶은 장소와 코스를 한곳에 모아두었어요.</p>
       </header>
 

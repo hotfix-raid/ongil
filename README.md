@@ -51,6 +51,7 @@ DB 스키마와 데이터 범위는 [`docs/database-schema.md`](docs/database-sc
 | `POST /api/auth/logout` | 세션 삭제 및 쿠키 만료 |
 | `GET/PUT/DELETE /api/likes` | 로그인 회원 좋아요 조회(`?type=place\|course`) / 좋아요·취소(`{ type, id, liked }`) / 유형별 전체 삭제. 비로그인 401 |
 | `GET/PUT /api/settings/accessibility` | 로그인 회원의 "나의 안심보행 기본값" 조회/저장. 비로그인 401 |
+| `GET /api/cron/forecast-sync` | Vercel Cron(매일 05:00 KST, `vercel.json`)이 호출하는 관광지 혼잡도 일일 동기화. `CRON_SECRET` 불일치 시 401 |
 
 자세한 필터 정책과 단계별 확장 계획은 [`docs/travel-search-filter-plan.md`](docs/travel-search-filter-plan.md)에 정리되어 있습니다.
 

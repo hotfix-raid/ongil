@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/forecast-sync",
+      "schedule": "0 20 * * *"
+    }
+  ]
+}
