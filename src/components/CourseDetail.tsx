@@ -18,7 +18,8 @@ import {
   Sparkles,
   Download,
   X,
-  Heart
+  Heart,
+  ExternalLink
 } from "lucide-react";
 import { difficultyLabel } from "@/src/lib/adapters/course";
 import { formatMinutes, htmlToLines, stripHtml } from "@/src/lib/format";
@@ -237,17 +238,6 @@ export default function CourseDetail({ crsIdx, variant = "sheet", onClose, ready
               <Footprints size={13} className={themeAccentData.primaryText} />
               코스 지도
             </h2>
-            {course.gpxpath && (
-              <a
-                href={`/api/dulle-courses/${encodeURIComponent(course.crs_idx)}/gpx`}
-                download={`${course.crs_kor_nm}.gpx`}
-                aria-label={`${course.crs_kor_nm} GPX 파일 다운로드`}
-                className={`inline-flex items-center gap-1 rounded-sm border ${themeAccentData.softBorder} ${themeAccentData.softBg} ${themeAccentData.primaryText} px-2.5 py-1 text-[10px] font-semibold transition-all duration-base cursor-pointer hover:opacity-80`}
-              >
-                <Download size={11} />
-                GPX 다운로드
-              </a>
-            )}
           </div>
           <CourseMap
             crsIdx={course.crs_idx}
@@ -344,6 +334,40 @@ export default function CourseDetail({ crsIdx, variant = "sheet", onClose, ready
             </div>
           </section>
         )}
+
+        {/* 하단 액션 바 */}
+        {!isSheet && (
+          <div className="flex items-stretch gap-3 border-t border-border-default bg-bento-bg pt-4 md:pt-5">
+            {course.gpxpath && (
+              <a
+                href={`/api/dulle-courses/${encodeURIComponent(course.crs_idx)}/gpx`}
+                download={`${course.crs_kor_nm}.gpx`}
+                aria-label={`${course.crs_kor_nm} GPX 파일 다운로드`}
+                className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border ${themeAccentData.softBorder} ${themeAccentData.softBg} ${themeAccentData.primaryText} py-3.5 text-xs font-bold shadow-sm transition-all duration-base hover:bg-white`}
+              >
+                <Download size={16} />
+                GPX 다운로드
+              </a>
+            )}
+            <a
+              href={`https://map.kakao.com/link/search/${encodeURIComponent(course.crs_kor_nm)}`}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`${course.crs_kor_nm} 카카오맵에서 열기`}
+              className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-md bg-bento-green py-3.5 text-xs font-bold text-white shadow-md transition-all duration-base hover:bg-bento-green/90 ${!course.gpxpath ? "basis-full" : ""}`}
+            >
+              <span className="h-2 w-2 rounded-full bg-[#FEE500]" aria-hidden />
+              카카오맵에서 보기
+              <ExternalLink size={12} className="opacity-80" />
+            </a>
+            <button
+              onClick={handleClose}
+              className="px-5 py-3.5 bg-bento-dark hover:bg-bento-dark/90 active:scale-98 text-white text-xs font-bold rounded-sm transition-all duration-base cursor-pointer"
+            >
+              닫기
+            </button>
+          </div>
+        )}
       </div>
     );
   })();
@@ -402,6 +426,40 @@ export default function CourseDetail({ crsIdx, variant = "sheet", onClose, ready
           <div className="flex-1 overflow-y-auto p-6 pt-16">
             {detailContent}
           </div>
+
+          {/* Sticky Bottom Action Bar */}
+          {data?.course && accent && (
+            <div className="flex items-stretch gap-3 border-t border-border-default bg-bento-bg p-4 md:px-6">
+              {data.course.gpxpath && (
+                <a
+                  href={`/api/dulle-courses/${encodeURIComponent(data.course.crs_idx)}/gpx`}
+                  download={`${data.course.crs_kor_nm}.gpx`}
+                  aria-label={`${data.course.crs_kor_nm} GPX 파일 다운로드`}
+                  className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border ${accent.softBorder} ${accent.softBg} ${accent.primaryText} py-3.5 text-xs font-bold shadow-sm transition-all duration-base hover:bg-white`}
+                >
+                  <Download size={16} />
+                  GPX 다운로드
+                </a>
+              )}
+              <a
+                href={`https://map.kakao.com/link/search/${encodeURIComponent(data.course.crs_kor_nm)}`}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={`${data.course.crs_kor_nm} 카카오맵에서 열기`}
+                className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-md bg-bento-green py-3.5 text-xs font-bold text-white shadow-md transition-all duration-base hover:bg-bento-green/90 ${!data.course.gpxpath ? "basis-full" : ""}`}
+              >
+                <span className="h-2 w-2 rounded-full bg-[#FEE500]" aria-hidden />
+                카카오맵에서 보기
+                <ExternalLink size={12} className="opacity-80" />
+              </a>
+              <button
+                onClick={handleClose}
+                className="px-5 py-3.5 bg-bento-dark hover:bg-bento-dark/90 active:scale-98 text-white text-xs font-bold rounded-sm transition-all duration-base cursor-pointer"
+              >
+                닫기
+              </button>
+            </div>
+          )}
         </motion.div>
       </div>
     );
