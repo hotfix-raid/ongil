@@ -215,14 +215,14 @@ export default function CourseTab({
   if (showThemeLanding) {
     return (
       <div className="space-y-6 animate-fadeIn pb-12">
-        <div className="text-center md:text-left">
-          <span className="text-sm font-semibold text-bento-green block mb-1">두루누비 무장애 걷기 코스</span>
-          <h2 className="text-2xl font-display font-black text-bento-dark tracking-tight leading-none mb-1.5 flex items-center gap-2 justify-center md:justify-start">
+        <header>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-bento-green">둘레길 걷기 코스</p>
+          <h2 className="font-display text-3xl font-black tracking-tight text-bento-dark flex items-center gap-2">
             <span>어떤 길을 걸어볼까요?</span>
             <span className="w-8 h-8 rounded-full bg-bento-green/10 flex items-center justify-center"><Footprints size={18} className="text-bento-green" /></span>
           </h2>
-          <p className="text-bento-dark/60 text-xs leading-relaxed max-w-2xl">걷고 싶은 테마를 고르면 그 길에 맞는 코스를 바로 찾아볼 수 있어요.</p>
-        </div>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-bento-dark/55">걷고 싶은 테마를 고르면 그 길에 맞는 코스를 바로 찾아볼 수 있어요.</p>
+        </header>
         {themes ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {WALKING_THEME_NAMES.map((name) => {
@@ -275,7 +275,7 @@ export default function CourseTab({
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
       {/* 1. Header */}
-      <div className="relative pt-10 text-center md:pl-12 md:pt-0 md:text-left">
+      <header className="relative pt-10 pl-12 text-left md:pt-0">
         <button
           type="button"
           onClick={() => { resetFilters(); setShowThemeLanding(true); }}
@@ -285,18 +285,18 @@ export default function CourseTab({
         >
           <ArrowLeft size={16} aria-hidden="true" />
         </button>
-        <span className="text-sm font-semibold text-bento-green block mb-1">두루누비 무장애 걷기 코스</span>
-        <h2 className="text-2xl font-display font-black text-bento-dark tracking-tight leading-none mb-1.5 flex items-center gap-2 justify-center md:justify-start">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-bento-green">둘레길 걷기 코스</p>
+        <h2 className="font-display text-3xl font-black tracking-tight text-bento-dark flex items-center gap-2">
           <span>{selectedThemeName ? `${selectedThemeName} 코스 탐색` : "걷기 코스 전용 탐색"}</span>
           <span className="w-8 h-8 rounded-full bg-bento-green/10 flex items-center justify-center">
             <Footprints size={18} className="text-bento-green" />
           </span>
         </h2>
-        <p className="text-bento-dark/60 text-xs leading-relaxed max-w-2xl">
+        <p className="mt-2 max-w-xl text-sm leading-relaxed text-bento-dark/55">
           지자체 및 문화체육관광부 두루누비 GPS 자료를 기반으로,
           휠체어 교행 안전 수치 및 반려견 출입 기준을 정밀 매칭한 &lsquo;열린 안심 길&rsquo;을 제안합니다.
         </p>
-      </div>
+      </header>
 
       {/* 2. Filter Control Panel */}
       <div className="bg-white p-4 rounded-xl border border-border-default shadow-sm space-y-3">

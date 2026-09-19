@@ -186,3 +186,71 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
 }
+
+/* Keep GFM tables readable without widening the assistant bubble. */
+.assistant-markdown-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.5rem;
+}
+
+.assistant-markdown-table-wrap table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.assistant-markdown-table-wrap th,
+.assistant-markdown-table-wrap td {
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding: 0.5rem 0.625rem;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.assistant-markdown-table-wrap th {
+  background: var(--color-bento-bg);
+  font-weight: 700;
+}
+
+.assistant-markdown-table-wrap tr:last-child td {
+  border-bottom: 0;
+}
+
+/* Keep supporting copy legible on small screens without changing the desktop scale. */
+@media (max-width: 767px) {
+  [class~="text-sm"] {
+    font-size: 0.9375rem;
+  }
+
+  [class~="text-xs"] {
+    font-size: 0.8125rem;
+  }
+
+  [class~="text-[11px]"] {
+    font-size: 0.75rem;
+  }
+
+  [class~="text-[10px]"],
+  [class~="text-[9px]"] {
+    font-size: 0.6875rem;
+  }
+
+  /* Prevent iOS Safari from zooming into the many small form fields. */
+  input[class],
+  select[class],
+  textarea[class] {
+    font-size: 1rem;
+  }
+
+  /* Interactive labels need a slightly stronger floor than supporting copy. */
+  button[class~="text-sm"],
+  button[class~="text-xs"],
+  button[class~="text-[10px]"],
+  button[class~="text-[9px]"] {
+    font-size: 0.875rem;
+  }
+}
