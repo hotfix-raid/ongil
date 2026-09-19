@@ -30,6 +30,8 @@ interface CourseDetailProps {
   variant?: "sheet" | "page";
   onClose?: () => void;
   ready?: boolean;
+  isLiked?: boolean;
+  onToggleLike?: (crsIdx: string) => void;
 }
 
 // Leaflet은 브라우저 전용이므로 ssr:false 동적 import (Next 16: Client 컴포넌트에서만 허용)
@@ -59,46 +61,15 @@ function parseEndpoints(travelerInfo: string | null): { start: string | null; en
   return { start, end };
 }
 
-export default function CourseDetail({ crsIdx, variant = "sheet", onClose, ready = true }: CourseDetailProps) {
+export default function CourseDetail({ crsIdx, variant = "sheet", onClose, ready = true, isLiked = false, onToggleLike }: CourseDetailProps) {
   const router = useRouter();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [data, setData] = useState<CourseDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
-  // true = 로그인 사용자 → 좋아요를 DB(/api/likes)에 저장, false = 게스트 → localStorage
-  const [likesInDb, setLikesInDb] = useState(false);
   const controller = useRef<AbortController | null>(null);
 
   const isSheet = variant === "sheet";
-
-  const LIKED_COURSES_KEY = "ongil_liked_courses";
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    let cancelled = false;
-    const loadLocal = () => {
-      try {
-        const raw = window.localStorage.getItem(LIKED_COURSES_KEY);
-        const liked = raw ? (JSON.parse(raw) as string[]) : [];
-        setIsLiked(liked.includes(crsIdx));
-      } catch {
-        setIsLiked(false);
-      }
-    };
-    loadLocal();
-    fetch("/api/likes?type=course")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json: { ids: string[] } | null) => {
-        if (cancelled || !json) return; // 401(게스트) 등 → localStorage 값 유지
-        setLikesInDb(true);
-        setIsLiked(json.ids.includes(crsIdx));
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [crsIdx, LIKED_COURSES_KEY]);
 
   const fetchDetail = async () => {
     controller.current?.abort();
@@ -164,38 +135,7 @@ export default function CourseDetail({ crsIdx, variant = "sheet", onClose, ready
   };
 
   const toggleLike = () => {
-    if (typeof window === "undefined") return;
-    if (likesInDb) {
-      const next = !isLiked;
-      setIsLiked(next);
-      fetch("/api/likes", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "course", id: crsIdx, liked: next }),
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        })
-        .catch((e) => {
-          console.error("Failed to save course like", e);
-          setIsLiked(!next); // 저장 실패 시 되돌림
-        });
-      return;
-    }
-    setIsLiked((prev) => {
-      const next = !prev;
-      try {
-        const raw = window.localStorage.getItem(LIKED_COURSES_KEY);
-        const liked = raw ? (JSON.parse(raw) as string[]) : [];
-        const updated = next
-          ? Array.from(new Set([...liked, crsIdx]))
-          : liked.filter((id) => id !== crsIdx);
-        window.localStorage.setItem(LIKED_COURSES_KEY, JSON.stringify(updated));
-      } catch {
-        // localStorage 미지원 환경에서 무시
-      }
-      return next;
-    });
+    onToggleLike?.(crsIdx);
   };
 
   const loadingContent = (
@@ -442,18 +382,20 @@ export default function CourseDetail({ crsIdx, variant = "sheet", onClose, ready
             >
               <X size={18} />
             </button>
-            <button
-              onClick={toggleLike}
-              className="w-10 h-10 rounded-full bg-white/95 backdrop-blur-xs hover:bg-white text-bento-dark flex items-center justify-center shadow-sm transition-all duration-fast active:scale-95 cursor-pointer"
-              aria-label={isLiked ? "좋아요 취소" : "좋아요"}
-            >
-              <Heart
-                size={18}
-                className={
-                  isLiked ? "fill-red-500 text-red-500" : "text-bento-dark/60"
-                }
-              />
-            </button>
+            {onToggleLike && (
+              <button
+                onClick={toggleLike}
+                className="w-10 h-10 rounded-full bg-white/95 backdrop-blur-xs hover:bg-white text-bento-dark flex items-center justify-center shadow-sm transition-all duration-fast active:scale-95 cursor-pointer"
+                aria-label={isLiked ? "좋아요 취소" : "좋아요"}
+              >
+                <Heart
+                  size={18}
+                  className={
+                    isLiked ? "fill-red-500 text-red-500" : "text-bento-dark/60"
+                  }
+                />
+              </button>
+            )}
           </div>
 
           {/* Scrollable Body */}

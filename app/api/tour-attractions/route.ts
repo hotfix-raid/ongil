@@ -29,6 +29,14 @@ function escapeLike(value: string) {
   return value.replace(/[\\%_]/g, "\\$&");
 }
 
+function parseList(value: string | null): string[] {
+  if (value === null) return [];
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const qValue = searchParams.get("q");
@@ -40,8 +48,13 @@ export async function GET(request: NextRequest) {
   const sort = rawSort === "relevance" || rawSort === "updated" ? "congestion" : rawSort;
   const pageValue = searchParams.get("page");
   const limitValue = searchParams.get("limit");
+  const ids = parseList(searchParams.get("ids"));
 
   if (qValue !== null && qValue.length > 200) return badRequest("q must be 200 characters or fewer");
+  if (ids.length > MAX_LIMIT) return badRequest("ids must contain at most 100 values");
+  for (const id of ids) {
+    if (id.length > 30) return badRequest("ids must contain values of 30 characters or fewer");
+  }
   if (regionCode !== null && !/^\d{2}$/.test(regionCode)) {
     return badRequest("regionCode must be exactly 2 digits");
   }
@@ -86,6 +99,10 @@ export async function GET(request: NextRequest) {
         a.title ILIKE ${qParam} ESCAPE '\\' OR
         CONCAT_WS(' ', a.addr1, a.addr2) ILIKE ${qParam} ESCAPE '\\'
       )`);
+    }
+    if (ids.length) {
+      const placeholders = ids.map((id) => addParam(id));
+      conditions.push(`a.content_id IN (${placeholders.join(", ")})`);
     }
     if (regionCode) conditions.push(`TRIM(a.ldong_regn_cd) = TRIM(${addParam(regionCode)})`);
     if (sigunguCode) conditions.push(`TRIM(a.ldong_signgu_cd) = TRIM(${addParam(sigunguCode)})`);
