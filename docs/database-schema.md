@@ -23,6 +23,8 @@ AI 에이전트가 개발 시 이 문서를 스키마의 단일 소스로 사용
 | `sessions` | 0 (신규) | `token_hash` | 로그인 세션 |
 | `assistant_usage_user` | 사용자별 | `user_id` | AI 어시스턴트 예약 직렬화용 잠금 행 |
 | `assistant_request_usage` | 요청별 | `request_id` | AI 어시스턴트 daily/concurrent 사용량 |
+| `assistant_rooms` | 사용자별 | `id` | AI 어시스턴트 대화방 |
+| `assistant_messages` | 메시지별 | `id` | AI 어시스턴트 대화 메시지 및 생성 상태 |
 | `user_likes` | 0 (신규) | (`user_id`,`target_type`,`target_id`) | 회원 좋아요(찜) — 관광지/코스 |
 
 ## 관계 (ERD)
@@ -41,6 +43,8 @@ users (id) ──< sessions.user_id    -- 실제 FK, ON DELETE CASCADE
 users (id) ──< user_likes.user_id  -- 실제 FK, ON DELETE CASCADE
 users (id) ──< assistant_usage_user.user_id -- 실제 FK, ON DELETE CASCADE
 users (id) ──< assistant_request_usage.user_id    -- 실제 FK, ON DELETE CASCADE
+users (id) ──< assistant_rooms.user_id            -- 실제 FK, ON DELETE CASCADE
+assistant_rooms (id) ──< assistant_messages.room_id -- 실제 FK, ON DELETE CASCADE
 ```
 
 **주의**: 관광 데이터 8개 테이블 사이의 실제 FK 제약은 `sigungu→region` 하나뿐이며, 나머지는 논리적 관계일 뿐이므로 조인 시 존재하지 않는 `content_id`/`route_idx`가 있어도 DB가 막아주지 않는다. `users`/`sessions`는 별도 도메인(인증)이라 `sessions.user_id → users.id`에 실제 FK가 걸려 있다.
@@ -224,9 +228,6 @@ users (id) ──< assistant_request_usage.user_id    -- 실제 FK, ON DELETE CA
 
 ## assistant_request_usage — AI 어시스턴트 사용량
 
-마이그레이션: [`docs/migrations/003_assistant_usage.sql`](migrations/003_assistant_usage.sql),
-기존 배포에서 요청 UUID 기본값을 제거하려면 [`docs/migrations/004_assistant_usage_drop_uuid_default.sql`](migrations/004_assistant_usage_drop_uuid_default.sql)을 적용한다.
-새 설치는 003만 적용하면 된다.
 서버는 `assistant_usage_user`의 사용자별 잠금 행을 짧은 예약 트랜잭션에서 `FOR UPDATE`로 잠근 뒤
 `assistant_request_usage`에 요청 예약을 기록한다. 외부 AI 호출 중에는 DB 트랜잭션을 유지하지 않는다.
 `finished_at`이 없는 예약도 `reservation_expires_at`이 지나면 다음 예약 시 회수되므로
@@ -243,6 +244,37 @@ users (id) ──< assistant_request_usage.user_id    -- 실제 FK, ON DELETE CA
 |  | `started_at` | daily 사용량 계산 기준 시각 |
 |  | `reservation_expires_at` | 미완료 예약의 자동 회수 시각 |
 |  | `finished_at` | 서버가 finally에서 기록하는 완료 시각; NULL이면 in-flight |
+
+## assistant_rooms — AI 어시스턴트 대화방
+
+| 컬럼 | 타입 | NULL | 설명 |
+|---|---|---|---|
+| `id` | `uuid` | NOT NULL, PK, 기본 `gen_random_uuid()` | 방 ID |
+| `user_id` | `uuid` | NOT NULL, FK→`users.id` (CASCADE) | 소유 회원 |
+| `title` | `varchar(200)` | NOT NULL, 기본 `'New chat'` | 첫 사용자 메시지에서 생성되는 방 제목 |
+| `created_at` / `updated_at` | `timestamptz` | NOT NULL, 기본 `now()` | 생성/최근 변경 시각 |
+
+인덱스: `(user_id, updated_at DESC, id DESC)`.
+
+## assistant_messages — AI 어시스턴트 메시지
+
+한 요청은 `complete` 사용자 메시지와 `in_progress` 어시스턴트 placeholder를 짧은 트랜잭션에서 함께 만든다. 외부 모델 스트리밍 중에는 DB 트랜잭션을 유지하지 않으며, 생성 만료 시 다음 읽기/요청에서 `failed/generation_expired`로 회수한다.
+
+| 컬럼 | 타입 | NULL | 설명 |
+|---|---|---|---|
+| `id` | `uuid` | NOT NULL, PK, 기본 `gen_random_uuid()` | 메시지 ID |
+| `room_id` | `uuid` | NOT NULL, FK→`assistant_rooms.id` (CASCADE) | 대화방 |
+| `ordinal` | `integer` | NOT NULL | 방 안의 순서; `(room_id, ordinal)` UNIQUE |
+| `role` | `varchar(10)` | NOT NULL | `user` 또는 `assistant` |
+| `status` | `varchar(12)` | NOT NULL | `in_progress`, `complete`, `failed`, `cancelled` |
+| `content` | `text` | NOT NULL, 기본 `''` | 메시지 또는 bounded partial text |
+| `sources` | `jsonb` | NOT NULL, 기본 `[]` | HTTP/HTTPS 출처 목록 |
+| `client_request_id` | `uuid` | NULL | 사용자 요청 idempotency key; non-null 값 UNIQUE |
+| `error_code` / `error_id` | `varchar(80)` / `varchar(160)` | NULL | 실패 진단 category와 요청 진단 ID |
+| `generation_expires_at` | `timestamptz` | NULL | 프로세스 장애 후 stale generation 회수 시각 |
+| `created_at` / `updated_at` | `timestamptz` | NOT NULL, 기본 `now()` | 생성/최근 변경 시각 |
+
+추가 인덱스: `(room_id, ordinal ASC, id ASC)` 메시지 순서 조회, `(room_id, status, ordinal DESC, id DESC)` 상태·최근 메시지 조회. `(room_id)`에 `role='assistant' AND status='in_progress'` partial unique index를 두어 방당 생성 하나만 허용한다.
 
 ## user_likes — 회원 좋아요(찜)
 

@@ -140,6 +140,21 @@
   animation: fadeIn 0.4s var(--ease-out-soft, cubic-bezier(0.25, 0.46, 0.45, 0.94)) both;
 }
 
+@keyframes room-drawer-enter {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-room-drawer-enter {
+  animation: room-drawer-enter 300ms var(--ease-out-soft, cubic-bezier(0.25, 0.46, 0.45, 0.94)) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-room-drawer-enter {
+    animation: none;
+  }
+}
+
 /* ===================================================================
     8. Hover Interaction Guidelines (호버 인터랙션 유형별 차등화)
    ===================================================================
@@ -188,6 +203,89 @@ body {
 }
 
 /* Keep GFM tables readable without widening the assistant bubble. */
+.assistant-intro {
+  max-height: 12rem;
+  overflow: hidden;
+  opacity: 1;
+  transition: max-height var(--duration-base) var(--ease-out-soft), opacity var(--duration-fast) ease;
+}
+
+.assistant-intro--collapsed {
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.assistant-chat-panel {
+  transition: margin-top var(--duration-base) var(--ease-out-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-intro,
+  .assistant-chat-panel,
+  .assistant-conversation-viewport {
+    transition: none;
+  }
+}
+
+.assistant-conversation-viewport {
+  --assistant-global-header-height: 4.0625rem;
+  --assistant-mobile-nav-height: 4.5rem;
+  min-height: 20rem;
+}
+
+@media (min-width: 768px) {
+  .assistant-tab {
+    height: calc(100dvh - 4.0625rem - 1.5rem - 3rem);
+    min-height: 0;
+  }
+}
+
+/* On mobile the assistant tab should fill the remaining viewport height with a
+   flex column so only the message list scrolls. The app shell above this tab
+   (#root → min-h-full app div → flex-1 main) has no definite height, so a
+   plain `height: 100%` resolves to auto and the panel would grow with the
+   conversation, pushing page-level scroll. Once a conversation has started
+   (--started) the tab is therefore sized directly from the viewport, which
+   makes the flex chain definite: the message list scrolls internally and the
+   input stays put. Before the first message the tab keeps normal document
+   flow (intro + suggestion cards may legitimately exceed one screen).
+   Subtracted constants: 4.0625rem = h-16 header + 1px border, 1.5rem = pt-6,
+   5rem = responsive clearance for the fixed mobile bottom nav). */
+@media (max-width: 767px) {
+  .assistant-conversation-viewport {
+    flex: 0 0 calc(100dvh - var(--assistant-global-header-height) - 1.5rem - 5rem - 5rem);
+    height: calc(100dvh - var(--assistant-global-header-height) - 1.5rem - 5rem - 5rem);
+    min-height: calc(100dvh - var(--assistant-global-header-height) - 1.5rem - 5rem - 5rem);
+    max-height: calc(100dvh - var(--assistant-global-header-height) - 1.5rem - 5rem - 5rem);
+  }
+
+  .assistant-tab--started {
+    --assistant-global-header-height: 4.0625rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    height: calc(100vh - var(--assistant-global-header-height) - 1.5rem - 5rem);
+    height: calc(100dvh - var(--assistant-global-header-height) - 1.5rem - 5rem);
+    min-height: 0;
+    padding-bottom: 0;
+  }
+
+  .assistant-tab--started .assistant-chat-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .assistant-tab--started .assistant-conversation-viewport {
+    flex: 0 0 calc(100dvh - var(--assistant-global-header-height) - 1.5rem - 5rem - 5rem);
+    min-height: calc(100dvh - var(--assistant-global-header-height) - 1.5rem - 5rem - 5rem);
+    height: calc(100dvh - var(--assistant-global-header-height) - 1.5rem - 5rem - 5rem);
+    max-height: calc(100dvh - var(--assistant-global-header-height) - 1.5rem - 5rem - 5rem);
+  }
+}
+
 .assistant-markdown-table-wrap {
   max-width: 100%;
   overflow-x: auto;
@@ -220,37 +318,20 @@ body {
   border-bottom: 0;
 }
 
-/* Keep supporting copy legible on small screens without changing the desktop scale. */
 @media (max-width: 767px) {
-  [class~="text-sm"] {
-    font-size: 0.9375rem;
-  }
-
-  [class~="text-xs"] {
-    font-size: 0.8125rem;
-  }
-
-  [class~="text-[11px]"] {
-    font-size: 0.75rem;
-  }
-
-  [class~="text-[10px]"],
-  [class~="text-[9px]"] {
-    font-size: 0.6875rem;
-  }
-
-  /* Prevent iOS Safari from zooming into the many small form fields. */
-  input[class],
-  select[class],
+  /* Prevent iOS Safari from zooming when it focuses a field for inline text
+     entry — that only happens below 16px. Scoped to the fields that actually
+     take typed input: the search boxes and the assistant composer. */
+  input:not([type="date"]):not([type="time"]):not([type="datetime-local"]):not([type="month"]):not([type="week"])[class],
   textarea[class] {
     font-size: 1rem;
   }
 
-  /* Interactive labels need a slightly stronger floor than supporting copy. */
-  button[class~="text-sm"],
-  button[class~="text-xs"],
-  button[class~="text-[10px]"],
-  button[class~="text-[9px]"] {
-    font-size: 0.875rem;
+  /* select and date inputs open a native picker instead of focusing for text
+     entry, so they never trigger the zoom and don't need the 16px floor.
+     One step down keeps the search filters from dwarfing their own labels. */
+  select[class],
+  input[type="date"][class] {
+    font-size: 0.75rem;
   }
 }

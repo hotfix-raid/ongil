@@ -85,7 +85,7 @@ export default function FooterSection() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="example@domain.com"
-                      className="w-full px-4 py-2.5 rounded-md border border-border-default bg-bento-bg/50 text-sm text-bento-dark placeholder-bento-dark/30 focus:outline-none focus:border-bento-green focus:bg-white transition-all duration-base ease-out-soft"
+                      className="w-full px-4 py-2.5 rounded-md border border-border-default bg-bento-bg/50 text-sm text-bento-dark placeholder-bento-dark/30 placeholder:text-xs sm:placeholder:text-sm focus:outline-none focus:border-bento-green focus:bg-white transition-all duration-base ease-out-soft"
                       required
                     />
                   </div>
@@ -127,7 +127,7 @@ export default function FooterSection() {
                       onChange={(e) => setMessage(e.target.value)}
                       rows={3}
                       placeholder="온길에 하실 말씀을 자유롭게 남겨주세요."
-                      className="w-full px-4 py-2.5 rounded-md border border-border-default bg-bento-bg/50 text-sm text-bento-dark placeholder-bento-dark/30 focus:outline-none focus:border-bento-green focus:bg-white transition-all duration-base ease-out-soft resize-none"
+                      className="w-full px-4 py-2.5 rounded-md border border-border-default bg-bento-bg/50 text-sm text-bento-dark placeholder-bento-dark/30 placeholder:text-xs sm:placeholder:text-sm focus:outline-none focus:border-bento-green focus:bg-white transition-all duration-base ease-out-soft resize-none"
                     />
                   </div>
 

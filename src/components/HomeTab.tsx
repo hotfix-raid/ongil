@@ -97,7 +97,7 @@ export default function HomeTab({
       {/* 1. Header with Title + Climate Widget */}
       <header>
         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-bento-green">온길 추천</p>
-        <h2 className="font-display text-3xl font-black tracking-tight text-bento-dark">온길 추천 여행지</h2>
+        <h2 className="font-display text-2xl font-black tracking-tight text-bento-dark md:text-3xl">온길 추천 여행지</h2>
         <p className="mt-2 max-w-xl text-sm leading-relaxed text-bento-dark/55">지속 가능한 로컬 지원과 포용적인 맞춤형 관광 큐레이터</p>
 
         {/* Climate Widget Trigger Badge */}
@@ -245,8 +245,8 @@ export default function HomeTab({
           </div>
           <p className="text-xs text-bento-stone leading-relaxed">
             {hasProfileDefaults
-              ? "MY 설정에 저장하신 배리어프리 조건을 반영한 맞춤 힐링 노선입니다."
-              : "동반 반려동물, 유모차 사용, 휠체어 여부에 맞춰 무장애 걷기길을 자동으로 큐레이션합니다."}
+              ? "MY 설정에 저장하신 조건을 반영한 맞춤 여행지 입니다."
+              : "이동 편의, 영유아 편의, 반려동물 동반, 주차 시설 여부에 여행지를 자동으로 큐레이션합니다."}
           </p>
         </div>
 
@@ -321,16 +321,14 @@ export default function HomeTab({
           <div className="p-6 bg-white rounded-xl border border-border-default shadow-sm flex flex-col md:flex-row items-center justify-between gap-5 text-center md:text-left">
             <div className="space-y-2 max-w-lg">
               <div className="flex items-center justify-center md:justify-start gap-1.5">
-                <div className="w-5 h-5 rounded-full bg-bento-green/15 text-bento-green flex items-center justify-center">
-                  <Accessibility size={12} />
-                </div>
+
                 <span className="text-xs font-bold text-bento-green">맞춤 필터를 설정하면 더 정확한 추천을 받을 수 있어요</span>
               </div>
               <h4 className="font-display font-black text-base text-bento-dark tracking-tight">
-                나만의 배리어프리 보행 조건을 설정해 보세요
+                나만의 여행지 조건을 설정해 보세요
               </h4>
               <p className="text-xs text-bento-stone leading-relaxed">
-                반려동물 동반, 휠체어 사용, 유모차 여부 등 나만의 조건을 프로필에 등록하면
+                이동 편의, 영유아 편의, 반려동물 동반, 주차 시설 여부 조건을 프로필에 등록하면
                 홈 화면의 추천과 검색 결과가 자동으로 맞춰집니다.
               </p>
             </div>

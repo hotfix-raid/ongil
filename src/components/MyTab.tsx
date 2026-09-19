@@ -9,7 +9,8 @@ import {
   PawPrint,
   Accessibility,
   Car,
-  Lock
+  Lock,
+  LogOut
 } from "lucide-react";
 
 interface MyTabProps {
@@ -25,6 +26,7 @@ interface MyTabProps {
   onUpdateAccessibilityDefaults: (newDefaults: any) => void;
   user: { name: string; avatarUrl: string } | null;
   onLoginClick: () => void;
+  onLogout: () => void;
 }
 
 export default function MyTab({
@@ -33,7 +35,8 @@ export default function MyTab({
   accessibilityDefaults,
   onUpdateAccessibilityDefaults,
   user,
-  onLoginClick
+  onLoginClick,
+  onLogout
 }: MyTabProps) {
   const [toastMessage, setToastMessage] = useState("");
 
@@ -68,9 +71,9 @@ export default function MyTab({
                 alt={user.name}
                 className="w-20 h-20 rounded-full border-2 border-bento-green object-cover shrink-0"
               />
-              <span className="absolute bottom-1 right-1 w-5.5 h-5.5 rounded-full bg-bento-green border-2 border-white text-white text-[10px] font-bold flex items-center justify-center">
+              {/*<span className="absolute bottom-1 right-1 w-5.5 h-5.5 rounded-full bg-bento-green border-2 border-white text-white text-[10px] font-bold flex items-center justify-center">
                 Lv.1
-              </span>
+              </span>*/}
             </div>
 
             {/* User name & summary */}
@@ -98,6 +101,14 @@ export default function MyTab({
                 </div>*/}
               </div>
             </div>
+
+            <button
+              onClick={onLogout}
+              className="self-stretch sm:self-center sm:ml-auto shrink-0 inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-md border border-red-200/70 bg-red-50/70 text-red-700 text-xs font-semibold hover:bg-red-100 hover:border-red-200 transition-colors duration-fast cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2"
+            >
+              <LogOut size={14} aria-hidden="true" />
+              로그아웃
+            </button>
           </>
         ) : (
           <>
@@ -313,9 +324,9 @@ export default function MyTab({
       <div className="p-4 bg-bento-dark/[0.03] border border-border-subtle rounded-lg text-[10px] text-bento-dark/50 leading-relaxed flex gap-2.5 items-start">
         <Info size={12} className="text-bento-green shrink-0 mt-0.5" />
         <div>
-          <span className="font-semibold text-bento-dark block mb-0.5">찜 목록 및 안심 기준 저장 안내</span>
+          <span className="font-semibold text-bento-dark block mb-0.5">즐겨찾기 목록 및 안심 기준 저장 안내</span>
           <p>
-            로그인하면 찜한 명소·코스와 안심보행 기본값이 온길 계정에 저장되어 다른 기기에서도 유지됩니다. 로그인하지 않은 경우에는 이 기기 브라우저에만 저장됩니다.
+            로그인하면 즐겨찾기 명소·코스와 나의 여행지 기본값이 온길 계정에 저장되어 다른 기기에서도 유지됩니다. 로그인하지 않은 경우에는 이 기기 브라우저에만 저장됩니다.
           </p>
         </div>
       </div>

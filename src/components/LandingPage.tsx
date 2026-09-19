@@ -94,7 +94,7 @@ export default function LandingPage({ onExploreClick, onAssistantClick }: Landin
                 <span className="h-2 w-2 rounded-full bg-[#d46c45]" />
                 강원 지역 여행 탐색 서비스
               </p>
-              <h1 className="font-display text-[clamp(3.2rem,8vw,7.5rem)] font-black leading-[0.94] tracking-[-0.065em] text-[#19332b]">
+              <h1 className="font-display text-[clamp(2.5rem,8vw,7.5rem)] font-black leading-[0.94] tracking-[-0.065em] text-[#19332b]">
                 여행의 방향을
                 <br />
                 <span className="text-[#2d5a27]">조금 다르게.</span>
@@ -159,7 +159,7 @@ export default function LandingPage({ onExploreClick, onAssistantClick }: Landin
             <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-24">
               <div>
                 <p className="mb-4 text-xs font-bold tracking-[0.18em] text-[#d46c45]">A SMALLER WAY TO PLAN</p>
-                <h2 className="font-display text-4xl font-black leading-tight tracking-[-0.04em] sm:text-5xl">
+                <h2 className="font-display text-3xl font-black leading-tight tracking-[-0.04em] sm:text-5xl">
                   많이 알려진 곳보다
                   <br />
                   <span className="text-[#2d5a27]">나에게 맞는 곳.</span>
@@ -188,7 +188,7 @@ export default function LandingPage({ onExploreClick, onAssistantClick }: Landin
           <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-24">
             <div>
               <p className="mb-4 text-xs font-bold tracking-[0.18em] text-[#d46c45]">A MORE PERSONAL WAY TO CHOOSE</p>
-              <h2 className="font-display text-4xl font-black leading-tight tracking-[-0.04em] sm:text-5xl">
+              <h2 className="font-display text-3xl font-black leading-tight tracking-[-0.04em] sm:text-5xl">
                 조건을 말하면,
                 <br />
                 <span className="text-[#2d5a27]">여행지를 찾아드려요.</span>
@@ -234,7 +234,7 @@ export default function LandingPage({ onExploreClick, onAssistantClick }: Landin
             <div className="flex flex-col justify-between gap-7 md:flex-row md:items-end">
               <div className="max-w-2xl">
                 <p className="mb-4 text-xs font-bold tracking-[0.18em] text-[#dfe6c7]">KOREA DULLE-GIL</p>
-                <h2 className="font-display text-4xl font-black leading-tight tracking-[-0.04em] sm:text-5xl">
+                <h2 className="font-display text-3xl font-black leading-tight tracking-[-0.04em] sm:text-5xl">
                   길의 결이 다른
                   <br />
                   <span className="text-[#dfe6c7]">네 가지 테마.</span>
@@ -270,7 +270,7 @@ export default function LandingPage({ onExploreClick, onAssistantClick }: Landin
           <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-24">
             <div>
               <p className="mb-4 text-xs font-bold tracking-[0.18em] text-[#c15b38]">A DATE-SPECIFIC REFERENCE</p>
-              <h2 className="font-display text-4xl font-black leading-tight tracking-[-0.04em] sm:text-5xl">
+              <h2 className="font-display text-3xl font-black leading-tight tracking-[-0.04em] sm:text-5xl">
                 같은 관광지도,
                 <br />
                 <span className="text-[#c15b38]">날짜에 따라 다르게.</span>
@@ -318,7 +318,7 @@ export default function LandingPage({ onExploreClick, onAssistantClick }: Landin
               <div className="absolute -bottom-20 -left-12 h-48 w-48 rounded-full border-[22px] border-[#dfe6c7]/20" />
               <div className="relative">
                 <p className="text-xs font-bold tracking-[0.18em] text-[#dfe6c7]">CHECK WHAT MATTERS</p>
-                <h2 className="mt-5 max-w-md font-display text-3xl font-black leading-tight tracking-[-0.04em] sm:text-4xl">
+                <h2 className="mt-5 max-w-md font-display text-2xl font-black leading-tight tracking-[-0.04em] sm:text-4xl">
                   여행의 조건도
                   <br />
                   여행의 일부니까.
@@ -334,7 +334,7 @@ export default function LandingPage({ onExploreClick, onAssistantClick }: Landin
             </div>
             <div>
               <p className="text-sm font-bold text-[#d46c45]">정보를 볼 때 한 가지 약속</p>
-              <h2 className="mt-4 font-display text-3xl font-black leading-tight tracking-[-0.04em] sm:text-4xl">확인된 안내를<br />있는 그대로 보여드려요.</h2>
+              <h2 className="mt-4 font-display text-2xl font-black leading-tight tracking-[-0.04em] sm:text-4xl">확인된 안내를<br />있는 그대로 보여드려요.</h2>
               <p className="mt-6 leading-7 text-[#19332b]/65">
                 반려동물·무장애 정보는 실제 이용 가능 여부를 단정하지 않고, 등록된 안내 정보를 기준으로 제공합니다. 방문 전 상세 내용을 한 번 더 확인할 수 있게 돕는 것이 온길의 역할입니다.
               </p>
@@ -347,7 +347,7 @@ export default function LandingPage({ onExploreClick, onAssistantClick }: Landin
 
         <section className="px-5 py-24 text-center sm:px-8 lg:px-12 lg:py-32">
           <p className="text-xs font-bold tracking-[0.18em] text-[#d46c45]">START WITH A PLACE</p>
-          <h2 className="mx-auto mt-5 max-w-2xl font-display text-4xl font-black leading-tight tracking-[-0.05em] sm:text-6xl">이번 여행은,<br /><span className="text-[#2d5a27]">어디서 시작할까요?</span></h2>
+          <h2 className="mx-auto mt-5 max-w-2xl font-display text-3xl font-black leading-tight tracking-[-0.05em] sm:text-6xl">이번 여행은,<br /><span className="text-[#2d5a27]">어디서 시작할까요?</span></h2>
           <p className="mx-auto mt-6 max-w-md text-sm leading-7 text-[#19332b]/60">관광지와 걷기 코스를 살펴보고, 당신의 여행에 맞는 정보를 직접 확인해보세요.</p>
           <button onClick={onExploreClick} className="group mt-9 inline-flex items-center gap-3 rounded-full bg-[#d46c45] px-7 py-4 text-sm font-bold text-white shadow-lg transition duration-300 hover:-translate-y-1 hover:bg-[#c15b38]">
             온길에서 찾아보기 <ArrowRight size={17} className="transition-transform group-hover:translate-x-1" />
