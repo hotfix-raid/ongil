@@ -1,16 +1,7 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from "react";
-import Hero from "./components/Hero";
-import ProblemSection from "./components/ProblemSection";
-import FeaturesSection from "./components/FeaturesSection";
-import SimulatorSection from "./components/SimulatorSection";
-import ComparisonSection from "./components/ComparisonSection";
-import PilotRegionSection from "./components/PilotRegionSection";
-import DataTrustSection from "./components/DataTrustSection";
-import ImpactSection from "./components/ImpactSection";
-import RoadmapSection from "./components/RoadmapSection";
-import FooterSection from "./components/FooterSection";
+import React, { useState, useEffect } from "react";
+import LandingPage from "./components/LandingPage";
 
 import HomeTab from "./components/HomeTab";
 import SearchTab from "./components/SearchTab";
@@ -77,7 +68,7 @@ function loadLocal<T>(key: string, fallback: T): T {
 
 export default function App() {
   // Navigation & View Mode states
-  const [viewMode, setViewMode] = useState<"app" | "intro">("app");
+  const [viewMode, setViewMode] = useState<"app" | "intro">("intro");
   const [activeTab, setActiveTab] = useState<Tab>("home");
 
   // User authentication state (Kakao OAuth session, via /api/auth/*)
@@ -267,15 +258,6 @@ export default function App() {
     if (tabFromHash() !== tab) {
       window.history.pushState({ tab }, "", `#/${tab}`);
     }
-  };
-
-  // Intro Sections scrolling helpers
-  const betaRef = useRef<HTMLDivElement>(null);
-  const handleBetaClick = () => {
-    setViewMode("intro");
-    setTimeout(() => {
-      betaRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
   };
 
   return (
@@ -607,52 +589,12 @@ export default function App() {
         </div>
       ) : (
         
-        /* ==================== ORIGINAL HIGH-FIDELITY LANDING PAGES ==================== */
+        /* ==================== LANDING PAGE ==================== */
         <div className="animate-fadeIn">
-          {/* Hero */}
-          <Hero onExploreClick={() => {
+          <LandingPage onExploreClick={() => {
             setViewMode("app");
             setActiveTab("search");
           }} />
-
-          {/* Problem Section (3 structural imbalances) */}
-          <div id="problem">
-            <ProblemSection />
-          </div>
-
-          {/* Key Features Section */}
-          <div id="features">
-            <FeaturesSection />
-          </div>
-
-          {/* Interactive Core Virtual Simulator Zone */}
-          <div id="simulator">
-            <SimulatorSection />
-          </div>
-
-          {/* Detailed Matrix Table */}
-          <div id="comparison">
-            <ComparisonSection />
-          </div>
-
-          {/* Focus Pilot Regions */}
-          <div id="regions">
-            <PilotRegionSection />
-          </div>
-
-          {/* Data API Verification details */}
-          <DataTrustSection />
-
-          {/* Regional Impact metrics */}
-          <ImpactSection />
-
-          {/* Project Timeline Roadmap */}
-          <RoadmapSection />
-
-          {/* Contact Footer */}
-          <div ref={betaRef}>
-            <FooterSection />
-          </div>
         </div>
 
       )}
