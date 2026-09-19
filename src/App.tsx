@@ -421,9 +421,9 @@ export default function App() {
                 <span>마이 페이지</span>
                 
                 {/* Visual indicator when defaults are saved */}
-                {Object.values(accessibilityDefaults).some(Boolean) && (
+                {/*{Object.values(accessibilityDefaults).some(Boolean) && (
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-bento-green animate-pulse" />
-                )}
+                )}*/}
               </button>
 
             </div>
@@ -579,10 +579,16 @@ export default function App() {
         
         /* ==================== LANDING PAGE ==================== */
         <div className="animate-fadeIn">
-          <LandingPage onExploreClick={() => {
-            setViewMode("app");
-            setActiveTab("search");
-          }} />
+          <LandingPage
+            onExploreClick={() => {
+              setViewMode("app");
+              setActiveTab("search");
+            }}
+            onAssistantClick={() => {
+              setViewMode("app");
+              handleNavigateToTab("assistant");
+            }}
+          />
         </div>
 
       )}
