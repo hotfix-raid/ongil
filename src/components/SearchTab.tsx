@@ -329,7 +329,7 @@ export default function SearchTab({
     <div className="space-y-6 pb-12 animate-fadeIn">
       <header>
         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-bento-green">온길 탐색</p>
-        <h2 className="font-display text-3xl font-black tracking-tight text-bento-dark">어디로 걸어볼까요?</h2>
+        <h2 className="font-display text-3xl font-black tracking-tight text-bento-dark">어디로 떠나볼까요?</h2>
         <p className="mt-2 max-w-xl text-sm leading-relaxed text-bento-dark/55">등록된 여행 정보만 바탕으로, 지금 찾고 싶은 목적지를 가볍게 좁혀보세요.</p>
       </header>
 
