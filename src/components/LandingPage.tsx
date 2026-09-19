@@ -240,7 +240,7 @@ export default function LandingPage({ onExploreClick, onAssistantClick }: Landin
                   <span className="text-[#dfe6c7]">네 가지 테마.</span>
                 </h2>
                 <p className="mt-6 max-w-xl leading-7 text-white/65">
-                  온길의 걷기 코스는 코리아둘레길 네 가지 테마를 기준으로 살펴볼 수 있어요. 현재 DB에 연결된 141개 코스의 거리·시간·노선 정보를 함께 확인해보세요.
+                  온길의 걷기 코스는 코리아둘레길 네 가지 테마를 기준으로 살펴볼 수 있어요.
                 </p>
               </div>
               <div className="shrink-0 rounded-full border border-white/15 px-4 py-2 text-xs font-semibold text-[#dfe6c7]">4 themes · 141 courses</div>
