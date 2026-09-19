@@ -20,7 +20,6 @@ import {
   Search, 
   Footprints, 
   User, 
-  BookOpen, 
   Heart, 
   Sparkles,
   Home as HomeIcon,
@@ -426,17 +425,6 @@ export default function App() {
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-bento-green animate-pulse" />
                 )}
               </button>
-
-              {/* Direct callout to documentation */}
-              <div className="pt-3 mt-3 border-t border-border-subtle">
-                <button
-                  onClick={() => setViewMode("intro")}
-                  className="text-xs font-medium text-bento-stone hover:text-bento-ink flex items-center justify-center gap-1.5 w-full py-2 rounded-md hover:bg-bento-cream/50 transition-colors duration-fast cursor-pointer"
-                >
-                  <BookOpen size={14} />
-                  <span>온길 철학 기획관람가기</span>
-                </button>
-              </div>
 
             </div>
           </aside>

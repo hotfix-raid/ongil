@@ -92,16 +92,13 @@ export default function HomeTab({
   const hasProfileDefaults = Object.values(accessibilityDefaults).some(Boolean);
 
   return (
-    <div className="space-y-12 animate-fadeIn pb-12">
+    <div className="space-y-6 animate-fadeIn pb-12">
 
       {/* 1. Header with Title + Climate Widget */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-border-subtle pb-6">
-        <div className="text-center sm:text-left">
-          <h2 className="text-xl font-display font-black tracking-tight text-bento-dark mb-1">
-            온길 추천 여행지
-          </h2>
-          <p className="text-xs text-bento-stone">지속 가능한 로컬 지원과 포용적인 맞춤형 관광 큐레이터</p>
-        </div>
+      <header>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-bento-green">온길 추천</p>
+        <h2 className="font-display text-3xl font-black tracking-tight text-bento-dark">온길 추천 여행지</h2>
+        <p className="mt-2 max-w-xl text-sm leading-relaxed text-bento-dark/55">지속 가능한 로컬 지원과 포용적인 맞춤형 관광 큐레이터</p>
 
         {/* Climate Widget Trigger Badge */}
         {/*<div className="flex items-center gap-2">
@@ -117,7 +114,7 @@ export default function HomeTab({
             <span className="text-xs font-bold bg-bento-green/10 text-bento-green px-2 py-0.5 rounded-full">{showWeatherDetails ? "닫기" : "자세히"}</span>
           </button>
         </div>*/}
-      </div>
+      </header>
 
       {/* 2. Section: 지금 한산한 인구감소지역 (Tranquil Depopulated Area Picks) */}
       <div className="bg-bento-olive/25 border border-bento-moss/30 p-6 sm:p-8 rounded-xl space-y-6 shadow-sm">

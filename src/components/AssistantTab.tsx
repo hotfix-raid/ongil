@@ -3,6 +3,7 @@
 import React, { FormEvent, useEffect, useRef, useState } from "react";
 import { AlertCircle, ArrowUp, ExternalLink, LockKeyhole, Sparkles } from "lucide-react";
 import ReactMarkdown, { defaultUrlTransform, type Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface AssistantTabProps {
   user: { name: string; avatarUrl: string } | null;
@@ -52,12 +53,16 @@ const MARKDOWN_COMPONENTS: Components = {
   ) : <>{children}</>,
   blockquote: ({ children }) => <blockquote className="border-l-2 border-bento-green/40 pl-3 text-bento-dark/65">{children}</blockquote>,
   code: ({ children }) => <code className="rounded bg-bento-bg px-1 py-0.5 text-[11px]">{children}</code>,
+  table: ({ children }) => <div className="assistant-markdown-table-wrap"><table>{children}</table></div>,
+  thead: ({ children }) => <thead>{children}</thead>,
+  th: ({ children }) => <th scope="col">{children}</th>,
+  td: ({ children }) => <td>{children}</td>,
 };
 
 function MarkdownMessage({ content }: { content: string }) {
   return (
-    <div className="space-y-2 break-words">
-      <ReactMarkdown components={MARKDOWN_COMPONENTS} skipHtml urlTransform={defaultUrlTransform}>
+    <div className="assistant-markdown space-y-2 break-words">
+      <ReactMarkdown components={MARKDOWN_COMPONENTS} remarkPlugins={[remarkGfm]} skipHtml urlTransform={defaultUrlTransform}>
         {content}
       </ReactMarkdown>
     </div>
@@ -323,7 +328,7 @@ export default function AssistantTab({ user, onLoginClick }: AssistantTabProps) 
           </div>
         </div>
 
-        <div ref={conversationViewportRef} className="max-h-[440px] min-h-[300px] overflow-y-auto overscroll-contain bg-bento-bg/45 p-4 sm:p-6" aria-live="polite">
+        <div ref={conversationViewportRef} className="h-[440px] min-h-0 overflow-y-auto overscroll-contain bg-bento-bg/45 p-4 sm:p-6" aria-live="polite">
           <div ref={conversationContentRef} className="space-y-5">
           {messages.filter((message) => message.role === "user" || message.text).map((message) => (
             <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
