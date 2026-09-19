@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
   const distance = searchParams.get("distance");
   const duration = searchParams.get("duration");
   const cycle = searchParams.get("cycle")?.trim() || undefined;
+  const ids = parseList(searchParams.get("ids"));
   const themes = parseList(searchParams.get("theme"));
   const levels = parseList(searchParams.get("level"));
   const sort = searchParams.get("sort") ?? "relevance";
@@ -52,6 +53,10 @@ export async function GET(request: NextRequest) {
   if (regionValue !== null && regionValue.length > 100) return badRequest("region must be 100 characters or fewer");
   if (boardDivision !== undefined && boardDivision.length > 10) return badRequest("boardDivision must be 10 characters or fewer");
   if (cycle !== undefined && cycle.length > 20) return badRequest("cycle must be 20 characters or fewer");
+  if (ids.length > MAX_LIMIT) return badRequest("ids must contain at most 100 values");
+  for (const id of ids) {
+    if (id.length > 30) return badRequest("ids must contain values of 30 characters or fewer");
+  }
   for (const theme of themes) {
     if (theme.length > 30) return badRequest("theme must be comma-separated route_idx values of 30 characters or fewer");
   }
@@ -94,6 +99,10 @@ export async function GET(request: NextRequest) {
     if (region) conditions.push(`TRIM(c.sigun) = TRIM(${addParam(region)})`);
     if (boardDivision) conditions.push(`TRIM(c.brd_div) = TRIM(${addParam(boardDivision)})`);
     if (cycle) conditions.push(`TRIM(c.crs_cycle) = TRIM(${addParam(cycle)})`);
+    if (ids.length) {
+      const placeholders = ids.map((id) => addParam(id));
+      conditions.push(`c.crs_idx IN (${placeholders.join(", ")})`);
+    }
     if (themes.length) {
       const placeholders = themes.map((theme) => addParam(theme));
       conditions.push(`c.route_idx IN (${placeholders.join(", ")})`);

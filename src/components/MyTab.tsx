@@ -1,33 +1,18 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { 
-  User, 
-  Heart, 
-  Sliders, 
-  Award, 
-  FileText, 
-  Settings, 
-  Check, 
-  Info, 
-  Trash2, 
-  ChevronRight, 
-  Share2, 
-  Search, 
-  TrendingDown, 
-  MapPin, 
-  Compass,
+import {
+  User,
+  Sliders,
+  Info,
   Sparkles,
-  Leaf,
   Baby,
   PawPrint,
   Accessibility,
   Car,
   Lock
 } from "lucide-react";
-import { MockDestination, mockDestinations } from "../data/destinations";
 
 interface MyTabProps {
-  onSelectDestination: (destination: MockDestination) => void;
   likedDestinations: string[];
   onToggleLike: (id: string) => void;
   accessibilityDefaults: {
@@ -38,32 +23,25 @@ interface MyTabProps {
     parking: boolean;
   };
   onUpdateAccessibilityDefaults: (newDefaults: any) => void;
-  onClearLikes: () => void;
   user: { name: string; avatarUrl: string } | null;
   onLoginClick: () => void;
 }
 
 export default function MyTab({
-  onSelectDestination,
   likedDestinations,
   onToggleLike,
   accessibilityDefaults,
   onUpdateAccessibilityDefaults,
-  onClearLikes,
   user,
   onLoginClick
 }: MyTabProps) {
   const [toastMessage, setToastMessage] = useState("");
-  const [activeSubTab, setActiveSubTab] = useState<"profile" | "stamp">("profile");
-
-  // Filter out liked destinations from the global list
-  const savedDestinations = mockDestinations.filter(d => likedDestinations.includes(d.id));
 
   // Handle toggle updates with a beautiful toast notification
   const handleToggle = (key: string, value: boolean) => {
     const updated = { ...accessibilityDefaults, [key]: value };
     onUpdateAccessibilityDefaults(updated);
-    
+
     const koreanNameMap: Record<string, string> = {
       petFriendly: "반려동물 동반 동행",
       wheelchair: "휠체어 안전보행로 전용",
@@ -76,20 +54,12 @@ export default function MyTab({
     setTimeout(() => setToastMessage(""), 4000);
   };
 
-  // Stampbook mock state
-  const stampItems = [
-    { id: "s1", county: "고성군", name: "능파대 해안초소 정복", unlocked: true, date: "2026-06-15", prize: "고성 특산 미역 할인쿠폰", color: "from-teal-400 to-emerald-600" },
-    { id: "s2", county: "삼척시", name: "초곡용굴 문주 통과", unlocked: true, date: "2026-06-20", prize: "삼척 곤드레 한정식 식사권", color: "from-blue-400 to-indigo-600" },
-    { id: "s3", county: "정선군", name: "동강 소금강 걷기대회", unlocked: false, prize: "정선 더덕 로컬 세트", color: "from-amber-400 to-orange-600" },
-    { id: "s4", county: "태백시", name: "바람의 언덕 고원 등정", unlocked: false, prize: "태백 자작나무 방향제", color: "from-pink-400 to-red-600" }
-  ];
-
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
-      
+
       {/* 1. Header & Profile Banner */}
       <div className="bg-white rounded-xl border border-border-default p-6 flex flex-col sm:flex-row items-center gap-5 shadow-sm relative overflow-hidden">
-        
+
         {user ? (
           <>
             {/* User profile picture */}
@@ -108,26 +78,25 @@ export default function MyTab({
             <div className="text-center sm:text-left flex-1 min-w-0">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1.5 justify-center sm:justify-start">
                 <h3 className="font-display font-black text-lg text-bento-dark tracking-tight leading-none">
-                  {user.name} 님 (관광 약자 수호 길벗)
+                  {user.name} 님
                 </h3>
-                <span className="bg-bento-olive text-bento-dark text-[9px] font-semibold px-2 py-0.5 rounded-sm w-max mx-auto sm:mx-0">
+                {/*<span className="bg-bento-olive text-bento-dark text-[9px] font-semibold px-2 py-0.5 rounded-sm w-max mx-auto sm:mx-0">
                   안심 보행 보조단
-                </span>
+                </span>*/}
               </div>
               <p className="text-xs text-bento-dark/50 leading-relaxed mb-3">
-                강원 소멸위기 4개 군의 무장애 수변데크 걷기길을 주로 지켜보며 동반 반려동물과 조용한 산책을 수집하고 있습니다.
               </p>
 
               <div className="flex items-center justify-center sm:justify-start gap-4 text-xs font-mono">
-                <div>
+                {/*<div>
                   <span className="text-bento-dark/40">찜한 코스</span>{" "}
                   <strong className="text-bento-dark font-black">{likedDestinations.length}개</strong>
-                </div>
-                <div className="w-1.25 h-1.25 rounded-full bg-bento-dark/10" />
-                <div className="flex items-center gap-1">
+                </div>*/}
+                {/*<div className="w-1.25 h-1.25 rounded-full bg-bento-dark/10" />*/}
+                {/*<div className="flex items-center gap-1">
                   <span className="text-bento-dark/40 font-sans">인구소멸 기여</span>{" "}
                   <strong className="text-bento-green font-black flex items-center gap-0.5">2회 안심 <Leaf size={11} className="inline text-bento-green" /></strong>
-                </div>
+                </div>*/}
               </div>
             </div>
           </>
@@ -148,7 +117,7 @@ export default function MyTab({
                 </h3>
               </div>
               <p className="text-xs text-bento-dark/50 leading-relaxed mb-3">
-                로그인하시면 나만의 안심 동반 기준 설정, 찜한 코스 연동 및 강원 소멸지역 스탬프 쿠폰 리워드를 관리하실 수 있습니다.
+                로그인하시면 나만의 안심 동반 기준 설정과 찜한 명소·코스 연동을 관리하실 수 있습니다.
               </p>
               <button
                 onClick={onLoginClick}
@@ -160,7 +129,7 @@ export default function MyTab({
           </>
         )}
 
-        {/* Small subtle background graphic representing stamps */}
+        {/* Small subtle background dot graphic */}
         <div className="absolute right-0 top-0 bottom-0 w-24 bg-[radial-gradient(#1a2f2303_1.5px,transparent_1.5px)] bg-[size:12px_12px] opacity-60 hidden md:block" />
       </div>
 
@@ -180,42 +149,16 @@ export default function MyTab({
         )}
       </AnimatePresence>
 
-      {/* 3. Sub Navigation inside Profile tab */}
-      <div className="flex bg-white rounded-lg p-1 border border-border-default max-w-sm mx-auto sm:mx-0">
-        <button
-          onClick={() => setActiveSubTab("profile")}
-          className={`flex-1 py-2 text-xs font-semibold rounded-sm transition-all duration-base cursor-pointer flex items-center justify-center gap-1.5 ${
-            activeSubTab === "profile" 
-              ? "bg-bento-green text-white shadow-sm" 
-              : "text-bento-dark/60 hover:bg-bento-dark/5"
-          }`}
-        >
-          <Settings size={13} />
-          <span>개인 설정 & 안심 기준</span>
-        </button>
-        <button
-          onClick={() => setActiveSubTab("stamp")}
-          className={`flex-1 py-2 text-xs font-semibold rounded-sm transition-all duration-base cursor-pointer flex items-center justify-center gap-1.5 ${
-            activeSubTab === "stamp" 
-              ? "bg-bento-green text-white shadow-sm" 
-              : "text-bento-dark/60 hover:bg-bento-dark/5"
-          }`}
-        >
-          <Award size={13} />
-          <span>두루누비 스탬프북</span>
-        </button>
-      </div>
-
-      {/* 4. DETAIL RENDERING */}
+      {/* 3. DETAIL RENDERING */}
       <div className="relative">
         {!user && (
           <div className="absolute inset-0 bg-white/70 backdrop-blur-xs rounded-xl z-50 flex flex-col items-center justify-center space-y-3 p-6 text-center">
             <div className="w-12 h-12 rounded-full bg-bento-dark/5 flex items-center justify-center text-bento-dark/60">
               <Lock size={20} />
             </div>
-            <span className="text-xs font-semibold text-bento-dark">안심 기준 및 스탬프북 잠김</span>
+            <span className="text-xs font-semibold text-bento-dark">안심 기준 설정 잠김</span>
             <p className="text-[11px] text-bento-dark/50 max-w-xs leading-relaxed">
-              카카오 계정 연동 후에 상세 스탬프 미션 현황 조회와 안심 필터 저장 기능을 이용하실 수 있습니다.
+              카카오 계정 연동 후에 나만의 안심보행 기본값 저장 기능을 이용하실 수 있습니다.
             </p>
             <button
               onClick={onLoginClick}
@@ -227,9 +170,8 @@ export default function MyTab({
         )}
 
         <div className={!user ? "pointer-events-none select-none filter blur-[1.5px]" : ""}>
-          {activeSubTab === "profile" ? (
             <div className="space-y-6">
-              
+
               {/* A. 나만의 안심 보행 디폴트 필터값 설정 (Accessibility defaults editor) */}
               <div className="bg-white rounded-xl border border-border-default p-5 space-y-4 shadow-sm">
                 <div>
@@ -245,7 +187,7 @@ export default function MyTab({
                 </div>
 
                 <div className="space-y-2.5">
-                  
+
                   {/* Wheelchair */}
                   <div className="flex items-center justify-between p-3.5 bg-bento-bg rounded-lg">
                     <div className="flex items-center gap-3">
@@ -364,149 +306,7 @@ export default function MyTab({
                 </div>
               </div>
 
-              {/* B. 내가 찜한 안심 코스 리스트 (Liked List) */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-semibold text-bento-dark/50 pl-1">
-                    저장한 안심 명소 ({savedDestinations.length}개)
-                  </h4>
-                  {savedDestinations.length > 0 && (
-                    <button
-                      onClick={onClearLikes}
-                      className="text-[10px] font-medium text-red-700 bg-red-100 hover:bg-red-200 px-2.5 py-1 rounded-sm cursor-pointer transition-colors duration-fast"
-                    >
-                      전체 지우기
-                    </button>
-                  )}
-                </div>
-
-                {savedDestinations.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {savedDestinations.map((dest) => (
-                      <div
-                        key={dest.id}
-                        onClick={() => onSelectDestination(dest)}
-                        className="bg-white p-4 rounded-lg border border-border-default flex gap-4 hover:shadow-md transition-all duration-base cursor-pointer items-center text-left"
-                      >
-                        <img
-                          src={dest.image}
-                          alt={dest.name}
-                          referrerPolicy="no-referrer"
-                          className="w-16 h-16 rounded-md object-cover shrink-0 border border-border-subtle"
-                        />
-                        <div className="min-w-0 flex-1 space-y-1">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[9px] font-semibold text-bento-green">
-                              {dest.region} · {dest.category}
-                            </span>
-                            <span className="text-[9px] text-bento-dark/50">
-                              혼잡 {dest.congestionLevel}%
-                            </span>
-                          </div>
-                          <h5 className="font-display font-bold text-sm text-bento-dark tracking-tight truncate leading-none">
-                            {dest.name}
-                          </h5>
-                          <p className="text-[10px] text-bento-dark/40 truncate leading-relaxed">
-                            {dest.accessibility.note}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  /* Empty Saved State */
-                  <div className="p-8 text-center bg-white rounded-xl border border-border-default shadow-sm max-w-sm mx-auto space-y-3 flex flex-col items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
-                      <Heart className="text-red-400" size={24} />
-                    </div>
-                    <h5 className="text-xs font-semibold text-bento-dark">저장된 코스가 없어요</h5>
-                    <p className="text-[11px] text-bento-dark/50 px-4 leading-relaxed">
-                      홈 화면이나 검색 결과에서 하트 버튼을 눌러 나만의 안심 코스 목록을 만들어 보세요!
-                    </p>
-                  </div>
-                )}
-              </div>
-
             </div>
-          ) : (
-            
-            /* 🏆 두루누비 스탬프북 (Durunubi Walk Goals & Stampbook Gamification) */
-            <div className="bg-white rounded-xl border border-border-default p-6 space-y-6 shadow-sm text-center md:text-left">
-              <div className="space-y-1">
-                <div className="flex items-center justify-center md:justify-start gap-2">
-                  <Award size={18} className="text-bento-green" />
-                  <h4 className="font-display font-bold text-sm text-bento-dark">
-                    강원 소멸지역 안심 스탬프북
-                  </h4>
-                </div>
-                <p className="text-[11px] text-bento-dark/50">
-                  인근 인구소멸 대상구역의 한산 노선을 완보하고 로컬 마일리지 및 할인혜택을 받으세요!
-                </p>
-              </div>
-
-              {/* Core Stamp grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {stampItems.map((stamp) => (
-                  <div
-                    key={stamp.id}
-                    onClick={() => {
-                      const info = stamp.unlocked
-                        ? `${stamp.county} ${stamp.name} · 완보 해제 (${stamp.date}) · ${stamp.prize}`
-                        : `${stamp.county} ${stamp.name} · 미답사 구역`;
-                      setToastMessage(info);
-                      setTimeout(() => setToastMessage(""), 4000);
-                    }}
-                    className={`p-4 rounded-xl border relative overflow-hidden flex flex-col items-center justify-between transition-all duration-base cursor-pointer text-center aspect-square ${
-                      stamp.unlocked 
-                        ? "bg-bento-green/5 border-bento-green/30" 
-                        : "bg-bento-dark/[0.02] border-border-default opacity-60"
-                    }`}
-                  >
-                    {/* Stamp Icon */}
-                    <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md bg-gradient-to-tr ${
-                      stamp.unlocked ? stamp.color : "from-gray-400 to-slate-500 saturate-0"
-                    }`}>
-                      {stamp.unlocked ? (
-                        <span>✓</span>
-                      ) : (
-                        <Lock size={14} className="text-white" />
-                      )}
-                    </div>
-
-                    <div className="space-y-0.5 z-10">
-                      <span className="text-[9px] font-semibold text-bento-dark/50 block">{stamp.county}</span>
-                      <h5 className="text-[11px] font-bold text-bento-dark leading-tight line-clamp-1">{stamp.name.split(" ")[0]}</h5>
-                      <span className="text-[8px] bg-bento-green/10 text-bento-green px-1.5 py-0.5 rounded-sm inline-block text-[9px]">
-                        {stamp.unlocked ? stamp.date : "미해제"}
-                      </span>
-                    </div>
-
-                    {/* Micro watermark */}
-                    <Leaf className="absolute -bottom-1 -right-1 opacity-5 text-bento-green pointer-events-none" size={48} />
-                  </div>
-                ))}
-              </div>
-
-              {/* Stamp benefits banner */}
-              <div className="p-4 bg-bento-bg border border-border-subtle rounded-lg flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="space-y-1 text-center md:text-left">
-                  <span className="text-xs font-semibold text-bento-dark block">해제된 완보 리워드: <strong>2개</strong></span>
-                  <p className="text-[10px] text-bento-dark/50 leading-relaxed">
-                    고성 안심길 정복(고성 특산 미역 할인쿠폰), 삼척 옥빛바다 열린길 통과(삼척 곤드레 한정식 식사권)가 전송되었습니다.
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    setToastMessage("스탬프 쿠폰함 바코드가 생성되었습니다. 강원도 지정 가맹점 스마트폰 화면에 시연해 주세요.");
-                    setTimeout(() => setToastMessage(""), 4000);
-                  }}
-                  className="px-4 py-2.5 bg-bento-dark hover:bg-bento-dark/90 text-white text-[11px] font-semibold rounded-sm transition-all duration-base cursor-pointer shrink-0"
-                >
-                  내 쿠폰함 열기
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

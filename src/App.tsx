@@ -16,6 +16,7 @@ import HomeTab from "./components/HomeTab";
 import SearchTab from "./components/SearchTab";
 import CourseTab from "./components/CourseTab";
 import MyTab from "./components/MyTab";
+import FavoritesTab from "./components/FavoritesTab";
 import KakaoLoginModal from "./components/KakaoLoginModal";
 import DestinationDetail from "./components/DestinationDetail";
 import SearchDestinationDetail from "./components/SearchDestinationDetail";
@@ -67,7 +68,7 @@ function loadLocal<T>(key: string, fallback: T): T {
 export default function App() {
   // Navigation & View Mode states
   const [viewMode, setViewMode] = useState<"app" | "intro">("app");
-  const [activeTab, setActiveTab] = useState<"home" | "search" | "course" | "my">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "search" | "course" | "my" | "favorites">("home");
 
   // User authentication state (Kakao OAuth session, via /api/auth/*)
   const [user, setUser] = useState<{ name: string; avatarUrl: string } | null>(null);
@@ -80,6 +81,7 @@ export default function App() {
     setUser(null);
     // Drop the account's likes/defaults from screen; fall back to this device's guest data.
     setLikedDestinations(loadLocal("ongil_liked_v1", DEFAULT_LIKES));
+    setLikedCourses(loadLocal("ongil_liked_courses", []));
     setAccessibilityDefaults(loadLocal("ongil_accessibility_v1", DEFAULT_ACCESSIBILITY));
     fetch("/api/auth/logout", { method: "POST" }).catch(() => {
       // Best-effort: client-side state is already cleared regardless.
@@ -88,6 +90,7 @@ export default function App() {
 
   // Global states
   const [likedDestinations, setLikedDestinations] = useState<string[]>(DEFAULT_LIKES);
+  const [likedCourses, setLikedCourses] = useState<string[]>([]);
 
   const [accessibilityDefaults, setAccessibilityDefaults] = useState<AccessibilityDefaults>(DEFAULT_ACCESSIBILITY);
   const [storageHydrated, setStorageHydrated] = useState(false);
@@ -127,6 +130,10 @@ export default function App() {
             .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
             .then((likes: { ids: string[] }) => setLikedDestinations(likes.ids))
             .catch((e) => console.error("Failed to load likes", e));
+          fetch("/api/likes?type=course")
+            .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
+            .then((likes: { ids: string[] }) => setLikedCourses(likes.ids))
+            .catch((e) => console.error("Failed to load course likes", e));
           fetch("/api/settings/accessibility")
             .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
             .then((settings: { accessibilityDefaults: Partial<AccessibilityDefaults> }) =>
@@ -144,6 +151,7 @@ export default function App() {
   // Hydrate browser-only state after the first render so SSR and hydration match.
   useEffect(() => {
     setLikedDestinations(loadLocal("ongil_liked_v1", DEFAULT_LIKES));
+    setLikedCourses(loadLocal("ongil_liked_courses", []));
     setAccessibilityDefaults(loadLocal("ongil_accessibility_v1", DEFAULT_ACCESSIBILITY));
     setStorageHydrated(true);
   }, []);
@@ -154,6 +162,11 @@ export default function App() {
     if (!storageHydrated || user) return;
     localStorage.setItem("ongil_liked_v1", JSON.stringify(likedDestinations));
   }, [likedDestinations, storageHydrated]);
+
+  useEffect(() => {
+    if (!storageHydrated || user) return;
+    localStorage.setItem("ongil_liked_courses", JSON.stringify(likedCourses));
+  }, [likedCourses, storageHydrated, user]);
 
   useEffect(() => {
     if (!storageHydrated || user) return;
@@ -179,15 +192,21 @@ export default function App() {
       });
   };
 
-  const handleClearLikes = () => {
-    const previous = likedDestinations;
-    setLikedDestinations([]);
+  const handleToggleCourseLike = (crsIdx: string) => {
+    const liked = !likedCourses.includes(crsIdx);
+    const apply = (on: boolean) =>
+      setLikedCourses((prev) => (on ? [...prev.filter((item) => item !== crsIdx), crsIdx] : prev.filter((item) => item !== crsIdx)));
+    apply(liked);
     if (!user) return;
-    fetch("/api/likes?type=place", { method: "DELETE" })
+    fetch("/api/likes", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "course", id: crsIdx, liked })
+    })
       .then((res) => { if (!res.ok) throw new Error(`HTTP ${res.status}`); })
       .catch((e) => {
-        console.error("Failed to clear likes", e);
-        setLikedDestinations(previous);
+        console.error("Failed to save course like", e);
+        apply(!liked);
       });
   };
 
@@ -214,7 +233,7 @@ export default function App() {
     }
   };
 
-  const handleNavigateToTab = (tab: "home" | "search" | "course" | "my") => {
+  const handleNavigateToTab = (tab: "home" | "search" | "course" | "my" | "favorites") => {
     setActiveTab(tab);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -351,6 +370,19 @@ export default function App() {
                 <span>걷기 코스</span>
               </button>
 
+              {/* Favorites */}
+              <button
+                onClick={() => handleNavigateToTab("favorites")}
+                className={`w-full px-4 py-2.5 rounded-md text-sm font-medium text-left flex items-center gap-3 transition-colors duration-fast cursor-pointer relative ${
+                  activeTab === "favorites"
+                    ? "bg-bento-green/10 text-bento-green before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-[3px] before:h-5 before:rounded-full before:bg-bento-green"
+                    : "text-bento-dark/70 hover:bg-bento-cream/60 hover:text-bento-dark"
+                }`}
+              >
+                <Heart size={16} strokeWidth={activeTab === "favorites" ? 2.5 : 2} />
+                <span>즐겨찾기</span>
+              </button>
+
               {/* MY Profile */}
               <button
                 onClick={() => handleNavigateToTab("my")}
@@ -387,7 +419,6 @@ export default function App() {
           <main className="flex-1 min-w-0">
             {activeTab === "home" && (
               <HomeTab
-                onSelectDestination={setSelectedDestination}
                 onSelectAttraction={setSelectedSearchContentId}
                 likedDestinations={likedDestinations}
                 onToggleLike={handleToggleLike}
@@ -409,26 +440,36 @@ export default function App() {
 
             {activeTab === "course" && (
               <CourseTab
-                onSelectDestination={setSelectedDestination}
-                likedDestinations={likedDestinations}
-                onToggleLike={handleToggleLike}
+                likedCourses={likedCourses}
+                onToggleCourseLike={handleToggleCourseLike}
                 onSelectCourse={setSelectedCrsIdx}
               />
             )}
 
             {activeTab === "my" && (
               <MyTab
-                onSelectDestination={setSelectedDestination}
                 likedDestinations={likedDestinations}
                 onToggleLike={handleToggleLike}
                 accessibilityDefaults={accessibilityDefaults}
                 onUpdateAccessibilityDefaults={handleUpdateAccessibilityDefaults}
-                onClearLikes={handleClearLikes}
                 user={user}
                 onLoginClick={() => {
                   setModalMode("login");
                   setShowLoginModal(true);
                 }}
+              />
+            )}
+
+            {activeTab === "favorites" && (
+              <FavoritesTab
+                likedPlaces={likedDestinations}
+                onToggleLike={handleToggleLike}
+                onSelectDestination={setSelectedDestination}
+                onSelectSearchDestination={(id: string) => setSelectedSearchContentId(String(id))}
+                onSelectCourse={setSelectedCrsIdx}
+                user={user}
+                likedCourses={likedCourses}
+                onToggleCourseLike={handleToggleCourseLike}
               />
             )}
           </main>
@@ -467,6 +508,17 @@ export default function App() {
             >
               <Footprints size={20} strokeWidth={activeTab === "course" ? 2.5 : 2} />
               <span className="text-[10px] mt-1 font-medium leading-none">걷기길</span>
+            </button>
+
+            {/* Favorites */}
+            <button
+              onClick={() => handleNavigateToTab("favorites")}
+              className={`flex flex-col items-center justify-center w-14 py-2 rounded-lg transition-colors duration-fast cursor-pointer ${
+                activeTab === "favorites" ? "text-bento-green bg-bento-green/[0.06] font-semibold" : "text-bento-dark/50 hover:text-bento-dark/70"
+              }`}
+            >
+              <Heart size={20} strokeWidth={activeTab === "favorites" ? 2.5 : 2} />
+              <span className="text-[10px] mt-1 font-medium leading-none">즐겨찾기</span>
             </button>
 
             {/* MY */}
@@ -574,6 +626,8 @@ export default function App() {
             variant="sheet"
             onClose={() => setSelectedCrsIdx(null)}
             ready={courseSheetReady}
+            isLiked={likedCourses.includes(selectedCrsIdx)}
+            onToggleLike={handleToggleCourseLike}
           />
         )}
       </AnimatePresence>

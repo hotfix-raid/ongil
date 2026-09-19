@@ -14,7 +14,8 @@ import {
   PawPrint,
   Clock,
   MapPin,
-  Route
+  Route,
+  Heart
 } from "lucide-react";
 import { adaptCourse, parseSigun } from "@/src/lib/adapters/course";
 import { formatMinutes, htmlToLines } from "@/src/lib/format";
@@ -28,9 +29,8 @@ function regionLabel(sigun: string | null): string {
 // ---------------------------------------------------------------------------
 
 interface CourseTabProps {
-  onSelectDestination: (destination: never) => void;
-  likedDestinations: string[];
-  onToggleLike: (id: string) => void;
+  likedCourses: string[];
+  onToggleCourseLike: (crsIdx: string) => void;
   onSelectCourse: (crsIdx: string) => void;
 }
 
@@ -67,9 +67,8 @@ const PAGE_LIMIT = 20;
 const WALKING_THEME_NAMES = ["남파랑길", "서해랑길", "DMZ 평화의 길", "해파랑길"] as const;
 
 export default function CourseTab({
-  onSelectDestination: _onSelectDestination,
-  likedDestinations: _liked,
-  onToggleLike: _onToggleLike,
+  likedCourses,
+  onToggleCourseLike,
   onSelectCourse
 }: CourseTabProps) {
   // 검색/필터 상태 (탭 내 상태만 — URL 동기화 생략)
@@ -487,8 +486,16 @@ export default function CourseTab({
                   boxShadow: "0 4px 6px -1px color-mix(in srgb, #1A2F23 6%, transparent)"
                 }}
                 transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className="bg-white rounded-lg border border-border-default overflow-hidden flex flex-col justify-between shadow-sm"
+                className="relative bg-white rounded-lg border border-border-default overflow-hidden flex flex-col justify-between shadow-sm"
               >
+                <button
+                  type="button"
+                  aria-label={likedCourses.includes(course.id) ? `${course.name} 좋아요 취소` : `${course.name} 좋아요`}
+                  onClick={(event) => { event.stopPropagation(); onToggleCourseLike(course.id); }}
+                  className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-bento-dark/50 shadow-sm"
+                >
+                  <Heart size={16} className={likedCourses.includes(course.id) ? "fill-red-500 text-red-500" : ""} />
+                </button>
                 <button
                   type="button"
                   onClick={() => onSelectCourse(course.id)}
