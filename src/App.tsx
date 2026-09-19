@@ -17,6 +17,7 @@ import SearchTab from "./components/SearchTab";
 import CourseTab from "./components/CourseTab";
 import MyTab from "./components/MyTab";
 import FavoritesTab from "./components/FavoritesTab";
+import AssistantTab from "./components/AssistantTab";
 import KakaoLoginModal from "./components/KakaoLoginModal";
 import DestinationDetail from "./components/DestinationDetail";
 import SearchDestinationDetail from "./components/SearchDestinationDetail";
@@ -53,6 +54,15 @@ const DEFAULT_ACCESSIBILITY = {
 const DEFAULT_LIKES = ["d001", "d004"]; // Pre-fill with Goseong & Samcheok for a vibrant start
 
 type AccessibilityDefaults = typeof DEFAULT_ACCESSIBILITY;
+type Tab = "home" | "search" | "course" | "assistant" | "my" | "favorites";
+
+/** Main-menu routes mirrored as URL hashes (#/home, #/search, ...) for browser history. */
+const TAB_ROUTES: readonly Tab[] = ["home", "search", "course", "assistant", "my", "favorites"];
+
+function tabFromHash(): Tab | null {
+  const hash = window.location.hash.replace(/^#\/?/, "");
+  return (TAB_ROUTES as readonly string[]).includes(hash) ? (hash as Tab) : null;
+}
 
 // Guests keep likes/defaults in localStorage; logged-in users use the DB via /api/likes and /api/settings/accessibility.
 function loadLocal<T>(key: string, fallback: T): T {
@@ -68,7 +78,7 @@ function loadLocal<T>(key: string, fallback: T): T {
 export default function App() {
   // Navigation & View Mode states
   const [viewMode, setViewMode] = useState<"app" | "intro">("app");
-  const [activeTab, setActiveTab] = useState<"home" | "search" | "course" | "my" | "favorites">("home");
+  const [activeTab, setActiveTab] = useState<Tab>("home");
 
   // User authentication state (Kakao OAuth session, via /api/auth/*)
   const [user, setUser] = useState<{ name: string; avatarUrl: string } | null>(null);
@@ -173,6 +183,22 @@ export default function App() {
     localStorage.setItem("ongil_accessibility_v1", JSON.stringify(accessibilityDefaults));
   }, [accessibilityDefaults, storageHydrated]);
 
+  // Browser history sync for main-menu navigation: popstate (back/forward)
+  // restores the tab encoded in the URL hash, defaulting to home for the
+  // un-hashed root entry. Also restores the tab when landing on a hashed URL.
+  useEffect(() => {
+    const onPopState = () => {
+      setActiveTab(tabFromHash() ?? "home");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+    window.addEventListener("popstate", onPopState);
+
+    const initialTab = tabFromHash();
+    if (initialTab) setActiveTab(initialTab);
+
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
   // Global Handlers
   const handleToggleLike = (id: string) => {
     const liked = !likedDestinations.includes(id);
@@ -233,9 +259,14 @@ export default function App() {
     }
   };
 
-  const handleNavigateToTab = (tab: "home" | "search" | "course" | "my" | "favorites") => {
+  const handleNavigateToTab = (tab: Tab) => {
     setActiveTab(tab);
     window.scrollTo({ top: 0, behavior: "smooth" });
+    // Stack a history entry per main-menu move (skipped when the menu is
+    // already current) so the browser back button returns to the previous menu.
+    if (tabFromHash() !== tab) {
+      window.history.pushState({ tab }, "", `#/${tab}`);
+    }
   };
 
   // Intro Sections scrolling helpers
@@ -370,6 +401,19 @@ export default function App() {
                 <span>걷기 코스</span>
               </button>
 
+              {/* AI assistant */}
+              <button
+                onClick={() => handleNavigateToTab("assistant")}
+                className={`w-full px-4 py-2.5 rounded-md text-sm font-medium text-left flex items-center gap-3 transition-colors duration-fast cursor-pointer relative ${
+                  activeTab === "assistant"
+                    ? "bg-bento-green/10 text-bento-green before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-[3px] before:h-5 before:rounded-full before:bg-bento-green"
+                    : "text-bento-dark/70 hover:bg-bento-cream/60 hover:text-bento-dark"
+                }`}
+              >
+                <Sparkles size={16} strokeWidth={activeTab === "assistant" ? 2.5 : 2} />
+                <span>AI 어시스턴트</span>
+              </button>
+
               {/* Favorites */}
               <button
                 onClick={() => handleNavigateToTab("favorites")}
@@ -446,6 +490,16 @@ export default function App() {
               />
             )}
 
+            {activeTab === "assistant" && (
+              <AssistantTab
+                user={user}
+                onLoginClick={() => {
+                  setModalMode("login");
+                  setShowLoginModal(true);
+                }}
+              />
+            )}
+
             {activeTab === "my" && (
               <MyTab
                 likedDestinations={likedDestinations}
@@ -508,6 +562,17 @@ export default function App() {
             >
               <Footprints size={20} strokeWidth={activeTab === "course" ? 2.5 : 2} />
               <span className="text-[10px] mt-1 font-medium leading-none">걷기길</span>
+            </button>
+
+            {/* AI assistant */}
+            <button
+              onClick={() => handleNavigateToTab("assistant")}
+              className={`flex flex-col items-center justify-center w-14 py-2 rounded-lg transition-colors duration-fast cursor-pointer ${
+                activeTab === "assistant" ? "text-bento-green bg-bento-green/[0.06] font-semibold" : "text-bento-dark/50 hover:text-bento-dark/70"
+              }`}
+            >
+              <Sparkles size={20} strokeWidth={activeTab === "assistant" ? 2.5 : 2} />
+              <span className="text-[10px] mt-1 font-medium leading-none">AI</span>
             </button>
 
             {/* Favorites */}

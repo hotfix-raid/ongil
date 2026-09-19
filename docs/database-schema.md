@@ -21,6 +21,8 @@ AI 에이전트가 개발 시 이 문서를 스키마의 단일 소스로 사용
 | `tourist_visitor_forecast` | 4,380 | (`base_ymd`,`area_cd`,`signgu_cd`,`tats_nm`) | 관광지별 방문자 예측(혼잡도) |
 | `users` | 0 (신규) | `id` | 회원 (카카오 OAuth) |
 | `sessions` | 0 (신규) | `token_hash` | 로그인 세션 |
+| `assistant_usage_user` | 사용자별 | `user_id` | AI 어시스턴트 예약 직렬화용 잠금 행 |
+| `assistant_request_usage` | 요청별 | `request_id` | AI 어시스턴트 daily/concurrent 사용량 |
 | `user_likes` | 0 (신규) | (`user_id`,`target_type`,`target_id`) | 회원 좋아요(찜) — 관광지/코스 |
 
 ## 관계 (ERD)
@@ -37,6 +39,8 @@ walking_trail_theme (route_idx) ──< dulle_course.route_idx  -- 논리적 1:N
 
 users (id) ──< sessions.user_id    -- 실제 FK, ON DELETE CASCADE
 users (id) ──< user_likes.user_id  -- 실제 FK, ON DELETE CASCADE
+users (id) ──< assistant_usage_user.user_id -- 실제 FK, ON DELETE CASCADE
+users (id) ──< assistant_request_usage.user_id    -- 실제 FK, ON DELETE CASCADE
 ```
 
 **주의**: 관광 데이터 8개 테이블 사이의 실제 FK 제약은 `sigungu→region` 하나뿐이며, 나머지는 논리적 관계일 뿐이므로 조인 시 존재하지 않는 `content_id`/`route_idx`가 있어도 DB가 막아주지 않는다. `users`/`sessions`는 별도 도메인(인증)이라 `sessions.user_id → users.id`에 실제 FK가 걸려 있다.
@@ -170,7 +174,7 @@ users (id) ──< user_likes.user_id  -- 실제 FK, ON DELETE CASCADE
 | `crs_totl_rqrm_hour` | `smallint` | NULL | 총 소요시간 (시간 단위) |
 | `crs_level` | `CHAR(1)` | NULL | 난이도 코드 |
 | `crs_cycle` | `VARCHAR(20)` | NULL | 코스 형태 (순환/비순환 등) |
-| `crs_contents` / `crs_summary` / `crs_tour_info` / `travel_info` | `text` | NULL | 상세설명 / 요약 / 주변관광 info / 여행자 info |
+| `crs_contents` / `crs_summary` / `crs_tour_info` / `traveler_info` | `text` | NULL | 상세설명 / 요약 / 주변관광 info / 여행자 info |
 | `sigun` | `VARCHAR(100)` | NULL | 시군 정보 (코드 아닌 명칭 문자열) |
 | `brd_div` | `VARCHAR(10)` | NULL | 노선 구분 |
 | `gpxpath` | `VARCHAR(1000)` | NULL | GPX 파일 경로 |
@@ -217,6 +221,28 @@ users (id) ──< user_likes.user_id  -- 실제 FK, ON DELETE CASCADE
 | `expires_at` | `timestamptz` | NOT NULL | 만료 시각 (기본 발급 시점 + 30일) |
 
 만료된 행은 물리적으로 삭제되지 않고 조회 시 `expires_at > now()`로만 걸러진다 — 트래픽이 늘면 만료 행을 정리하는 배치가 필요.
+
+## assistant_request_usage — AI 어시스턴트 사용량
+
+마이그레이션: [`docs/migrations/003_assistant_usage.sql`](migrations/003_assistant_usage.sql),
+기존 배포에서 요청 UUID 기본값을 제거하려면 [`docs/migrations/004_assistant_usage_drop_uuid_default.sql`](migrations/004_assistant_usage_drop_uuid_default.sql)을 적용한다.
+새 설치는 003만 적용하면 된다.
+서버는 `assistant_usage_user`의 사용자별 잠금 행을 짧은 예약 트랜잭션에서 `FOR UPDATE`로 잠근 뒤
+`assistant_request_usage`에 요청 예약을 기록한다. 외부 AI 호출 중에는 DB 트랜잭션을 유지하지 않는다.
+`finished_at`이 없는 예약도 `reservation_expires_at`이 지나면 다음 예약 시 회수되므로
+프로세스 장애가 concurrent 슬롯을 영구 점유하지 않는다.
+
+현재 서버 제한은 UTC 기준 사용자당 하루 100회, 동시 예약 2개다.
+완료 요청은 daily 계산을 위해 보존되며, 하루가 지난 완료 행은 다음 예약 시 정리된다.
+
+| 테이블 | 컬럼 | 설명 |
+|---|---|---|
+| `assistant_usage_user` | `user_id` | `users.id` FK, 사용자별 예약 직렬화 잠금 행, PK |
+| `assistant_request_usage` | `request_id` | 애플리케이션이 생성하는 요청 예약 UUID, PK |
+|  | `user_id` | `users.id` FK |
+|  | `started_at` | daily 사용량 계산 기준 시각 |
+|  | `reservation_expires_at` | 미완료 예약의 자동 회수 시각 |
+|  | `finished_at` | 서버가 finally에서 기록하는 완료 시각; NULL이면 in-flight |
 
 ## user_likes — 회원 좋아요(찜)
 

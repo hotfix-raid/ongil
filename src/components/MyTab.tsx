@@ -43,11 +43,10 @@ export default function MyTab({
     onUpdateAccessibilityDefaults(updated);
 
     const koreanNameMap: Record<string, string> = {
-      petFriendly: "반려동물 동반 동행",
-      wheelchair: "휠체어 안전보행로 전용",
-      stroller: "유모차 통행 보강",
-      senior: "실버 케어 쉼터 연동",
-      parking: "교통약자 넓은 주차면"
+      petFriendly: "반려동물 동반",
+      wheelchair: "이동 편의",
+      stroller: "영유아 편의",
+      parking: "주차 시설"
     };
 
     setToastMessage(`${koreanNameMap[key]} 설정이 ${value ? "활성화" : "비활성화"}되었습니다. 홈/검색 화면이 연계 업데이트됩니다.`);
@@ -178,7 +177,7 @@ export default function MyTab({
                   <div className="flex items-center gap-2 mb-1">
                     <Sliders size={16} className="text-bento-green" />
                     <h4 className="font-display font-bold text-sm text-bento-dark">
-                      나의 안심보행 기본값 설정
+                      나의 여행지 기본값 설정
                     </h4>
                   </div>
                   <p className="text-[11px] text-bento-dark/50">
@@ -195,8 +194,8 @@ export default function MyTab({
                         <Accessibility size={16} />
                       </div>
                       <div className="text-left">
-                        <span className="text-xs font-semibold block text-bento-dark">휠체어 안전보행로</span>
-                        <span className="text-[10px] text-bento-dark/50 block">계단 제거, 경사도 5% 미만, 안전난간 기준</span>
+                        <span className="text-xs font-semibold block text-bento-dark">이동 편의</span>
+                        {/*<span className="text-[10px] text-bento-dark/50 block">계단 제거, 경사도 5% 미만, 안전난간 기준</span>*/}
                       </div>
                     </div>
                     <button
@@ -218,8 +217,8 @@ export default function MyTab({
                         <Baby size={16} />
                       </div>
                       <div className="text-left">
-                        <span className="text-xs font-semibold block text-bento-dark">유모차 동반 통로</span>
-                        <span className="text-[10px] text-bento-dark/50 block">비포장 비탈길 우회, 기저귀 갈이대 구비처</span>
+                        <span className="text-xs font-semibold block text-bento-dark">영유아 편의</span>
+                        {/*<span className="text-[10px] text-bento-dark/50 block">비포장 비탈길 우회, 기저귀 갈이대 구비처</span>*/}
                       </div>
                     </div>
                     <button
@@ -241,8 +240,8 @@ export default function MyTab({
                         <PawPrint size={16} />
                       </div>
                       <div className="text-left">
-                        <span className="text-xs font-semibold block text-bento-dark">반려동물 동반 산책</span>
-                        <span className="text-[10px] text-bento-dark/50 block">목줄 착용, 공식 허용 관광지 우선 추천</span>
+                        <span className="text-xs font-semibold block text-bento-dark">반려동물 동반</span>
+                        {/*<span className="text-[10px] text-bento-dark/50 block">목줄 착용, 공식 허용 관광지 우선 추천</span>*/}
                       </div>
                     </div>
                     <button
@@ -258,7 +257,7 @@ export default function MyTab({
                   </div>
 
                   {/* Senior */}
-                  <div className="flex items-center justify-between p-3.5 bg-bento-bg rounded-lg">
+                  {/*<div className="flex items-center justify-between p-3.5 bg-bento-bg rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0">
                         <User size={16} />
@@ -278,7 +277,7 @@ export default function MyTab({
                         accessibilityDefaults.senior ? "left-[22px]" : "left-1"
                       }`} />
                     </button>
-                  </div>
+                  </div>*/}
 
                   {/* Parking */}
                   <div className="flex items-center justify-between p-3.5 bg-bento-bg rounded-lg">
@@ -287,8 +286,8 @@ export default function MyTab({
                         <Car size={16} />
                       </div>
                       <div className="text-left">
-                        <span className="text-xs font-semibold block text-bento-dark">장애인 전용 주차</span>
-                        <span className="text-[10px] text-bento-dark/50 block">평지 무료 공영주차장, 휠체어 하차 지원</span>
+                        <span className="text-xs font-semibold block text-bento-dark">주차 시설</span>
+                        {/*<span className="text-[10px] text-bento-dark/50 block">평지 무료 공영주차장, 휠체어 하차 지원</span>*/}
                       </div>
                     </div>
                     <button
