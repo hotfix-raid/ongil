@@ -14,8 +14,7 @@ import contentMapJson from "./tats-content-map.json";
 const CONTENT_MAP: Record<string, string> = contentMapJson;
 
 const SERVICE_KEY =
-  process.env.SERVICE_KEY ||
-  "7rsiXgK3JvxQbO8j1%2FPt%2B1NQqtORMhgvqQUDT6j%2BcV%2BfWMD2Fc2%2BLt2k6cx2Lkiu1nuyhmAHMa4ltgLNsavQbA%3D%3D";
+  process.env.SERVICE_KEY;
 const BASE_URL =
   "https://apis.data.go.kr/B551011/TatsCnctrRateService/tatsCnctrRatedList";
 
